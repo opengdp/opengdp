@@ -1,0 +1,148 @@
+
+MAP
+  NAME DeepHorizon
+  # Map image size
+
+  SIZE 600 400
+  UNITS dd
+
+########  WEST       SOUTH     EAST      NORTH
+
+  EXTENT -100.0  17.0 -74.0  33.0
+  PROJECTION
+    'proj=longlat'
+    'ellps=WGS84'
+    'datum=WGS84'
+    'no_defs'
+    ''
+  END
+
+  # Background color for the map canvas -- change as desired
+  IMAGECOLOR 0 0 0
+  IMAGEQUALITY 95
+  IMAGETYPE png24
+
+#  OUTPUTFORMAT
+#    NAME png
+#    DRIVER "GD/PNG"
+#    TRANSPARENT ON
+#    MIMETYPE "image/png"
+#    IMAGEMODE PC256
+#    EXTENSION "png"
+#  END  
+
+  OUTPUTFORMAT
+    NAME jpeg
+    DRIVER 'GD/JPEG'
+    MIMETYPE 'image/jpeg'
+    IMAGEMODE RGB
+    FORMATOPTION  QUALITY=90
+    EXTENSION 'jpg'
+  END
+
+  OUTPUTFORMAT
+    NAME GTiff
+    DRIVER "GDAL/GTiff"
+    MIMETYPE "image/tiff"
+    IMAGEMODE RGB
+    FORMATOPTION  TILED=YES
+   EXTENSION "tif"
+  END
+
+  OUTPUTFORMAT
+    NAME PNG24
+    DRIVER "GDAL/PNG"
+    MIMETYPE "image/png"
+    EXTENSION PNG
+    IMAGEMODE RGBA
+    TRANSPARENT ON
+  END
+
+  # Legend
+  LEGEND
+      IMAGECOLOR 255 255 255
+    STATUS ON
+    KEYSIZE 18 12
+    LABEL
+      TYPE BITMAP
+      SIZE MEDIUM
+      COLOR 0 0 0
+    END
+  END
+
+  # Web interface definition. Only the template parameter
+  # is required to display a map. See MapServer documentation
+  WEB
+    # Set IMAGEPATH to the path where MapServer should
+    # write its output.
+    IMAGEPATH '/tmp/'
+
+    # Set IMAGEURL to the url that points to IMAGEPATH
+    # as defined in your web server configuration
+    IMAGEURL '/tmp/'
+
+    # WMS server settings
+    METADATA
+      'wms_title'           'Deep Horizon'
+      'wms_onlineresource'  'http://hurakan.ucsd.edu/cgi-bin/deephorizon_wms?SERVICE=WMS'
+      'wms_srs'             'EPSG:900913 EPSG:4326'
+    END
+#   LOG '/var/www/html/mapserver.log'
+    #Scale range at which web interface will operate
+    # Template and header/footer settings
+    # Only the template parameter is required to display a map. See MapServer documentation
+  END
+
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100504.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100505.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100506.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100507.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100508.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100509.map'
+  INCLUDE 'done/AERIAL_NOAA/AERIAL_NOAA20100512.map'
+
+  INCLUDE 'done/ASTER/ASTER.map'
+
+
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100506.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100511.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100513.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100517.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100518.map'
+
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_ETM_USGS//LANDSAT_ETM_USGS20100426.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_ETM_USGS//LANDSAT_ETM_USGS20100501.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_ETM_USGS//LANDSAT_ETM_USGS20100510.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_ETM_USGS//LANDSAT_ETM_USGS20100517.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_USGS_PRE_EVENT_CHARLOTTE_CNTY_FL//AERIAL_USGS_PRE_EVENT_CHARLOTTE_CNTY_FL20100102.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_USGS_PRE_EVENT_DIXIE_CNTY_FL//AERIAL_USGS_PRE_EVENT_DIXIE_CNTY_FL20091219.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_USGS_PRE_EVENT_GULF_CNTY_FL//AERIAL_USGS_PRE_EVENT_GULF_CNTY_FL20100104.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_TM_USGS//LANDSAT_TM_USGS20100509.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_TM_USGS//LANDSAT_TM_USGS20100518.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100519.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100520.map'
+  INCLUDE '/storage/data/deephorizon//done/EO1//EO120100505.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA_AVIRIS//AERIAL_NASA_AVIRIS20100510.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA_AVIRIS//AERIAL_NASA_AVIRIS20100513.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA_AVIRIS//AERIAL_NASA_AVIRIS20100517.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA_AVIRIS//AERIAL_NASA_AVIRIS20100518.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA_AVIRIS//AERIAL_NASA_AVIRIS20100519.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100504.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100506.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100507.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100508.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_USACE//AERIAL_USACE20100513.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100505.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100509.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100513.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100515.map'
+  INCLUDE '/storage/data/deephorizon//done/EO1//EO120100521.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100523.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_USACE//AERIAL_USACE20100409.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_ETM_USGS//LANDSAT_ETM_USGS20100524.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100512.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NASA//AERIAL_NASA20100524.map'
+  INCLUDE '/storage/data/deephorizon//done/LANDSAT_TM_USGS//LANDSAT_TM_USGS20100525.map'
+  INCLUDE '/storage/data/deephorizon//done/AERIAL_NOAA_MOSAIC//AERIAL_NOAA_MOSAIC20100520.map'
+END
+
