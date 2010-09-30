@@ -32,10 +32,8 @@ mapserverpath="/usr/local/src/mapserver/mapserver"
 
 ##### setup proccess management #####
 
-((doing=0))
 ((limit=12))
 
-source generic.bash
+source dwh-generic.bash
 
 main
-
