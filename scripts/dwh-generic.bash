@@ -235,7 +235,7 @@ function comp_meter {
 
 function mainloop {
     mirrorfile="$1"
-    dofunc="${2-dofile}"
+    dofunc="$2"
     
     ((doing=0))
     
@@ -270,15 +270,15 @@ function mainloop {
         if [ $doing -lt $limit ]
         then
         	${dofunc} "$line" > /dev/null 2> /dev/null &
-         	((doing +=1))
+         	((doing++))
          	
         ##### over the limit wait for a job to finish before starting #####
         
         else
             read <&3
-            ((doing--1))
+            ((doing--))
             
-            ((donelines++1))
+            ((donelines++))
             comp_meter $started $lines $donelines
             
             ${dofunc} "$line" > /dev/null 2> /dev/null &
@@ -298,7 +298,7 @@ function mainloop {
 
 function finishup {
     mirrorfile="$1"
-    dateregex="${2-s:.*/AE00N[0-9]\{2\}_[a-zA-Z0-9]\{10\}_[0-9]\{6\}\([0-9]\{8\}\).*:\1:}"
+    dateregex="$2"
     
     ##### loop over each date of data we got #####
 
@@ -335,13 +335,9 @@ function finishup {
 function getlist {
     mirrorfile="$1"
     patern="$2"
+
+    lftp "$baseurl" -e "mirror --script=${mirrorfile} -I "$patern"; exit"
     
-    if [[ -n "${patern}" ]]
-    then
-        lftp "$baseurl" -e "mirror --script=${mirrorfile} ; exit"
-    else
-        lftp "$baseurl" -e "mirror --script=${mirrorfile} -I "$patern"; exit"
-    fi
 }
 
 ###############################################################################
@@ -371,13 +367,13 @@ function main {
         exit
     fi
     
-    if [ -d "$basedir" == "" ]
+    if ! [ -d "$basedir" ]
     then
         echo "ERROR: no such dir $basedir"
         exit
     fi
     
-    if [ -w "$basedir" == "" ]
+    if ! [ -w "$basedir" ]
     then
         echo "ERROR: no write access to $basedir"
         exit
@@ -398,7 +394,7 @@ function main {
         fi
     fi
     
-    if [ -w "$indir" == "" ]
+    if ! [ -w "$indir" ]
     then
         echo "ERROR: no write access to $indir"
         exit
@@ -418,21 +414,21 @@ function main {
         fi
     fi
     
-    if [ -w "$outdir" == "" ]
+    if ! [ -w "$outdir" ]
     then
         echo "ERROR: no write access to $outdir"
         exit
     fi
     
-    ${tmp=/tmp/}
+    : ${tmp=/tmp/}
 
-    if [ -d "$tmp" == "" ]
+    if ! [ -d "$tmp" ]
     then
         echo "ERROR: no such dir $tmp"
         exit
     fi
     
-    if [ -w "$tmp" == "" ]
+    if ! [ -w "$tmp" ]
     then
         echo "ERROR: no write access to $tmp"
         exit
@@ -444,27 +440,27 @@ function main {
         exit
     fi
     
-    if [ -f "$mapfile" == "" ]
+    if ! [ -f "$mapfile" ]
     then
         echo "ERROR: no such file $mapfile"
         exit
     fi
 
-    if [ -w "$tmp" == "" ]
+    if ! [ -w "$tmp" ]
     then
         echo "ERROR: no write access to $mapfile"
         exit
     fi
     
-    ${mapserverpath=/usr/local/src/mapserver/mapserver/}
+    : ${mapserverpath=/usr/local/src/mapserver/mapserver/}
     
-    if [ -d "$mapserverpath" == "" ]
+    if ! [ -d "$mapserverpath" ]
     then
         echo "ERROR: no such dir $mapserverpath"
         exit
     fi
     
-    if [ -x "${mapserverpath}/shp2img" == "" ]
+    if ! [ -x "${mapserverpath}/shp2img" ]
     then
         echo "ERROR: no executable ${mapserverpath}/shp2img"
         exit
@@ -473,7 +469,7 @@ function main {
     
     ##### setup proccess management #####
     
-    ${limit=20}
+    : ${limit=4}
     
     ##### cd to the in dir #####
 
@@ -485,29 +481,27 @@ function main {
     
     ##### get the list of new files to fetch #####
     
-    if [[ -n "${fetchpattern}" ]]
+    : ${fetchpattern=\*}
+    if ! getlist "$mirrorfile" "$fetchpattern"
     then
-        getlist "$mirrorfile" "$fetchpattern"
-    else
-        getlist "$mirrorfile"
+        exit
     fi
     
     ##### loop over the commands in the mirrorfile #####
     
-    if [[ -n "${dofunc}" ]]
+    : ${dofunc-dofile}
+    if ! mainloop "$mirrorfile" "$dofunc"
     then
-        mainloop "$mirrorfile" "$dofunc"
-    else
-        mainloop "$mirrorfile"
+        exit
     fi
-    
+
     ##### finish up, make overvies etc... #####
     
-    if [[ -n "${dateregex}" ]]
+    : ${dateregex-s:.*/AE00N[0-9]\{2\}_[a-zA-Z0-9]\{10\}_[0-9]\{6\}\([0-9]\{8\}\).*:\1:}
+    if ! finishup "$mirrorfile" "$dateregex"
     then
-        finishup "$mirrorfile" "$dateregex"
-    else
-        finishup "$mirrorfile"
+        exit
     fi
+
     
 }
