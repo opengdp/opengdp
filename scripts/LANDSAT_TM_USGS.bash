@@ -39,9 +39,17 @@ source dwh-generic.bash
 
 dofunc="LANDSAT_TM_USGS_dofile"
 
-dateregex='s:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
-
 doovr="no"
+
+datefunc="LANDSAT_TM_USGS_dodate"
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function LANDSAT_TM_USGS_dodate {
+    sed 's:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
+}
 
 #################################################################################################
 # function to proccess a file

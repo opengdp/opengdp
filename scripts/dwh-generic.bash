@@ -403,17 +403,25 @@ EOF
 }
 
 ###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+    sed 's:.*/AE00N[0-9]\{2\}_[a-zA-Z0-9]\{10\}_[0-9]\{6\}\([0-9]\{8\}\).*:\1:'
+}
+
+###############################################################################
 # function to add the data to the map file and create overviews
 ###############################################################################
 
 function finishup {
     mirrorfile="$1"
-    dateregex="$2"
+    datefunc="$2"
     
     ##### loop over each date of data we got #####
 
     grep "${mirrorfile}" -e "^get" |\
-     sed "$dateregex" |\
+     ${datefunc} |\
      sort |\
      uniq |\
      while read ts
@@ -613,8 +621,8 @@ function main {
 
     ##### finish up, make overvies etc... #####
     
-    : ${dateregex-s:.*/AE00N[0-9]\{2\}_[a-zA-Z0-9]\{10\}_[0-9]\{6\}\([0-9]\{8\}\).*:\1:}
-    if ! finishup "$mirrorfile" "$dateregex"
+    : ${datefunc-dodate}
+    if ! finishup "$mirrorfile" "$datefunc"
     then
         exit
     fi
