@@ -91,7 +91,10 @@ function writemap {
     ts="$1"
     extent="$2"
 
-    cat > "${outdir}/${dsname}${ts}.map" << EOF
+    if [[ "$doovr" == "yes" ]]
+    then
+        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        
 
   LAYER
     NAME '${dsname}_${ts}_nominmax'
@@ -116,7 +119,7 @@ function writemap {
 
   END
 
- LAYER
+  LAYER
     NAME '${dsname}_${ts}_hires'
     TYPE RASTER
     STATUS ON
@@ -141,7 +144,7 @@ function writemap {
 
   END
 
- LAYER
+  LAYER
     NAME '${dsname}_${ts}_ovr'
     TYPE RASTER
     STATUS ON
@@ -168,6 +171,36 @@ function writemap {
 
 EOF
 
+    else
+        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        
+  LAYER
+    NAME '${dsname}_${ts}'
+    TYPE RASTER
+    STATUS ON
+    DUMP TRUE
+    PROJECTION
+     'proj=longlat'
+     'ellps=WGS84'
+     'datum=WGS84'
+     'no_defs'
+     ''
+    END
+    METADATA
+      'wms_title'        '${dsname}_${ts}'
+      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_extent'	 '$extent'
+    END
+    OFFSITE 0 0 0
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    PROCESSING "SCALE=AUTO"
+
+  END
+
+EOF
+    fi
+    
+    
 }
 
 ###############################################################################
@@ -269,7 +302,7 @@ function mainloop {
 
         if [ $doing -lt $limit ]
         then
-        	${dofunc} "$line" > /dev/null 2> /dev/null &
+        	${dofunc} "$line"  &
          	((doing++))
          	
         ##### over the limit wait for a job to finish before starting #####
@@ -281,7 +314,7 @@ function mainloop {
             ((donelines++))
             comp_meter $started $lines $donelines
             
-            ${dofunc} "$line" > /dev/null 2> /dev/null &
+            ${dofunc} "$line"  &
          	((doing++))
         fi
 
@@ -289,6 +322,83 @@ function mainloop {
 
     wait
     echo
+
+}
+
+###############################################################################
+# function to create a js with the layers for openlayers and a geoext folder
+###############################################################################
+
+
+function dogeoext {
+
+(
+    cat << EOF
+
+Ext.onReady(function() {
+
+  var ${dsname}_layers = [];
+
+EOF
+
+    for map in $(find $outdir -name "*.map")
+    do
+        if [[ "$doovr" == "yes" ]]
+        then
+            layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
+        else
+            layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
+        fi
+        
+        cat << EOF
+    
+  ${layer} = new OpenLayers.Layer.WMS(
+    "${layer}",
+    "$mscgi",
+    {
+      layers: '${layer}',
+      format: 'image/png',
+      transparency: 'TRUE',
+    },
+    {
+      isBaseLayer: false,
+      visibility: false,
+    }
+  );
+
+  ${dsname}_layers.push( ${layer} );
+
+EOF
+    done
+
+    cat << EOF
+    
+  ${dsname}_store = new GeoExt.data.LayerStore(
+    {
+      initDir: 0,
+      layers: ${dsname}_layers
+    }
+  );
+
+  ${dsname}_list = new GeoExt.tree.OverlayLayerContainer(
+    {
+      text: '${dsname}',
+      layerStore: ${dsname}_store,
+      leaf: false,
+      nodeType: "gx_overlaylayercontainer",
+      expanded: true,
+      applyLoader: false
+    }
+  );
+
+  layerRoot.appendChild(${dsname}_list);
+
+});
+
+EOF
+
+
+) > ${webdir}/${dsname}.js
 
 }
 
@@ -321,9 +431,14 @@ function finishup {
         
         addinclude "$ts"
 
-        ##### create a single file for larger area overviews #####
+        if [[ "$doovr" == "yes" ]]
+        then
         
-        makeoverview "$ts" "$extent"
+            ##### create a single file for larger area overviews #####
+        
+            makeoverview "$ts" "$extent"
+            
+        fi
         
      done 
 }
@@ -466,6 +581,7 @@ function main {
         exit
     fi
     
+    : ${doovr=yes}
     
     ##### setup proccess management #####
     
