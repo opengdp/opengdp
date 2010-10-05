@@ -21,26 +21,44 @@
 
 dsname="AERIAL_NASA_UAVSAR"
 baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/AERIAL/NASA_UAVSAR/"
-basedir="/data/testdwh/"
+basedir="/storage/data/deephorizon/"
 indir="${basedir}/source/${dsname}/"
 outdir="${basedir}/done/${dsname}/"
 mapfile="${basedir}/deephorizon.map"
 
-#tmp=/mnt/ram2/
-tmp=/data/testdwh/
-mapserverpath="/usr/local/src/mapserver/"
+tmp=/mnt/ram2/
+
+mapserverpath="/usr/local/src/mapserver/mapserver"
 
 ##### setup proccess management #####
 
-((doing=0))
-((limit=16))
+((limit=1))
+
+source dwh-generic.bash
+
+dofunc="AERIAL_NASA_UAVSAR_dofile"
+
+doovr="no"
+
+fetchpattern="*.kmz"
+
+datefunc="AERIAL_NASA_UAVSAR_dodate"
 
 
-#################################################################################################
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function AERIAL_NASA_UAVSAR_dodate {
+    sed -r 's:.*/[a-zA-Z0-9]{6}_[0-9]{5}_[0-9]{5}_[0-9]{3}_([0-9]{6})_.*:20\1:'
+}
+
+
+###############################################################################
 # function to proccess a file
-#################################################################################################
+###############################################################################
 
-function dofile {
+function AERIAL_NASA_UAVSAR_dofile {
     
     myline=$1
     zipfile="${myline##*/}"
@@ -110,239 +128,13 @@ EOF
 
         done
 
-        rm -rf "${tmpdir}/"
+        rm -rf "${tmpdir}"
 
     fi
 
     echo >&3
 }
 
-
-#################################################################################################
-# function to get the extent of the ds
-#################################################################################################
-
-function getextent {
-    ts="$1"
-
-    ogrinfo -so -al "${outdir}/${dsname}${ts}.shp" |\
-     grep Extent: |\
-     sed -e 's/) - (/ /' -e 's/Extent: (//' -e 's/,//' -e 's/)//'
-}
-
-#################################################################################################
-# function to write out a map file
-#################################################################################################
-
-function writemap {
-    ts="$1"
-    extent="$2"
-
-    cat > "${outdir}/${dsname}${ts}.map" << EOF
-
-  LAYER
-    NAME '${dsname}_${ts}_nominmax'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_nominmax'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-
-  END
-
- LAYER
-    NAME '${dsname}_${ts}_hires'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_hires'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    GROUP '${dsname}_${ts}'
-    MAXSCALEDENOM 50000
-
-  END
-
- LAYER
-    NAME '${dsname}_${ts}_ovr'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_ovr'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    DATA '${outdir}/${ts}/overview.tif'
-    GROUP '${dsname}_${ts}'
-    MINSCALEDENOM 50000
-
-  END
-
-EOF
-
-}
-
-#################################################################################################
-# function to add an include line in the main mapfile
-#################################################################################################
-
-function addinclude {
-    ts="$1"
-
-    if ! grep $mapfile -e "${outdir}/${dsname}${ts}.map" > /dev/null
-    then
-        linenum=$(cat "$mapfile" | grep -n -e "^[ ]*END[ ]*$" | tail -n 1 | cut -d ":" -f 1)
-
-        ed -s "$mapfile" << EOF
-${linenum}-1a
-  INCLUDE '${outdir}/${dsname}${ts}.map'
-.
-w
-EOF
-    fi
-
-}
-
-#################################################################################################
-# functiom to create a overview from the dataset
-#################################################################################################
-
-function makeoverview {
-    ts="$1"
-    extent="$2"
-
-    ${mapserverpath}/shp2img -m "$mapfile" -l "${dsname}_${ts}_nominmax" \
-     -o "${outdir}/${ts}/overview.tif" -s 12000 8000 -i image/tiff -e $extent
-
-}
-
-#################################################################################################
-# main
-#################################################################################################
-
-function main {
-
-    ##### make sure the base dirs exsist #####
-
-    if ! [ -d "$indir" ]
-    then
-        mkdir -p "$indir"
-    fi
-
-    if ! [ -d "$outdir" ]
-    then
-        mkdir -p "$outdir"
-    fi
-
-    ##### cd to the in dir #####
-
-    cd "$indir"
-
-    #open a fd to a named pipe
-
-    mkfifo pipe; exec 3<>pipe
-
-    host="$(hostname)"
-    mirrorfile="$host.mirror.lftp"
-
-    ##### get a list of new files #####
-
-    lftp "$baseurl" -e "mirror --script=${mirrorfile} -I *.kmz ; exit"
-
-    ##### loop over the list #####
-
-    while read line ;
-    do
-
-        if echo "$line" | grep -e "^mkdir" > /dev/null
-        then
-            lftp -e "$line ; exit"
-            continue
-        fi
-
-        if [ $doing -lt $limit ]
-        then
-        	dofile "$line" &
-         	((doing +=1))
-        else
-            read <&3
-            ((doing -=1))
-        	dofile "$line" &
-         	((doing +=1))
-        fi
-
-    done < "${mirrorfile}"
-
-    wait
-
- ##### loop over each date of data we got #####
-
-    grep "${mirrorfile}" -e "^get" |\
-     sed -r 's:.*/[a-zA-Z0-9]{6}_[0-9]{5}_[0-9]{5}_[0-9]{3}_([0-9]{6})_.*:20\1:' |\
-     sort |\
-     uniq |\
-     while read ts
-     do
-
-        for t in "${outdir}/${ts}/"*
-        do
-            if [[ "$t" != "${outdir}/${ts}/overview.tif" ]]
-            then
-                gdaltindex "${outdir}/${dsname}${ts}.shp"  "$t"
-            fi
-        done
-
-        ##### get the extent of the ds #####
-        
-        extent=$(getextent "$ts")
-
-        ##### rewrite the map file #####
-
-        writemap "$ts" "$extent"
-
-        ##### add an include line in the main mapfile #####
-        
-        addinclude "$ts"
-
-        ##### create a single file for larger area overviews #####
-        
-        makeoverview "$ts" "$extent"
-
-     done 
-
-}
 
 
 main

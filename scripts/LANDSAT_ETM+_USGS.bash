@@ -94,7 +94,7 @@ function LANDSAT_ETM_USGS_dofile {
         mv "${tmpdir}/${tifs}.tif" "$outdir/${ts}/${tifs}.tif"
 	    mv "${tmpdir}/${zipfile}" "$indir"
 	    
-	    rm -rf "${tmpdir}/"
+	    rm -rf "${tmpdir}"
 
         gdaltindex "${outdir}/${dsname}${ts}.shp" "$outdir/${ts}/${tifs}.tif"
 

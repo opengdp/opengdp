@@ -64,6 +64,7 @@ function ASTER_dofile {
     tifs="${zipfile%_*}"
 
     dir="${zipfile:13:4}${zipfile:17:4}"
+    ts="${zipfile:17:4}${zipfile:13:4}"
 
     if echo "$myline" | grep -e "^get" > /dev/null
     then
@@ -87,7 +88,7 @@ function ASTER_dofile {
       
         mv "${tmpdir}/${tifs}.tif" "$outdir/${ts}/${tifs}.tif"
 	    
-	    rm -rf "${tmpdir}/"
+	    rm -rf "${tmpdir}"
 
         gdaltindex "${outdir}/${dsname}${ts}.shp" "$outdir/${ts}/${tifs}.tif"
 

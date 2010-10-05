@@ -87,7 +87,7 @@ function LANDSAT_TM_USGS_dofile {
         mv "${tmpdir}/${tifs}.tif" "$outdir/${ts}/${tifs}.tif"
 	    mv "${tmpdir}/${zipfile}" "$indir"
 	    
-	    rm -rf "${tmpdir}/"
+	    rm -rf "${tmpdir}"
 
         gdaltindex "${outdir}/${dsname}${ts}.shp" "$outdir/${ts}/${tifs}.tif"
 

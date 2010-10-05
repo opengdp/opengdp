@@ -60,7 +60,7 @@ function dofile {
         mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}"
         mv "${tmpdir}/${zipfile}" "$indir"
 
-        rm -rf "${tmpdir}/"
+        rm -rf "${tmpdir}"
 
         gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${tif}"
         
@@ -70,6 +70,7 @@ function dofile {
 
     echo >&3
 }
+
 
 ###############################################################################
 # function to get the extent of the ds
