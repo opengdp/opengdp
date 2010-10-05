@@ -26,13 +26,24 @@ indir="${basedir}/source/${dsname}/"
 outdir="${basedir}/done/${dsname}/"
 mapfile="${basedir}/deephorizon.map"
 
+tmp=/mnt/ram2/
+
+mapserverpath="/usr/local/src/mapserver/mapserver"
+
+##### setup proccess management #####
+
+((limit=1))
+
+source dwh-generic.bash
+
+dofunc="AERIAL_NASA_AVIRIS_dofile"
+
 #################################################################################################
 # function to proccess a file
 #################################################################################################
 
-function dofile {
+function AERIAL_NASA_AVIRIS_dofile {
     
-
     myline=$1
     zipfile="${myline##*/}"
 
@@ -40,240 +51,46 @@ function dofile {
 
     ts="${zipfile:25:8}"
 
-    lftp -e "$myline ; exit"
-
+    
     if echo "$myline" | grep -e "^get" > /dev/null
     then
+
+        tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+  
+        lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
 
         if ! [ -d "$outdir/${ts}" ]
         then
             mkdir -p "$outdir/${ts}"
         fi
 
-        tmpdir=$(mktemp -d -p /tmp "${dsname}XXXXXXXXXX")
-        unzip "$zipfile" "$tif" -d "$tmpdir"
+        unzip "${tmpdir}/${zipfile}" "$tif" -d "$tmpdir"
+
+        gdal_translate -ot byte -a_nodata 0 -scale 0 32767 "${tmpdir}/${tif}" "${tmpdir}/translated_${tif}"
         
-        gdal_translate -ot Byte -scale "${tmpdir}/${tif}" "${tmpdir}/byte_${tif}"
+        if ! gdalinfo "${tmpdir}/translated_${tif}" | grep 'AUTHORITY[[]"EPSG","4326"[]][]]'
+        then
+            gdalwarp -t_srs EPSG:4326 "${tmpdir}/translated_${tif}" "${tmpdir}/warped_${tif}"
+            nearblack -co TILED=YES -of GTiff "${tmpdir}/warped_${tif}" -o "${tmpdir}/nearblack_${tif}"
+        else
+            nearblack -co TILED=YES -of GTiff "${tmpdir}/translated_${tif}" -o "${tmpdir}/nearblack_${tif}"
+        fi
 
-        gdaladdo -r average "${tmpdir}/byte_${tif}" 2 4 8 16 32
+        gdaladdo -r average "${tmpdir}/nearblack_${tif}" 2 4 8 16 32
+        
+        mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}"
+        mv "${tmpdir}/${zipfile}" "$indir"
 
-        mv "${tmpdir}/byte_${tif}" "$outdir/${ts}/${tif}"
+        rm -rf "${tmpdir}"
 
         gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${tif}"
+        
+        
 
     fi
 
+    echo >&3
 }
 
-#################################################################################################
-# function to get the extent of the ds
-#################################################################################################
-
-function getextent {
-    ts="$1"
-
-    ogrinfo -so -al "${outdir}/${dsname}${ts}.shp" |\
-     grep Extent: |\
-     sed -e 's/) - (/ /' -e 's/Extent: (//' -e 's/,//' -e 's/)//'
-}
-
-#################################################################################################
-# function to write out a map file
-#################################################################################################
-
-function writemap {
-    ts="$1"
-    extent="$2"
-
-    cat > "${outdir}/${dsname}${ts}.map" << EOF
-
-  LAYER
-    NAME '${dsname}_${ts}_nominmax'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_nominmax'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    PROCESSING "SCALE=AUTO"
-
-  END
-
- LAYER
-    NAME '${dsname}_${ts}_hires'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_hires'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    GROUP '${dsname}_${ts}'
-    MAXSCALEDENOM 50000
-    PROCESSING "SCALE=AUTO"
-
-  END
-
- LAYER
-    NAME '${dsname}_${ts}_ovr'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        '${dsname}_${ts}_ovr'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
-    END
-    OFFSITE 0 0 0
-    DATA '${outdir}/${ts}/overview.tif'
-    GROUP '${dsname}_${ts}'
-    MINSCALEDENOM 50000
-    PROCESSING "SCALE=AUTO"
-
-  END
-
-EOF
-
-}
-
-#################################################################################################
-# function to add an include line in the main mapfile
-#################################################################################################
-
-function addinclude {
-    ts="$1"
-
-    if ! grep $mapfile -e "${outdir}/${dsname}${ts}.map" > /dev/null
-    then
-        linenum=$(cat "$mapfile" | grep -n -e "^[ ]*END[ ]*$" | tail -n 1 | cut -d ":" -f 1)
-
-        ed -s "$mapfile" << EOF
-${linenum}-1a
-  INCLUDE '${outdir}/${dsname}${ts}.map'
-.
-w
-EOF
-    fi
-
-}
-
-#################################################################################################
-# functiom to create a overview from the dataset
-#################################################################################################
-
-function makeoverview {
-    ts="$1"
-    extent="$2"
-
-    /usr/local/src/mapserver-trunk/mapserver/shp2img -m "$mapfile" -l "${dsname}_${ts}_nominmax" \
-     -o "${outdir}/${ts}/overview.tif" -s 12000 8000 -i image/tiff -e $extent
-
-}
-
-
-#################################################################################################
-# main
-#################################################################################################
-
-##### make sure the base dirs exsist #####
-
-if ! [ -d "$indir" ]
-then
-    mkdir -p "$indir"
-fi
-
-if ! [ -d "$outdir" ]
-then
-    mkdir -p "$outdir"
-fi
-
-##### cd to the in dir #####
-
-cd "$indir"
-
-##### setup proccess management #####
-
-((doing=0))
-((limit=7))
-
-##### get a list of new files #####
-
-lftp "$baseurl" -e "mirror --script=mirror.lftp ; exit"
-
-##### loop over the list #####
-
-cat mirror.lftp |\
- while read line ;
- do
-    if [ $doing -lt $limit ]
-    then
-    	dofile "$line" &
-     	((doing +=1))
-    else
-        wait
-        ((doing=0))
-        dofile "$line" &
-     	((doing +=1))
-    fi
-
- done
-
-wait
-
-##### loop over each date of data we got #####
-
-grep mirror.lftp -e "^get" |\
- sed 's:.*/AE00N[0-9]\{2\}_[a-zA-Z0-9]\{10\}_[0-9]\{6\}\([0-9]\{8\}\).*:\1:' |\
- sort |\
- uniq |\
- while read ts
- do
-    echo $ts
-
-    ##### get the extent of the ds #####
-    
-    extent=$(getextent "$ts")
-
-    ##### rewrite the map file #####
-
-    writemap "$ts" "$extent"
-
-    ##### add an include line in the main mapfile #####
-    
-    addinclude "$ts"
-
-    ##### create a single file for larger area overviews #####
-    
-    makeoverview "$ts" "$extent"
-    
-    echo $ts again
- done 
+main
 
