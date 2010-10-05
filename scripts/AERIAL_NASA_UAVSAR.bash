@@ -120,7 +120,7 @@ $n
 EOF
             gdal_translate -ot Byte -scale -b 1 -b 2 -b 3 -of GTiff -co "TILED=YES" "${tmpdir}/$img" "${tmpdir}/${zipbase}_${tilename}.tif"
 
-            gdaladdo -r average "${tmpdir}/${zipbase}_${tilename}.tif" 2 4 8 16 32
+            gdaladdo -r average "${tmpdir}/${zipbase}_${tilename}.tif" 2 4 8 16
         
             mv "${tmpdir}/${zipbase}_${tilename}.tif" "$outdir/${ts}/${zipbase}_${tilename}.tif"
             
