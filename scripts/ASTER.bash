@@ -19,105 +19,86 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/ASTER/"
+dsname="ASTER"
+baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/SATELLITE/ASTER/"
 basedir="/storage/data/deephorizon/"
-indir="${basedir}/source/ASTER/"
-outdir="${basedir}/done/ASTER/"
+indir="${basedir}/source/${dsname}/"
+outdir="${basedir}/done/${dsname}/"
+mapfile="${basedir}/deephorizon.map"
 
-if ! [ -d "$indir" ]
-then
-    mkdir -p "$indir"
-fi
+tmp=/mnt/ram2/
 
-if ! [ -d "$outdir" ]
-then
-    mkdir -p "$outdir"
-fi
+mapserverpath="/usr/local/src/mapserver/mapserver"
 
+##### setup proccess management #####
 
-cd "$indir"
+((limit=1))
 
-((doing=0))
-((limit=7))
+source dwh-generic.bash
 
-function dofile {
-    ((doing +=1))
+dofunc="ASTER_dofile"
 
+doovr="no"
+
+fetchpattern="AST_L1AE*tif.zip"
+
+datefunc="ASTER_dodate"
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function ASTER_dodate {
+    sed 's:.*/AST_L1AE_[0-9]*_\([0-9]\{4\}\)\([0-9]\{4\}\)[0-9]\{6\}_.*:\2\1:'
+}
+
+#################################################################################################
+# function to proccess a file
+#################################################################################################
+
+function ASTER_dofile {
+    
     myline=$1
     zipfile="${myline##*/}"
 
-    tif="${zipfile%.*}"
-    tif="${tif%_*}_b1.tif"
+    tifs="${zipfile%_*}"
 
-    lftp -e "$myline ; exit"
+    dir="${zipfile:13:4}${zipfile:17:4}"
 
-    if ! unzip "$zipfile" "$tif"
+    if echo "$myline" | grep -e "^get" > /dev/null
     then
-        return
+
+        tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+        
+        lftp -e "$myline ; exit"
+        
+	    if ! [ -d "$outdir/${ts}" ]
+        then
+            mkdir -p "$outdir/${ts}"
+        fi
+
+	    unzip "${indir}/${dir}/${zipfile}" "${tifs}_b*.tif" -d "$tmpdir"
+
+        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${tifs}.vrt" "${tmpdir}/${tifs}_b3N.tif" "${tmpdir}/${tifs}_b2.tif" "${tmpdir}/${tifs}_b1.tif"
+        
+        gdalwarp -t_srs EPSG:4326 "${tmpdir}/${tifs}.vrt" "${tmpdir}/${tifs}.tif"
+
+        gdaladdo -r average "${tmpdir}/${tifs}.tif" 2 4 8 16 32
+      
+        mv "${tmpdir}/${tifs}.tif" "$outdir/${ts}/${tifs}.tif"
+	    
+	    rm -rf "${tmpdir}/"
+
+        gdaltindex "${outdir}/${dsname}${ts}.shp" "$outdir/${ts}/${tifs}.tif"
+
     fi
-
-    gdaladdo -r average "$tif" 2 4 8 16 32
-
-    mv "$tif" "$outdir"
-
-    gdaltindex "${outdir}/ASTER.shp" "${outdir}/${tif}"
-
-    ((doing -= 1))
+    echo >&3
 }
 
-##### make the map file #####
-
-cat > "${outdir}/ASTER.map" << EOF
- LAYER
-    NAME 'ASTER'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-    PROJECTION
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
-    METADATA
-      'wms_title'        'ASTER'
-      'wms_srs'          'EPSG:4326'
-      'wms_extent'	 '-100.0  17.0 -74.0  33.0'
-    END
-    OFFSITE 0 0 0
-    TILEINDEX 'done/ASTER/ASTER.shp'
-  END
-
-EOF
-
-##### get a list of new files #####
-
-lftp "$baseurl" -e "mirror -I AST_L1BE_003_*_tif.zip --script=mirror.lftp ; exit"
-
-##### loop over the list #####
-
-cat mirror.lftp |\
- while read line ;
- do
-    
-    if [ $doing -lt $limit ]
-    then
-        dofile "$line" &
-        ((doing +=1))
-    else
-        wait
-        ((doing=0))
-        dofile "$line" &
-        ((doing +=1))
-    fi
-
- done
+main
 
 
 
-    
-    
 
 
 
