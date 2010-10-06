@@ -19,19 +19,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-unset project
-unset path
-unset edcftp
-unset mapfile
-unset tmp
-unset mapserverpath
-unset limit
-unset cgibindir
-unset cgibin
-
-echo
 
 ##### name of project #####
+
+echo
+unset project
 
 while ! [ -n "$project" ]
 do
@@ -98,18 +90,20 @@ do
     
 done
 
-echo
-
 ##### edcftp base url #####
+
+unset edcftp
+echo
 
 while ! [ -n "$edcftp" ]
 do
     read -e -i "http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/" -p "enter the edcftp base url: " edcftp
 done
 
-echo
-
 ##### mapfile #####
+
+unset mapfile
+echo
 
 while ! [ -n "$mapfile" ]
 do
@@ -142,9 +136,10 @@ do
     break;
 done
 
-echo
-
 ##### mapserver path #####
+
+unset mapserverpath
+echo
 
 while ! [ -n "$mapserverpath" ]
 do
@@ -155,13 +150,16 @@ echo
 
 ##### limit #####
 
+unset limit
+echo
+
 regex="^[0-9]+$"
 while ! [[ $limit =~ $regex ]]
 do
     read -e -i "12" -p "enter the max number of proc to spawn: " limit
 done
 
-##### cgibin #####
+##### cgibin  dir #####
 
 while true
 do
@@ -181,6 +179,7 @@ do
     break
 done
 
+##### cgi bin script #####
 
 while true
 do
@@ -205,9 +204,69 @@ do
     break;
 done
 
-echo
+##### html  dir #####
+
+while true
+do
+    echo
+    unset cgibindir
+    while ! [ -n "$htmldir" ]
+    do
+        read -e -i "/var/www/html/" -p "enter the path to the html dir to create the project in: " htmldir
+    done
+    
+
+    if ! [ -d "$htmldir" ]
+    then
+        echo "ERROR: $path is not a dir"
+        continue;
+    fi
+    
+    if [ -e "$htmldir/${project}" ] && ! [ -d "$htmldir/${project}/" ]
+    then
+        echo "ERROR: $htmldir exists and is not a dir"
+        continue;
+    fi
+    
+    if [ -d "$htmldir/${project}/" ]
+    then
+        unset t
+        read -e -p "WARNING: $htmldir/${project} already exists use anyway? yes/no : " t
+        if [[ "$t" = "yes" ]]
+        then
+            break;
+        fi
+        continue;
+    fi
+    
+    if ! [ -w "$htmldir" ]
+    then
+        unset t
+        read -e -p "WARNING $htmldir is not writable use sudo? yes/no : " t
+        if [[ "$t" = "yes" ]]
+        then
+            uid=$(id -u)
+            gid=$(id -g)
+            if sudo bash -c "mkdir \"$htmldir/${project}\" && chown ${uid}:${gid} \"$htmldir/${project}\""
+            then
+                break;
+            fi
+        fi
+        continue;
+    fi
+    
+    if mkdir "$htmldir/${project}"
+    then
+        break
+    fi
+    
+done
+
 
 ##### url base #####
+
+unset urlbase
+echo
 
 while ! [ -n "$urlbase" ]
 do
@@ -218,10 +277,14 @@ echo
 
 ##### url cgi-bin dir #####
 
+unset urlcgibindir
+echo
+
 while ! [ -n "$urlcgibindir" ]
 do
     read -e -i "$urlbase/cgi-bin" -p "enter the cgi bin dir url: " urlcgibindir
 done
+
 
 ##### some compound vars #####
 
@@ -229,7 +292,7 @@ basedir="${path}/${project}"
 scriptdir="${path}/${project}/scripts/"
 mapfile="$basedir/$mapfile"
 urlcgibin="$urlcgibindir/$cgibin"
-
+htmlbase="$htmldir/$project"
 
 ##### print the stuff #####
 
@@ -247,6 +310,8 @@ echo "tmp:              $tmp"
 echo "limit:            $limit"
 echo "cgibindir:        $cgibindir"
 echo "cgibin:           $cgibin"
+echo "htmldir:          $htmldir"
+echo "htmlbase:         $htmlbase"
 echo "urlbase:          $urlbase"
 echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
@@ -274,6 +339,8 @@ function do_subst {
         -e "s,[@]limit[@],$limit,g" \
         -e "s,[@]cgibindir[@],$cgibindir,g" \
         -e "s,[@]cgibin[@],$cgibin,g" \
+        -e "s,[@]htmldir[@],$htmldir,g" \
+        -e "s,[@]htmlbase[@],$htmlbase,g" \
         -e "s,[@]urlbase[@],$urlbase,g" \
         -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
         -e "s,[@]urlcgibin[@],$urlcgibin,g"
@@ -318,4 +385,7 @@ echo "Installing cgi-bin"
 
 sudo bash -c "do_subst < \"cgi-bin/dwh\" > \"$cgibindir/${cgibin}\" && chown +x \"$cgibindir/${cgibin}\""
 
+##### html and js #####
+
+do_subst < "map/dwh.map" > "$mapfile"
 
