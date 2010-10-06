@@ -358,7 +358,7 @@ function do_subst {
         -e "s,[@]edcftp[@],$edcftp,g" \
         -e "s,[@]mapfile[@],$mapfile,g" \
         -e "s,[@]mapserverpath[@],$mapserverpath,g" \
-        -e "s,[@]tmp[@],$tmp,g" \
+        -e "s,[@]tmp[@],$tmpdir,g" \
         -e "s,[@]limit[@],$limit,g" \
         -e "s,[@]cgibindir[@],$cgibindir,g" \
         -e "s,[@]cgibin[@],$cgibin,g" \
