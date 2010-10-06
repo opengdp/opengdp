@@ -138,21 +138,21 @@ error=""
 
 while true
 do
-    unset tmp
+    unset tmpdir
     while ! [ -n "$tmp" ]
     do
-        tmp=$(inputbox "${error}enter the path to the temp dir: " "/mnt/ram2/")
+        tmpdir=$(inputbox "${error}enter the path to the temp dir: " "/mnt/ram2/")
     done
     
-    if ! [ -d "$tmp" ]
+    if ! [ -d "$tmpdir" ]
     then
-        error="ERROR: $tmp is not a dir\n"
+        error="ERROR: $tmpdir is not a dir\n"
         continue;
     fi
     
-    if ! [ -w "$tmp" ]
+    if ! [ -w "$tmpdir" ]
     then
-        error="ERROR: $tmp is not writeable\n"
+        error="ERROR: $tmpdir is not writeable\n"
         continue;
     fi
 
@@ -330,7 +330,7 @@ echo "scriptdir:        $scriptdir"
 echo "edcftp:           $edcftp"
 echo "mapfile:          $mapfile"
 echo "mapserverpath:    $mapserverpath"
-echo "tmp:              $tmp"
+echo "tmpdir:           $tmpdir"
 echo "limit:            $limit"
 echo "cgibindir:        $cgibindir"
 echo "cgibin:           $cgibin"

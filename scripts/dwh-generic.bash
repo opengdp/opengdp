@@ -544,8 +544,8 @@ function main {
         exit
     fi
     
-    : ${tmp=/tmp/}
-
+    if ! [ -n "$tmp" ] ; then tmp="/tmp/" ; fi
+    
     if ! [ -d "$tmp" ]
     then
         echo "ERROR: no such dir $tmp"
@@ -576,7 +576,7 @@ function main {
         exit
     fi
     
-    : ${mapserverpath=/usr/local/src/mapserver/mapserver/}
+    if ! [ -n "$mapserverpath" ] ; then mapserverpath="/usr/local/src/mapserver/mapserver/" ; fi
     
     if ! [ -d "$mapserverpath" ]
     then
@@ -590,11 +590,12 @@ function main {
         exit
     fi
     
-    : ${doovr=yes}
+    if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
+
     
     ##### setup proccess management #####
     
-    : ${limit=4}
+    if ! [ -n "$limit" ] ; then limit="4" ; fi
     
     ##### cd to the in dir #####
 
@@ -606,7 +607,8 @@ function main {
     
     ##### get the list of new files to fetch #####
     
-    : ${fetchpattern=\*}
+    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
+
     if ! getlist "$mirrorfile" "$fetchpattern"
     then
         exit
@@ -614,7 +616,8 @@ function main {
     
     ##### loop over the commands in the mirrorfile #####
     
-    : ${dofunc-dofile}
+    if ! [ -n "$dofunc" ] ; then dofunc="dofile" ; fi
+    
     if ! mainloop "$mirrorfile" "$dofunc"
     then
         exit
@@ -622,7 +625,8 @@ function main {
 
     ##### finish up, make overvies etc... #####
     
-    : ${datefunc-dodate}
+    if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
+
     if ! finishup "$mirrorfile" "$datefunc"
     then
         exit
