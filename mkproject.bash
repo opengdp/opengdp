@@ -86,7 +86,7 @@ do
         then
             uid=$(id -u)
             gid=$(id -g)
-            if sudo bash -c "mkdir \"${path}/${project}\" && chown ${uid}:${gid} \"${path}/${project}\""
+            if sudo bash -c "$(printf 'mkdir %q' "${path}/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "${path}/${project}") "
             then
                 break;
             fi
@@ -258,7 +258,7 @@ do
         then
             uid=$(id -u)
             gid=$(id -g)
-            if sudo bash -c "mkdir \"$htmldir/${project}\" && chown ${uid}:${gid} \"$htmldir/${project}\""
+            if sudo bash -c "$(printf 'mkdir %q' "$htmldir/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "$htmldir/${project}")"
             then
                 break;
             fi
@@ -365,11 +365,11 @@ function do_subst {
         -e "s,[@]htmlbase[@],$htmlbase,g" \
         -e "s,[@]urlbase[@],$urlbase,g" \
         -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
-        -e "s,[@]urlcgibin[@],$urlcgibin,g"
+        -e "s,[@]urlcgibin[@],$urlcgibin,g" \
         -e "s,[@]urlhtmldir[@],$urlhtmldir,g"
        
 }
-exit
+
 
 ##### scripts #####
 
@@ -386,7 +386,7 @@ E01.bash
 ASTER.bash
 dwh-generic.bash"
 
-if ! -d "$scriptdir" ]
+if [ ! -d "$scriptdir" ]
 then
     mkdir "$scriptdir"
 fi
@@ -405,9 +405,13 @@ do_subst < "map/dwh.map" > "$mapfile"
 
 ##### cgi #####
 
-echo "Installing cgi-bin"
+tmp=$(mktemp -t "${dwh}XXXXXXXXXX")
+do_subst < "cgi-bin/dwh" >> "$tmp"
 
-sudo bash -c "do_subst < \"cgi-bin/dwh\" > \"$cgibindir/${cgibin}\" && chown +x \"$cgibindir/${cgibin}\""
+sudo bash -c "$(printf 'mv %q %q' "$tmp" "$cgibindir/${cgibin}") && $(printf 'chmod +x %q' "$cgibindir/${cgibin}")"
+
+rm -f "$tmp"
+
 
 ##### html and js #####
 
