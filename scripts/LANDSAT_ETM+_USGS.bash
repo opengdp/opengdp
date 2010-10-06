@@ -20,22 +20,21 @@
 # DEALINGS IN THE SOFTWARE.
 
 dsname="LANDSAT_ETM_USGS"
-baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/LANDSAT_ETM+_USGS/"
-baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201008_Hurricane_Earl/data/LANDSAT_ETM+_USGS/"
-basedir="/storage/data/deephorizon/"
+baseurl="@edcftp@/LANDSAT_ETM+_USGS/"
+basedir="@basedir@"
 indir="${basedir}/source/${dsname}/"
 outdir="${basedir}/done/${dsname}/"
-mapfile="${basedir}/deephorizon.map"
+mapfile="@mapfile@"
 
-tmp=/mnt/ram2/
+tmp="@tmp@"
 
-mapserverpath="/usr/local/src/mapserver/mapserver"
+mapserverpath="@mapserverpath@"
 
 ##### setup proccess management #####
 
-((limit=1))
+((limit=@limit@))
 
-source dwh-generic.bash
+source "@scriptdir@/dwh-generic.bash"
 
 dofunc="LANDSAT_ETM_USGS_dofile"
 

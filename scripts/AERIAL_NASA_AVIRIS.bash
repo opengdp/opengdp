@@ -20,27 +20,28 @@
 # DEALINGS IN THE SOFTWARE.
 
 dsname="AERIAL_NASA_AVIRIS"
-baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/AERIAL_NASA_AVIRIS/"
-basedir="/storage/data/deephorizon/"
+baseurl="@edcftp@/AERIAL_NASA_AVIRIS/"
+basedir="@basedir@"
 indir="${basedir}/source/${dsname}/"
 outdir="${basedir}/done/${dsname}/"
-mapfile="${basedir}/deephorizon.map"
+mapfile="@mapfile@"
 
-tmp=/mnt/ram2/
 
-mapserverpath="/usr/local/src/mapserver/mapserver"
+tmp="@tmp@"
+
+mapserverpath="@mapserverpath@"
 
 ##### setup proccess management #####
 
-((limit=1))
+((limit=@limit@))
 
-source dwh-generic.bash
+source "@scriptdir@/dwh-generic.bash"
 
 dofunc="AERIAL_NASA_AVIRIS_dofile"
 
-#################################################################################################
+###############################################################################
 # function to proccess a file
-#################################################################################################
+###############################################################################
 
 function AERIAL_NASA_AVIRIS_dofile {
     

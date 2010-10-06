@@ -19,22 +19,13 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-dsname="AERIAL_USACE"
-baseurl="@edcftp@/AERIAL_USACE/"
-basedir="@basedir@"
-indir="${basedir}/source/${dsname}/"
-outdir="${basedir}/done/${dsname}/"
-mapfile="@mapfile@"
-
-
-tmp="@tmp@"
 
 mapserverpath="@mapserverpath@"
 
-##### setup proccess management #####
+export GDAL_DISABLE_READDIR_ON_OPEN=YES
+export MS_MAPFILE="@mapfile@"
 
-((limit=@limit@))
+${mapserverpath}/mapserv
 
-source "@scriptdir@/dwh-generic.bash"
+exit 0
 
-main
