@@ -8,7 +8,7 @@ Ext.onReady(function() {
 *******************************************************************************/
  
   mapPanel = new GeoExt.MapPanel({
-    title: "Hurakan Weather",
+    title: "@fullproject@",
     //renderTo: "mappanel",
     border: true,
     region: "center",

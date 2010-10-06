@@ -23,6 +23,17 @@
 ##### name of project #####
 
 echo
+unset fullproject
+
+while ! [ -n "$fullproject" ]
+do
+    read -e -i "Deep Water Horizon" -p "enter the full project name: " fullproject
+done
+
+
+##### name of project #####
+
+echo
 unset project
 
 while ! [ -n "$project" ]
@@ -285,6 +296,15 @@ do
     read -e -i "$urlbase/cgi-bin" -p "enter the cgi bin dir url: " urlcgibindir
 done
 
+##### url html dir #####
+
+unset urlhtmldir
+echo
+
+while ! [ -n "$urlhtmldir" ]
+do
+    read -e -i "$urlbase/html/project$" -p "enter the html dir url: " urlhtmldir
+done
 
 ##### some compound vars #####
 
@@ -299,6 +319,7 @@ htmlbase="$htmldir/$project"
 echo
 echo
 echo "------------------------------------------------------------------------"
+echo "fullproject:      $fullproject"
 echo "project:          $project"
 echo "path:             $path"
 echo "basedir:          $basedir"
@@ -315,7 +336,7 @@ echo "htmlbase:         $htmlbase"
 echo "urlbase:          $urlbase"
 echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
-
+echo "urlhtmldir:       $urlhtmldir"
 echo "------------------------------------------------------------------------"
 
 
@@ -328,7 +349,8 @@ echo "------------------------------------------------------------------------"
 ###############################################################################
 
 function do_subst {
-    sed -e "s,[@]project[@],$project,g" \
+    sed -e "s,[@]fullproject[@],$fullproject,g" \
+        -e "s,[@]project[@],$project,g" \
         -e "s,[@]path[@],$path,g" \
         -e "s,[@]basedir[@],$basedir,g" \
         -e "s,[@]scriptdir[@],$scriptdir,g" \
@@ -344,6 +366,7 @@ function do_subst {
         -e "s,[@]urlbase[@],$urlbase,g" \
         -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
         -e "s,[@]urlcgibin[@],$urlcgibin,g"
+        -e "s,[@]urlhtmldir[@],$urlhtmldir,g"
        
 }
 exit
@@ -375,6 +398,7 @@ do
 done
 
 
+
 ##### map #####
 
 do_subst < "map/dwh.map" > "$mapfile"
@@ -387,5 +411,8 @@ sudo bash -c "do_subst < \"cgi-bin/dwh\" > \"$cgibindir/${cgibin}\" && chown +x 
 
 ##### html and js #####
 
-do_subst < "map/dwh.map" > "$mapfile"
+do_subst < "html/index.html" > "$htmlbase/index.html"
+do_subst < "html/setup.js" > "$htmlbase/setup.js"
+do_subst < "html/google.js" > "$htmlbase/google.js"
+do_subst < "html/finish.js" > "$htmlbase/finish.js"
 

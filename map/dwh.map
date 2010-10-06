@@ -83,7 +83,7 @@ MAP
 
     # WMS server settings
     METADATA
-      'wms_title'           '@project@'
+      'wms_title'           '@fullproject@'
       'wms_onlineresource'  '@urlcgibin@?SERVICE=WMS'
       'wms_srs'             'EPSG:900913 EPSG:4326'
     END
