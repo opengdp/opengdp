@@ -60,7 +60,7 @@ do
         echo "ERROR: $path is not a dir"
         continue;
     fi
-    echo "test/${path}/${project}/for/echo"
+    
     if [ -e "${path}/${project}" ] && ! [ -d "${path}/${project}/" ]
     then
         echo "ERROR: $path exists and is not a dir"
@@ -220,7 +220,7 @@ done
 while true
 do
     echo
-    unset cgibindir
+    unset htmldir
     while ! [ -n "$htmldir" ]
     do
         read -e -i "/var/www/html/" -p "enter the path to the html dir to create the project in: " htmldir
@@ -229,7 +229,7 @@ do
 
     if ! [ -d "$htmldir" ]
     then
-        echo "ERROR: $path is not a dir"
+        echo "ERROR: $htmldir is not a dir"
         continue;
     fi
     
@@ -303,7 +303,7 @@ echo
 
 while ! [ -n "$urlhtmldir" ]
 do
-    read -e -i "$urlbase/html/project$" -p "enter the html dir url: " urlhtmldir
+    read -e -i "$urlbase/html/$project" -p "enter the html dir url: " urlhtmldir
 done
 
 ##### some compound vars #####
