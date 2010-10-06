@@ -570,7 +570,7 @@ function main {
         exit
     fi
 
-    if ! [ -w "$tmp" ]
+    if ! [ -w "$mapfile" ]
     then
         echo "ERROR: no write access to $mapfile"
         exit
