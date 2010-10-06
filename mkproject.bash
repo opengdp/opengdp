@@ -19,26 +19,38 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+if ! which dialog
+then
+    echo "this script requires the dialog utility"
+    exit 1
+fi
+
+function inputbox {
+    echo $(dialog --clear --inputbox "$1" 12 80 "$2" 2>&1 >/dev/tty)
+}
+
+function yesnobox {
+    
+    dialog --clear --yesno "$1" 12 80  2>&1 >/dev/tty
+}
 
 ##### name of project #####
 
-echo
 unset fullproject
 
 while ! [ -n "$fullproject" ]
 do
-    read -e -i "Deep Water Horizon" -p "enter the full project name: " fullproject
+    fullproject="$(inputbox "enter the full project name: " "Deep Water Horizon")"
 done
 
 
 ##### name of project #####
 
-echo
 unset project
 
 while ! [ -n "$project" ]
 do
-    read -e -i "deephorizon" -p "enter the project name: " project
+    project="$(inputbox "enter the project name: " "deephorizon")"
 done
 
 project=$(echo "$project" | sed -r 's/[ \t]+/_/g')
@@ -46,32 +58,31 @@ project=$(echo "$project" | sed -r 's/[ \t]+/_/g')
     
 ##### project creation path #####
 
+error=""
+
 while true
 do
-    echo
     unset path
     while ! [ -n "$path" ]
     do
-        read -e -i "/storage/data/" -p "enter the path to create the project in : " path
+        path="$(inputbox "${error}enter the path to create the project in : " "/storage/data/")"
     done
 
     if ! [ -d "$path" ]
     then
-        echo "ERROR: $path is not a dir"
+        error="ERROR: $path is not a dir\n"
         continue;
     fi
     
     if [ -e "${path}/${project}" ] && ! [ -d "${path}/${project}/" ]
     then
-        echo "ERROR: $path exists and is not a dir"
+        error="ERROR: $path exists and is not a dir\n"
         continue;
     fi
     
     if [ -d "${path}/${project}/" ]
     then
-        unset t
-        read -e -p "WARNING: ${path}/${project} already exists use anyway? yes/no : " t
-        if [[ "$t" = "yes" ]]
+        if yesnobox "WARNING: ${path}/${project} already exists use anyway? yes/no : "
         then
             break;
         fi
@@ -80,16 +91,16 @@ do
     
     if ! [ -w "$path" ]
     then
-        unset t
-        read -e -p "WARNING ${path} is not writable use sudo? yes/no : " t
-        if [[ "$t" = "yes" ]]
+        if yesnobox "WARNING ${path} is not writable use sudo? yes/no : "
         then
             uid=$(id -u)
             gid=$(id -g)
+            reset
             if sudo bash -c "$(printf 'mkdir %q' "${path}/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "${path}/${project}") "
             then
                 break;
             fi
+            error="mkdir failed\n"
         fi
         continue;
     fi
@@ -99,48 +110,49 @@ do
         break
     fi
     
+    error="mkdir failed\n"
+    
 done
 
 ##### edcftp base url #####
 
 unset edcftp
-echo
 
 while ! [ -n "$edcftp" ]
 do
-    read -e -i "http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/" -p "enter the edcftp base url: " edcftp
+    edcftp=$(inputbox "enter the edcftp base url: " "http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/")
 done
 
 ##### mapfile #####
 
 unset mapfile
-echo
 
 while ! [ -n "$mapfile" ]
 do
-    read -e -i "$project.map" -p "enter the name of the mapfile: " mapfile
+    mapfile=$(inputbox "enter the name of the mapfile: " "$project.map")
 done
 
 ##### temp dir #####
 
+error=""
+
 while true
 do
-    echo
     unset tmp
     while ! [ -n "$tmp" ]
     do
-        read -e -i "/mnt/ram2/" -p "enter the path to the temp dir: " tmp
+        tmp=$(inputbox "${error}enter the path to the temp dir: " "/mnt/ram2/")
     done
     
     if ! [ -d "$tmp" ]
     then
-        echo "ERROR: $tmp is not a dir"
+        error="ERROR: $tmp is not a dir\n"
         continue;
     fi
     
     if ! [ -w "$tmp" ]
     then
-        echo "ERROR: $tmp is not writeable"
+        error="ERROR: $tmp is not writeable\n"
         continue;
     fi
 
@@ -150,40 +162,36 @@ done
 ##### mapserver path #####
 
 unset mapserverpath
-echo
 
 while ! [ -n "$mapserverpath" ]
 do
-    read -e -i "/usr/local/src/mapserver/mapserver/" -p "enter the path to the mapserver binaries: " mapserverpath
+    mapserverpath=$(inputbox "enter the path to the mapserver binaries: " "/usr/local/src/mapserver/mapserver/")
 done
-
-echo
 
 ##### limit #####
 
 unset limit
-echo
 
 regex="^[0-9]+$"
 while ! [[ $limit =~ $regex ]]
 do
-    read -e -i "12" -p "enter the max number of proc to spawn: " limit
+    limit=$(inputbox "enter the max number of proc to spawn: " "12")
 done
 
 ##### cgibin  dir #####
 
+unset error
 while true
 do
-    echo
     unset cgibindir
     while ! [ -n "$cgibindir" ]
     do
-        read -e -i "/var/www/cgi-bin" -p "enter the path to the cgi-bin dir: " cgibindir
+        cgibindir=$(inputbox "${error}enter the path to the cgi-bin dir: " "/var/www/cgi-bin")
     done
     
         if ! [ -d "$cgibindir" ]
     then
-        echo "ERROR: $cgibindir is not a dir"
+        error="ERROR: $cgibindir is not a dir\n"
         continue;
     fi
     
@@ -194,18 +202,15 @@ done
 
 while true
 do
-    echo
     unset cgibin
     while ! [ -n "$cgibin" ]
     do
-        read -e -i "${project}" -p "enter the name of the cgi-bin script: " cgibin
+        cgibin=$(inputbox "enter the name of the cgi-bin script: " "${project}")
     done
     
     if [ -e "$cgibindir/${cgibin}" ]
     then
-        unset t
-        read -e -p "WARNING: "$cgibindir/${cgibin}" already exists use anyway? yes/no : " t
-        if [[ "$t" = "yes" ]]
+        if yesnobox "WARNING: "$cgibindir/${cgibin}" already exists use anyway? yes/no : "
         then
             break;
         fi
@@ -217,33 +222,32 @@ done
 
 ##### html  dir #####
 
+unset error
+
 while true
 do
-    echo
     unset htmldir
     while ! [ -n "$htmldir" ]
     do
-        read -e -i "/var/www/html/" -p "enter the path to the html dir to create the project in: " htmldir
+        htmldir=$(inputbox "${error}enter the path to the html dir to create the project in: " "/var/www/html/")
     done
     
 
     if ! [ -d "$htmldir" ]
     then
-        echo "ERROR: $htmldir is not a dir"
+        error="ERROR: $htmldir is not a dir\n"
         continue;
     fi
     
     if [ -e "$htmldir/${project}" ] && ! [ -d "$htmldir/${project}/" ]
     then
-        echo "ERROR: $htmldir exists and is not a dir"
+        error="ERROR: $htmldir exists and is not a dir\n"
         continue;
     fi
     
     if [ -d "$htmldir/${project}/" ]
     then
-        unset t
-        read -e -p "WARNING: $htmldir/${project} already exists use anyway? yes/no : " t
-        if [[ "$t" = "yes" ]]
+        if yesnobox "WARNING: $htmldir/${project} already exists use anyway? yes/no : "
         then
             break;
         fi
@@ -252,16 +256,16 @@ do
     
     if ! [ -w "$htmldir" ]
     then
-        unset t
-        read -e -p "WARNING $htmldir is not writable use sudo? yes/no : " t
-        if [[ "$t" = "yes" ]]
+        if yesnobox "WARNING $htmldir is not writable use sudo? yes/no : "
         then
             uid=$(id -u)
             gid=$(id -g)
+            reset
             if sudo bash -c "$(printf 'mkdir %q' "$htmldir/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "$htmldir/${project}")"
             then
                 break;
             fi
+            error="mkdir failed\n"
         fi
         continue;
     fi
@@ -271,39 +275,36 @@ do
         break
     fi
     
+    error="mkdir failed\n"
 done
 
 
 ##### url base #####
 
 unset urlbase
-echo
 
 while ! [ -n "$urlbase" ]
 do
-    read -e -i "http://$(hostname)" -p "enter the base url for the web server: " urlbase
+    urlbase=$(inputbox "enter the base url for the web server: " "http://$(hostname)")
 done
-
-echo
 
 ##### url cgi-bin dir #####
 
 unset urlcgibindir
-echo
 
 while ! [ -n "$urlcgibindir" ]
 do
-    read -e -i "$urlbase/cgi-bin" -p "enter the cgi bin dir url: " urlcgibindir
+    urlcgibindir=$(inputbox "enter the cgi bin dir url: " "$urlbase/cgi-bin")
 done
 
 ##### url html dir #####
 
 unset urlhtmldir
-echo
+
 
 while ! [ -n "$urlhtmldir" ]
 do
-    read -e -i "$urlbase/html/$project" -p "enter the html dir url: " urlhtmldir
+    urlhtmldir=$(inputbox "enter the html dir url" "$urlbase/html/$project")
 done
 
 ##### some compound vars #####
@@ -316,8 +317,10 @@ htmlbase="$htmldir/$project"
 
 ##### print the stuff #####
 
-echo
-echo
+
+
+
+dialog --clear --msgbox "$(
 echo "------------------------------------------------------------------------"
 echo "fullproject:      $fullproject"
 echo "project:          $project"
@@ -338,11 +341,9 @@ echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
 echo "urlhtmldir:       $urlhtmldir"
 echo "------------------------------------------------------------------------"
-
+)" 30 100
 
 					 
-
-
 
 ###############################################################################
 # function to sub the vars in a file
