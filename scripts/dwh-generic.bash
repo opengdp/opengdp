@@ -20,6 +20,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 urlcgibin="@urlcgibin@"
+htmlbase="@htmlbase@"
 
 ###############################################################################
 # function to proccess a file
@@ -401,7 +402,7 @@ EOF
 EOF
 
 
-) > ${webdir}/${dsname}.js
+) > ${htmlbase}/${dsname}.js
 
 }
 
