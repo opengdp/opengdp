@@ -404,6 +404,25 @@ EOF
 
 ) > ${htmlbase}/${dsname}.js
 
+    ##### make sure the js is loaded by index.html
+    
+    if ! grep "${htmlbase}/index.html" -e "${dsname}.js" > /dev/null
+    then
+        linenum=$(cat "$mapfile" |\
+                   grep -n -e "finish.js" |\
+                   tail -n 1 |\
+                   cut -d ":" -f 1
+                 )
+
+        ed -s "$mapfile" << EOF
+${linenum}-1a
+        <script type="text/javascript" src="${dsname}.js"></script>
+.
+w
+EOF
+    fi
+
+
 }
 
 ###############################################################################
