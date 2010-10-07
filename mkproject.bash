@@ -448,7 +448,7 @@ do_subst < "map/dwh.map" > "$mapfile"
 tmp=$(mktemp -t "${dwh}XXXXXXXXXX")
 do_subst < "cgi-bin/dwh" >> "$tmp"
 
-sudo bash -c "$(printf 'mv %q %q' "$tmp" "$cgibindir/${cgibin}") && $(printf 'chmod +x %q' "$cgibindir/${cgibin}")"
+sudo bash -c "$(printf 'mv %q %q' "$tmp" "$cgibindir/${cgibin}") && $(printf 'chmod a+rx %q' "$cgibindir/${cgibin}")"
 
 rm -f "$tmp"
 
