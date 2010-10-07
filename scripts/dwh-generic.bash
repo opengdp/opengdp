@@ -119,7 +119,7 @@ function writemap {
     END
     OFFSITE 0 0 0
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    PROCESSING "SCALE=AUTO"
+
 
   END
 
@@ -144,7 +144,7 @@ function writemap {
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     GROUP '${dsname}_${ts}'
     MAXSCALEDENOM 50000
-    PROCESSING "SCALE=AUTO"
+
 
   END
 
@@ -169,7 +169,7 @@ function writemap {
     DATA '${outdir}/${ts}/overview.tif'
     GROUP '${dsname}_${ts}'
     MINSCALEDENOM 50000
-    PROCESSING "SCALE=AUTO"
+
 
   END
 
@@ -197,7 +197,7 @@ EOF
     END
     OFFSITE 0 0 0
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    PROCESSING "SCALE=AUTO"
+
 
   END
 

@@ -46,7 +46,7 @@ Ext.onReady(function() {
           if(checked) {
             map.addLayer(node.layer);
           } else {
-            map.removeLayer(node.layer, TRUE);
+            map.removeLayer(node.layer, 'TRUE');
           }
         }
       }
