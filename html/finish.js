@@ -15,7 +15,7 @@ Ext.onReady(function() {
   }
 
   mapPanel = new GeoExt.MapPanel({
-    title: "@fullproject@"",
+    title: "@fullproject@",
     //renderTo: "mappanel",
     border: true,
     region: "center",
