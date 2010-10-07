@@ -19,6 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+urlcgibin="@urlcgibin@"
+
 ###############################################################################
 # function to proccess a file
 ###############################################################################
@@ -355,7 +357,7 @@ EOF
     
   ${layer} = new OpenLayers.Layer.WMS(
     "${layer}",
-    "$mscgi",
+    "$urlcgibin",
     {
       layers: '${layer}',
       format: 'image/png',
@@ -449,6 +451,9 @@ function finishup {
             
         fi
         
+        #####  write out a js file for geoext #####
+        
+        dogeoext
      done 
 }
 

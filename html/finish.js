@@ -3,22 +3,28 @@ var mapPanel;
 Ext.onReady(function() {
 
   
+ 
 /*******************************************************************************
   map panel
 *******************************************************************************/
+
+  map.addControl(new OpenLayers.Control.Permalink());
  
+  if (!map.getCenter() || map.getCenter().lon == 0) {
+    map.setCenter(new OpenLayers.LonLat(@mapcenter@), @mapzoom@);
+  }
+
   mapPanel = new GeoExt.MapPanel({
-    title: "@fullproject@",
+    title: "@fullproject@"",
     //renderTo: "mappanel",
     border: true,
     region: "center",
     map: map,
-    center: [-100, 35],
-    zoom: 4,
+    center: [map.getCenter().Lon, map.getCenter().Lat],
+    zoom: map.getZoom(),
+    extent: map.getExtent(),
     stateId: "map"
   });
-
-  map.addControl(new OpenLayers.Control.Permalink());
   
 /*******************************************************************************
   tree panel

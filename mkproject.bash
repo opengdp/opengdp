@@ -139,7 +139,7 @@ error=""
 while true
 do
     unset tmpdir
-    while ! [ -n "$tmp" ]
+    while ! [ -n "$tmpdir" ]
     do
         tmpdir=$(inputbox "${error}enter the path to the temp dir: " "/mnt/ram2/")
     done
@@ -307,6 +307,38 @@ do
     urlhtmldir=$(inputbox "enter the html dir url" "$urlbase/html/$project")
 done
 
+##### map center #####
+
+unset mapcenter
+unset error
+
+while true
+do
+    unset mc
+    while ! [ -n "$mc" ]
+    do
+        mc=$(inputbox "${error}enter the center coordinates of the map in lon lat format: " "-88 28")
+    done
+    
+    if ! read x y z < <(echo "$mc" | gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913)
+    then
+        error="unable to transform $mc\n"
+        continue
+    fi
+    
+    mapcenter="$x, $y"
+    break
+done
+
+##### mapzoom #####
+
+unset mapzoom
+
+while ! [ -n "$mapzoom" ]
+do
+    mapzoom=$(inputbox "enter the default map zoom level: " "5")
+done
+        
 ##### some compound vars #####
 
 basedir="${path}/${project}"
@@ -340,10 +372,15 @@ echo "urlbase:          $urlbase"
 echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
 echo "urlhtmldir:       $urlhtmldir"
+echo "mapcenter:        $mapcenter"
+echo "mapzoom:          $mapzoom"
 echo "------------------------------------------------------------------------"
 )" 30 100
 
 					 
+##### fix the , in mapcenter #####
+
+mapcenter="$(echo $mapcenter | sed 's/,/\\,/')"
 
 ###############################################################################
 # function to sub the vars in a file
@@ -367,7 +404,9 @@ function do_subst {
         -e "s,[@]urlbase[@],$urlbase,g" \
         -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
         -e "s,[@]urlcgibin[@],$urlcgibin,g" \
-        -e "s,[@]urlhtmldir[@],$urlhtmldir,g"
+        -e "s,[@]urlhtmldir[@],$urlhtmldir,g" \
+        -e "s,[@]mapcenter[@],$mapcenter,g" \
+        -e "s,[@]mapzoom[@],$mapzoom,g"
        
 }
 
