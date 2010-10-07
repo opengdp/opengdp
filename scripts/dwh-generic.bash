@@ -414,7 +414,7 @@ EOF
                    cut -d ":" -f 1
                  )
 
-        ed -s "$mapfile" << EOF
+        ed -s "${htmlbase}/index.html" << EOF
 ${linenum}-1a
         <script type="text/javascript" src="${dsname}.js"></script>
 .
