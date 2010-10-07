@@ -408,7 +408,7 @@ EOF
     
     if ! grep "${htmlbase}/index.html" -e "${dsname}.js" > /dev/null
     then
-        linenum=$(cat "$mapfile" |\
+        linenum=$(cat "${htmlbase}/index.html" |\
                    grep -n -e "finish.js" |\
                    tail -n 1 |\
                    cut -d ":" -f 1
