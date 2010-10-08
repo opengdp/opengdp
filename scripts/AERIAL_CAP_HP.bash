@@ -19,7 +19,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-dsname="AERIAL_NOAA"
+dsname="AERIAL_CAP_HP"
 baseurl="@edcftp@/AERIAL_CAP/"
 basedir="@basedir@"
 indir="${basedir}/source/${dsname}/"
