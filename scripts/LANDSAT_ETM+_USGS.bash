@@ -89,7 +89,9 @@ function LANDSAT_ETM_USGS_dofile {
         gdalwarp -co TILED=YES -t_srs EPSG:4326 "${tmpdir}/${tifs}_filled.vrt" "${tmpdir}/${tifs}.tif"
 
         gdaladdo -r average "${tmpdir}/${tifs}.tif" 2 4 8 16 32
-      
+        
+        tiffset -s 306 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" "${tmpdir}/${tifs}.tif"
+        
         mv "${tmpdir}/${tifs}.tif" "$outdir/${ts}/${tifs}.tif"
 	    mv "${tmpdir}/${zipfile}" "$indir"
 	    

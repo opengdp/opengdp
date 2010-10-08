@@ -79,6 +79,8 @@ function AERIAL_NASA_AVIRIS_dofile {
 
         gdaladdo -r average "${tmpdir}/nearblack_${tif}" 2 4 8 16 32
         
+        tiffset -s 306 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" "${tmpdir}/nearblack_${tif}"
+        
         mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}"
         mv "${tmpdir}/${zipfile}" "$indir"
 
