@@ -414,6 +414,9 @@ function do_subst {
 ##### scripts #####
 
 scripts="
+AERIAL_CAP.bash
+AERIAL_CAP_IR.bash
+AERIAL_CAP_HP.bash
 AERIAL_NOAA.bash
 AERIAL_NOAA_MOSAIC.bash
 AERIAL_NASA.bash
