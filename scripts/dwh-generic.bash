@@ -41,33 +41,36 @@ function dofile {
 
         tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
   
-        lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
+        lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" || rm -rf "${tmpdir}" && echo >&3 && return
 
         if ! [ -d "$outdir/${ts}" ]
         then
             mkdir -p "$outdir/${ts}"
         fi
 
-        unzip "${tmpdir}/${zipfile}" "$tif" -d "$tmpdir"
+        unzip "${tmpdir}/${zipfile}" "$tif" -d "$tmpdir" || rm -rf "${tmpdir}" && echo >&3 && return
 
         if ! gdalinfo "${tmpdir}/${tif}" | grep 'AUTHORITY[[]"EPSG","4326"[]][]]'
         then
-            gdalwarp -t_srs EPSG:4326 "${tmpdir}/${tif}" "${tmpdir}/warped_${tif}"
-            nearblack -co TILED=YES -of GTiff "${tmpdir}/warped_${tif}" -o "${tmpdir}/nearblack_${tif}"
+            gdalwarp -t_srs EPSG:4326 "${tmpdir}/${tif}" "${tmpdir}/warped_${tif}" || rm -rf "${tmpdir}" && echo >&3 && return
+            nearblack -co TILED=YES -of GTiff "${tmpdir}/warped_${tif}" -o "${tmpdir}/nearblack_${tif}" || rm -rf "${tmpdir}" && echo >&3 && return
+            rm "${tmpdir}/warped_${tif}"
         else
-            nearblack -co TILED=YES -of GTiff "${tmpdir}/${tif}" -o "${tmpdir}/nearblack_${tif}"
+            nearblack -co TILED=YES -of GTiff "${tmpdir}/${tif}" -o "${tmpdir}/nearblack_${tif}" || rm -rf "${tmpdir}" && echo >&3 && return
         fi
 
-        gdaladdo -r average "${tmpdir}/nearblack_${tif}" 2 4 8 16 32
+        gdaladdo -r average "${tmpdir}/nearblack_${tif}" 2 4 8 16 32 || rm -rf "${tmpdir}" && echo >&3 && return
         
-        tiffset -s 306 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" "${tmpdir}/nearblack_${tif}"
+        tiffset -s 306 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" "${tmpdir}/nearblack_${tif}" || rm -rf "${tmpdir}" && echo >&3 && return
         
-        mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}"
-        mv "${tmpdir}/${zipfile}" "$indir"
-
+        mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}" || rm -rf "${tmpdir}" && echo >&3 && return
+        mv "${tmpdir}/${zipfile}" "$indir" || rm -rf "${tmpdir}" && echo >&3 && return
+        
+        gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${tif}"
+        
         rm -rf "${tmpdir}"
 
-        gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${tif}"
+        
         
         
 
@@ -368,7 +371,7 @@ EOF
     },
     {
       isBaseLayer: false,
-      visibility: false,
+      visibility: false
     }
   );
 
