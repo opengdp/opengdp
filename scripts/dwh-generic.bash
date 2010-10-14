@@ -20,25 +20,473 @@
 # DEALINGS IN THE SOFTWARE.
 
 urlcgibin="@urlcgibin@"
+urlbase="@urlbase@"
 htmlbase="@htmlbase@"
 
+###############################################################################
+# function to proccess a single file
+###############################################################################
+
+function dosubimg {
+    img="$1"
+    tmpdir="$2"
+    ts="$3"
+    info="$4"
+    
+    imgfile="${img##*/}"
+    imgbase="${imgfile%.*}"
+    imgext="${imgfile##*.}"
+    imgdir="${img%/*}"
+    
+    ##### test the projection ####
+       
+    if ! echo $info | grep 'GEOGCS\["WGS 84", DATUM\["WGS_1984", SPHEROID\["WGS 84",6378137,298.257223563, AUTHORITY\["EPSG","7030"\]\], AUTHORITY\["EPSG","6326"\]\], PRIMEM\["Greenwich",0\], UNIT\["degree",0.0174532925199433\], AUTHORITY\["EPSG","4326"\]\]' > /dev/null
+    then
+        
+        ##### does the image not have an alpha band? #####
+        
+        if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
+        then
+        
+            ##### needs warped #####
+        
+            gdalwarp -co TILED=YES \
+                     -dstalpha
+                     -t_srs EPSG:4326 \
+                     "${tmpdir}/${img}" \
+                     "${tmpdir}/warped_${imgbase}.tif"
+            
+            ##### rm the original image to free up ramdisk as fast as posible #####
+        
+            rm "${tmpdir}/${img}"
+            
+            ##### run nearblack on the file in place to avoid io #####
+            
+            nearblack -setalpha "${tmpdir}/warped_${imgbase}.tif"
+        
+        ##### since it has a alpha band already skip the nearblack #####
+        
+        else
+        
+            ##### needs warped #####
+        
+            gdalwarp -co TILED=YES \
+                     -t_srs EPSG:4326 \
+                     "${tmpdir}/${img}" \
+                     "${tmpdir}/warped_${imgbase}.tif"
+            
+            ##### rm the original image to free up ramdisk as fast as posible #####
+        
+            rm "${tmpdir}/${img}"
+            
+        fi
+        
+        ##### add overviews #####
+        
+        gdaladdo -r average \
+                 "${tmpdir}/warped_${imgbase}.tif" \
+                 2 4 8 16 32
+        
+        ##### add a timestamp for indexers #####
+                
+        tiffset -s 306 \
+                "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
+                "${tmpdir}/warped_${imgbase}.tif"
+        
+        ##### move the output to the outdir #####
+        
+        mv "${tmpdir}/warped_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
+    
+    ##### already the right proj #####
+      
+    else
+        
+        ##### if the source is anything but a tif or does #####
+        ##### not have a alpha band we need to copy       #####
+        
+        if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
+           [[ "${imgext,,*}" != "tif" ]]
+        then
+            nearblack -co TILED=YES \
+                      -of GTiff \
+                      -setalpha \
+                      "${tmpdir}/${img}" \
+                      -o "${tmpdir}/nearblack_${imgbase}.tif"
+        
+            ##### rm the original image to free up ramdisk as fast as posible #####
+        
+            rm "${tmpdir}/${img}"
+            
+            ##### add overviews #####
+    
+            gdaladdo -r average \
+                     "${tmpdir}/nearblack_${imgbase}.tif" \
+                     2 4 8 16 32
+    
+            ##### add a timestamp for indexers #####
+            
+            tiffset -s 306 \
+                    "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
+                    "${tmpdir}/nearblack_${imgbase}.tif"
+    
+            ##### move the output to the outdir #####
+    
+            mv "${tmpdir}/nearblack_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
+        
+        
+        else
+            
+            ##### add overviews #####
+    
+            gdaladdo -r average \
+                     "${tmpdir}/${img}" \
+                     2 4 8 16 32
+    
+            ##### add a timestamp for indexers #####
+            
+            tiffset -s 306 \
+                    "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
+                    "${tmpdir}/${img}"
+    
+            ##### move the output to the outdir #####
+    
+            mv "${tmpdir}/${img}" "$outdir/${ts}/${imgbase}.tif"
+        
+        fi
+
+    fi
+    
+    ##### add the file to the tile index #####
+    
+    ##### lock! #####
+    
+    lock="${outdir}/${dsname}${ts}.shp"
+    lock="${lock//\//.}"
+    
+    while ! mkdir "${lock}"
+	do
+		sleep 1
+	done
+    
+    gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${imgbase}.tif"
+    
+    ##### unlock #####
+    
+    rmdir "${lock}"
+    
+    if [[ "$haveomar" == "yes" ]]
+    then
+        curl --data "filename=${outdir}/${ts}/${imgbase}.tif" \
+             "${urlbase}/omar/dataManager/addRaster"
+    fi
+    
+}
+
+
+
+###############################################################################
+# function to bust a larger image into chunks and proccess
+###############################################################################
+
+function doimg{
+    img="$1"
+    tmpdir="$2"
+    ts="$3"
+    info="$4"
+    
+    imgfile="${img##*/}"
+    imgbase="${imgfile%.*}"
+    imgext="${imgfile##*.}"
+    imgdir="${img%/*}"
+    
+    ##### get the xy size in pixels #####
+        
+    read x y < <(echo "$info" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+    
+    ##### is the img too big? #####
+    
+    if [[ $x -gt 6000 ]] || [[ $y -gt 6000 ]]
+    then
+        
+        ##### loop over x #####
+        
+        ((xsize = 4096))
+        for ((xoff = 0; xoff < x; xoff += xsize))
+        do
+            
+            ##### set the x size of the sub img #####
+            
+            if ((xoff + xsize >= x))
+            then
+                ((xsize = x - xoff))
+            fi
+                
+            ##### loop over y #####
+            
+            ((ysize = 4096))
+            for ((yoff = 0; yoff < y; yoff += 4096))
+            do
+                
+                ##### set the y size of the sub img #####
+            
+                if ((yoff + ysize >= y))
+                then
+                    ((ysize = y - yoff))
+                fi
+                
+                ##### translate #####
+                
+                gdal_translate -srcwin $xoff $yoff $xsize $ysize \
+                               "${tmpdir}/${img}"\
+                               "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt"
+                fi
+                
+                dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+                         "$tmpdir" "$ts" \
+                         "$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt")"
+                
+            done
+        done
+    
+        ##### rm the original image to free up ramdisk as fast as posible #####
+    
+        rm "${tmpdir}/${img}"
+    
+    ##### its not too big do the image as is #####
+    
+    else
+    
+        dosubimg "${img}" \
+                 "$tmpdir" "$ts" \
+                 "$info"
+    
+    fi
+
+}
+
+     
+###############################################################################
+# function to process a tar file
+###############################################################################
+
+function dotar {
+    zipfile="$1"
+    tmpdir="$2"
+    ts="$3"
+   
+    
+    for f in $(tar -tf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    do
+        imgfile="${f##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        imgdir="${f%/*}"
+        
+        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        
+        ##### try to unzip a world file if its there #####
+        
+        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        
+        info=$(gdalinfo "${tmpdir}/${f}")
+        doimg "$f" "$tmpdir" "$ts" "$info"
+    done
+    
+}
+
+###############################################################################
+# function to process a tar.gz file
+###############################################################################
+
+function dotargz {
+    zipfile="$1"
+    tmpdir="$2"
+    ts="$3"
+    
+
+    for f in $(tar -tzf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    do
+        imgfile="${f##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        imgdir="${f%/*}"
+        
+        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        
+        ##### try to unzip a world file if its there #####
+        
+        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        
+        info=$(gdalinfo "${tmpdir}/${f}")
+        doimg "$f" "$tmpdir" "$ts" "$info"
+        
+    done
+}
+
+###############################################################################
+# function to process a tar.gz file
+###############################################################################
+
+function dotarbz2 {
+    zipfile="$1"
+    tmpdir="$2"
+    ts="$3"
+    
+
+    for f in $(tar -tjf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    do
+        imgfile="${f##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        imgdir="${f%/*}"
+        
+        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        
+        ##### try to unzip a world file if its there #####
+        
+        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        
+        info=$(gdalinfo "${tmpdir}/${f}")
+        doimg "$f" "$tmpdir" "$ts" "$info"
+        
+    done
+}
+
+###############################################################################
+# function to process a zip file
+###############################################################################
+
+function dozip {
+    zipfile="$1"
+    tmpdir="$2"
+    ts="$3"
+    
+
+    for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$extglob")
+    do
+        imgfile="${f##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        imgdir="${f%/*}"
+        
+        unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
+        
+        ##### try to unzip a world file if its there #####
+        
+        unzip "${tmpdir}/${zipfile}" "${imgdir}/${imgbase}.??w" -d "$tmpdir"
+        
+        info=$(gdalinfo "${tmpdir}/${f}")
+        doimg "$f" "$tmpdir" "$ts" "$info"
+        
+    done
+
+###############################################################################
+# function to process a kmz file
+###############################################################################
+
+function dokmz {
+    zipfile="$1"
+    tmpdir="$2"
+    ts="$3"
+
+    for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$baseglob.kml")
+    do
+        
+        ##### extract the kml #####
+        
+        unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
+        
+        ##### find and extract the corisponding img #####
+        
+        img=$(grep '<GroundOverlay>' -A12 "$kml" |\
+               grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
+        
+        unzip "${tmpdir}/${zipfile}" "$img" -d "$tmpdir"
+        
+        imgfile="${img##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        imgdir="${img%/*}"
+        
+        ##### get the corner quords #####
+        
+        read n s e w < <(grep '<GroundOverlay>' -A12 "$kml" |\
+                          grep north -A3 |\
+                          sed 's:<[/a-z]*>::g' |\
+                          tr "\n" " ")
+        
+        ##### get the xy size in pixels #####
+        
+        read x y < <(gdalinfo "${tmpdir}/$img" |\
+                      grep -e "Size is" |\
+                      sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+        
+        ##### calc the pixel size #####
+        
+        xp=$(echo "scale = 16; ($e - $w) / $x" | bc)
+        yp=$(echo "scale = 16; ($s - $n) / $y" | bc)
+        
+        ##### decide the world file ext #####
+        
+        case "$imgext" in
+            jpg)
+                world="jpw"
+                ;;
+            tif)
+                world="tfw"
+                ;;
+            png)
+                world="pgw"
+                ;;
+        esac
+
+        ##### write out the world file #####
+        
+        cat > "${tmpdir}/${imgdir}/${imgbase}.$world" <<EOF
+$xp
+0.0000000000000000
+0.0000000000000000
+$yp
+$w
+$n
+EOF
+
+        ##### create a vrt with the proj #####
+        
+        gdal_translate -a_srs EPSG:4326 \
+                       -of VRT \
+                       "${tmpdir}/${img}" \
+                       "${tmpdir}/${imgdir}/${imgbase}.vrt"
+                       
+        ##### proccess #####
+        
+        info=$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}.vrt")
+        doimg "${tmpdir}/${imgdir}/${imgbase}.vrt" "$tmpdir" "$ts" "$info"
+    done
+
+}
+        
 ###############################################################################
 # function to proccess a file
 ###############################################################################
 
 function dofile {
-    
     myline=$1
-    zipfile="${myline##*/}"
 
-    tif="${zipfile%.*}.tif"
-
-    ts="${zipfile:25:8}"
-
-    
     if echo "$myline" | grep -e "^get" > /dev/null
-    then
-
+    then    
+        sourcedir=${indir//\/\///}
+        sourcedir=${source//\/\///}
+        
+        file="${myline##*/}"
+        base="${file%.*}"
+        ext="${file#*.}"
+        ext="${ext,,*}"
+        dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")"
+         
+        
+        ts="$(echo "$myline" | ${datefunc})"
+        
         tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
   
         lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
@@ -47,36 +495,49 @@ function dofile {
         then
             mkdir -p "$outdir/${ts}"
         fi
+        
+        case "$ext" in
+        
+            *tar)
+                dotar "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                ;;
+                
+            *tar.gz)
+            *tgz)
+                dotargz "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                ;;
+            
+            *tar.bz2)
+                dotarbz2 "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                ;;
+            
+            *zip)
+                dozip "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                ;;
+            
+            *kmz)
+                dokmz "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                ;;
 
-        unzip "${tmpdir}/${zipfile}" "$tif" -d "$tmpdir"
+#fixme this does not take into account world files that may be there too
+            
+            *)
+                if gdalinfo "${tmpdir}${dir}/${file}"
+                then
+                    doimg "${dir}/${file}"
+                          "$tmpdir"
+                          "$ts"
+                          $(gdalinfo "${tmpdir}${dir}/${file}")
+                fi
 
-        if ! gdalinfo "${tmpdir}/${tif}" | grep 'AUTHORITY[[]"EPSG","4326"[]][]]'
-        then
-            gdalwarp -t_srs EPSG:4326 "${tmpdir}/${tif}" "${tmpdir}/warped_${tif}"
-            nearblack -co TILED=YES -of GTiff "${tmpdir}/warped_${tif}" -o "${tmpdir}/nearblack_${tif}"
-            rm "${tmpdir}/warped_${tif}"
-        else
-            nearblack -co TILED=YES -of GTiff "${tmpdir}/${tif}" -o "${tmpdir}/nearblack_${tif}"
-        fi
+            esac
 
-        gdaladdo -r average "${tmpdir}/nearblack_${tif}" 2 4 8 16 32
-        
-        tiffset -s 306 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" "${tmpdir}/nearblack_${tif}"
-        
-        mv "${tmpdir}/nearblack_${tif}" "$outdir/${ts}/${tif}"
-        mv "${tmpdir}/${zipfile}" "$indir"
-        
-        gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${tif}"
-        
         rm -rf "${tmpdir}"
-
-        
-        
-        
-
-    fi
+    
+    fi    
 
     echo >&3
+    
 }
 
 
@@ -501,7 +962,7 @@ function getlist {
 function main {
     
 
-    ##### SANITY CHECKS #####
+    ##### dsname #####
     
     if ! [[ -n "${dsname}" ]]
     then
@@ -509,11 +970,15 @@ function main {
         exit
     fi
     
+    ##### fetch url #####
+    
     if ! [[ -n "${baseurl}" ]]
     then
         echo "ERROR: var baseurl not set"
         exit
     fi
+    
+    ##### basedir #####
     
     if ! [[ -n "${basedir}" ]]
     then
@@ -532,6 +997,8 @@ function main {
         echo "ERROR: no write access to $basedir"
         exit
     fi
+    
+    ##### indir #####
     
     if ! [[ -n "${indir}" ]]
     then
@@ -554,6 +1021,8 @@ function main {
         exit
     fi
     
+    ##### outdir #####
+    
     if ! [[ -n "${outdir}" ]]
     then
         echo "ERROR: var outdir not set"
@@ -574,6 +1043,8 @@ function main {
         exit
     fi
     
+    ##### tmp dir #####
+    
     if ! [ -n "$tmp" ] ; then tmp="/tmp/" ; fi
     
     if ! [ -d "$tmp" ]
@@ -587,6 +1058,8 @@ function main {
         echo "ERROR: no write access to $tmp"
         exit
     fi
+    
+    ##### mapfile #####
     
     if ! [[ -n "${mapfile}" ]]
     then
@@ -606,6 +1079,8 @@ function main {
         exit
     fi
     
+    ##### mapserverpath #####
+    
     if ! [ -n "$mapserverpath" ] ; then mapserverpath="/usr/local/src/mapserver/mapserver/" ; fi
     
     if ! [ -d "$mapserverpath" ]
@@ -620,25 +1095,37 @@ function main {
         exit
     fi
     
+    ##### do ovrview default #####
+    
     if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
 
+    ##### fetch pattern default #####
     
-    ##### setup proccess management #####
+    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
+    
+    ##### unzip untar... pattern default #####
+    
+    if ! [ -n "$extglob" ] ; then extglob="*.tif" ; fi
+    
+    ##### unzip kmz pattern default #####
+    
+    if ! [ -n "$baseglob" ] ; then baseglob="tile-*" ; fi
+    
+    ##### proccess limit default #####
     
     if ! [ -n "$limit" ] ; then limit="4" ; fi
     
     ##### cd to the in dir #####
 
-    
     cd "$indir"
 
+    ##### file name for the mirror file #####
+    
     host="$(hostname)"
     mirrorfile="$host.mirror.lftp"
     
     ##### get the list of new files to fetch #####
     
-    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
-
     if ! getlist "$mirrorfile" "$fetchpattern"
     then
         exit
