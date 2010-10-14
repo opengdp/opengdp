@@ -28,15 +28,17 @@ htmlbase="@htmlbase@"
 ###############################################################################
 
 function dosubimg {
-    img="$1"
-    tmpdir="$2"
-    ts="$3"
-    info="$4"
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
     
-    imgfile="${img##*/}"
-    imgbase="${imgfile%.*}"
-    imgext="${imgfile##*.}"
-    imgdir="${img%/*}"
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    local imgext="${imgfile##*.}"
+    local imgextlower="$(echo $imgext | tr [A-Z] [a-z])"
+    
+    local imgdir="${img%/*}"
     
     ##### test the projection ####
        
@@ -47,7 +49,7 @@ function dosubimg {
         
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
         then
-        
+            
             ##### needs warped #####
         
             gdalwarp -co TILED=YES \
@@ -105,8 +107,9 @@ function dosubimg {
         ##### not have a alpha band we need to copy       #####
         
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
-           [[ "${imgext,,*}" != "tif" ]]
+           [[ "${imgextlower}" != "tif" ]]
         then
+            
             nearblack -co TILED=YES \
                       -of GTiff \
                       -setalpha \
@@ -135,7 +138,7 @@ function dosubimg {
         
         
         else
-            
+           
             ##### add overviews #####
     
             gdaladdo -r average \
@@ -188,16 +191,16 @@ function dosubimg {
 # function to bust a larger image into chunks and proccess
 ###############################################################################
 
-function doimg{
-    img="$1"
-    tmpdir="$2"
-    ts="$3"
-    info="$4"
+function doimg {
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
     
-    imgfile="${img##*/}"
-    imgbase="${imgfile%.*}"
-    imgext="${imgfile##*.}"
-    imgdir="${img%/*}"
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    local imgext="${imgfile##*.}"
+    local imgdir="${img%/*}"
     
     ##### get the xy size in pixels #####
         
@@ -239,12 +242,11 @@ function doimg{
                 gdal_translate -srcwin $xoff $yoff $xsize $ysize \
                                "${tmpdir}/${img}"\
                                "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt"
-                fi
-                
-                dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+        
+                dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                          "$tmpdir" "$ts" \
                          "$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt")"
-                
+
             done
         done
     
@@ -270,17 +272,17 @@ function doimg{
 ###############################################################################
 
 function dotar {
-    zipfile="$1"
-    tmpdir="$2"
-    ts="$3"
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
    
     
     for f in $(tar -tf "${tmpdir}/${zipfile}" --wildcards "$extglob")
     do
-        imgfile="${f##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        imgdir="${f%/*}"
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        local imgdir="${f%/*}"
         
         tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
@@ -288,7 +290,7 @@ function dotar {
         
         tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
         
-        info=$(gdalinfo "${tmpdir}/${f}")
+        local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
     done
     
@@ -299,17 +301,17 @@ function dotar {
 ###############################################################################
 
 function dotargz {
-    zipfile="$1"
-    tmpdir="$2"
-    ts="$3"
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
     
 
     for f in $(tar -tzf "${tmpdir}/${zipfile}" --wildcards "$extglob")
     do
-        imgfile="${f##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        imgdir="${f%/*}"
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        local imgdir="${f%/*}"
         
         tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
@@ -317,7 +319,7 @@ function dotargz {
         
         tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
         
-        info=$(gdalinfo "${tmpdir}/${f}")
+        local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
         
     done
@@ -328,17 +330,17 @@ function dotargz {
 ###############################################################################
 
 function dotarbz2 {
-    zipfile="$1"
-    tmpdir="$2"
-    ts="$3"
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
     
 
     for f in $(tar -tjf "${tmpdir}/${zipfile}" --wildcards "$extglob")
     do
-        imgfile="${f##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        imgdir="${f%/*}"
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        local imgdir="${f%/*}"
         
         tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
@@ -346,7 +348,7 @@ function dotarbz2 {
         
         tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
         
-        info=$(gdalinfo "${tmpdir}/${f}")
+        local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
         
     done
@@ -357,17 +359,17 @@ function dotarbz2 {
 ###############################################################################
 
 function dozip {
-    zipfile="$1"
-    tmpdir="$2"
-    ts="$3"
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
     
 
     for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$extglob")
     do
-        imgfile="${f##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        imgdir="${f%/*}"
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        local imgdir="${f%/*}"
         
         unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
         
@@ -375,19 +377,21 @@ function dozip {
         
         unzip "${tmpdir}/${zipfile}" "${imgdir}/${imgbase}.??w" -d "$tmpdir"
         
-        info=$(gdalinfo "${tmpdir}/${f}")
+        local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
         
     done
+
+}
 
 ###############################################################################
 # function to process a kmz file
 ###############################################################################
 
 function dokmz {
-    zipfile="$1"
-    tmpdir="$2"
-    ts="$3"
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
 
     for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$baseglob.kml")
     do
@@ -398,15 +402,15 @@ function dokmz {
         
         ##### find and extract the corisponding img #####
         
-        img=$(grep '<GroundOverlay>' -A12 "$kml" |\
-               grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
+        local img=$(grep '<GroundOverlay>' -A12 "$kml" |\
+                    grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
         
         unzip "${tmpdir}/${zipfile}" "$img" -d "$tmpdir"
         
-        imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        imgdir="${img%/*}"
+        local imgfile="${img##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        local imgdir="${img%/*}"
         
         ##### get the corner quords #####
         
@@ -460,7 +464,7 @@ EOF
                        
         ##### proccess #####
         
-        info=$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}.vrt")
+        local info=$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}.vrt")
         doimg "${tmpdir}/${imgdir}/${imgbase}.vrt" "$tmpdir" "$ts" "$info"
     done
 
@@ -475,20 +479,32 @@ function dofile {
 
     if echo "$myline" | grep -e "^get" > /dev/null
     then    
-        sourcedir=${indir//\/\///}
-        sourcedir=${source//\/\///}
+        local sourcedir=${indir//\/\///}
+        local sourcedir=${sourcedir//\/\///}
         
-        file="${myline##*/}"
-        base="${file%.*}"
-        ext="${file#*.}"
-        ext="${ext,,*}"
-        dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")"
+        local file="${myline##*/}"
+        local base="${file%.*}"
+        local ext="${file#*.}"
+        local ext="$(echo $ext | tr [A-Z] [a-z])"
+        #local ext="${ext,,*}"
+        
+        local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")"
          
         
-        ts="$(echo "$myline" | ${datefunc})"
+        local ts="$(echo "$myline" | ${datefunc})"
         
-        tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
-  
+        #printf " sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+        #        "$sourcedir "\
+        #        "$file" \
+        #        "$base" \
+        #        "$ext" \
+        #        "$dir" \
+        #        "$ts"
+        #echo >&3
+        #return
+
+        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+        
         lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
 
         if ! [ -d "$outdir/${ts}" ]
@@ -499,24 +515,27 @@ function dofile {
         case "$ext" in
         
             *tar)
-                dotar "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                dotar "${dir}/${file}" "$tmpdir" "$ts"
                 ;;
                 
             *tar.gz)
+                dotargz "${dir}/${file}" "$tmpdir" "$ts"
+                ;;
+            
             *tgz)
-                dotargz "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                dotargz "${dir}/${file}" "$tmpdir" "$ts"
                 ;;
             
             *tar.bz2)
-                dotarbz2 "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                dotarbz2 "${dir}/${file}" "$tmpdir" "$ts"
                 ;;
             
             *zip)
-                dozip "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                dozip "${dir}/${file}" "$tmpdir" "$ts"
                 ;;
             
             *kmz)
-                dokmz "${dir}/${file}" "$extglob" "$tmpdir" "$ts"
+                dokmz "${dir}/${file}" "$tmpdir" "$ts"
                 ;;
 
 #fixme this does not take into account world files that may be there too
@@ -539,8 +558,6 @@ function dofile {
     echo >&3
     
 }
-
-
 ###############################################################################
 # function to get the extent of the ds
 ###############################################################################
