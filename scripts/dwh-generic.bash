@@ -39,17 +39,25 @@ function dosubimg {
     local imgextlower="$(echo $imgext | tr [A-Z] [a-z])"
     
     local imgdir="${img%/*}"
+    if [[ "$imgdir" = "$imgfile" ]]
+    then
+        local imgdir=""
+    else
+        local imgdir="${imgdir}/"
+    fi
+
     
     ##### test the projection ####
        
     if ! echo $info | grep 'GEOGCS\["WGS 84", DATUM\["WGS_1984", SPHEROID\["WGS 84",6378137,298.257223563, AUTHORITY\["EPSG","7030"\]\], AUTHORITY\["EPSG","6326"\]\], PRIMEM\["Greenwich",0\], UNIT\["degree",0.0174532925199433\], AUTHORITY\["EPSG","4326"\]\]' > /dev/null
     then
-        
+        echo "needs warped"
         ##### does the image not have an alpha band? #####
         
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
         then
-            
+            echo "needs warped has alpha"
+        
             ##### needs warped #####
         
             gdalwarp -co TILED=YES \
@@ -69,6 +77,7 @@ function dosubimg {
         ##### since it has a alpha band already skip the nearblack #####
         
         else
+            echo "needs warped does not have alpha"
         
             ##### needs warped #####
         
@@ -102,6 +111,7 @@ function dosubimg {
     ##### already the right proj #####
       
     else
+        echo "mo warp"
         
         ##### if the source is anything but a tif or does #####
         ##### not have a alpha band we need to copy       #####
@@ -109,7 +119,8 @@ function dosubimg {
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
            [[ "${imgextlower}" != "tif" ]]
         then
-            
+            echo "no warp no alpha"
+        
             nearblack -co TILED=YES \
                       -of GTiff \
                       -setalpha \
@@ -138,7 +149,8 @@ function dosubimg {
         
         
         else
-           
+           echo "no warp has alpha"
+
             ##### add overviews #####
     
             gdaladdo -r average \
@@ -202,6 +214,25 @@ function doimg {
     local imgext="${imgfile##*.}"
     local imgdir="${img%/*}"
     
+    local imgdir="${img%/*}"
+    if [[ "$imgdir" = "$imgfile" ]]
+    then
+        local imgdir=""
+    else
+        local imgdir="${imgdir}/"
+    fi
+
+        
+    #printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n" \
+    #        "$img" \
+    #        "$tmpdir "\
+    #        "$ts" \
+    #        "$imgfile" \
+    #        "$imgbase" \
+    #        "$imgext" \
+    #        "$imgdir"
+    #return
+
     ##### get the xy size in pixels #####
         
     read x y < <(echo "$info" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
@@ -241,11 +272,11 @@ function doimg {
                 
                 gdal_translate -srcwin $xoff $yoff $xsize $ysize \
                                "${tmpdir}/${img}"\
-                               "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt"
+                               "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
         
                 dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                          "$tmpdir" "$ts" \
-                         "$(gdalinfo "${tmpdir}/${imgdir}/${imgbase}_${xoff}_${yoff}.vrt")"
+                         "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")"
 
             done
         done
@@ -282,13 +313,20 @@ function dotar {
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
         local imgext="${imgfile##*.}"
-        local imgdir="${f%/*}"
         
+        local imgdir="${f%/*}"
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi
+
         tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -311,13 +349,21 @@ function dotargz {
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
         local imgext="${imgfile##*.}"
+        
         local imgdir="${f%/*}"
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi
+
         
         tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -340,13 +386,20 @@ function dotarbz2 {
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
         local imgext="${imgfile##*.}"
-        local imgdir="${f%/*}"
         
+        local imgdir="${f%/*}"
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi
+
         tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}/${imgbase}.??w"
+        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -369,13 +422,20 @@ function dozip {
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
         local imgext="${imgfile##*.}"
+
         local imgdir="${f%/*}"
-        
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi  
+
         unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
         
         ##### try to unzip a world file if its there #####
         
-        unzip "${tmpdir}/${zipfile}" "${imgdir}/${imgbase}.??w" -d "$tmpdir"
+        unzip "${tmpdir}/${zipfile}" "${imgdir}${imgbase}.??w" -d "$tmpdir"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -407,11 +467,18 @@ function dokmz {
         
         unzip "${tmpdir}/${zipfile}" "$img" -d "$tmpdir"
         
-        local imgfile="${img##*/}"
+        local imgfile="${img##*}"
         local imgbase="${imgfile%.*}"
         local imgext="${imgfile##*.}"
-        local imgdir="${img%/*}"
         
+        local imgdir="${f%/*}"
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi
+
         ##### get the corner quords #####
         
         read n s e w < <(grep '<GroundOverlay>' -A12 "$kml" |\
@@ -488,12 +555,17 @@ function dofile {
         local ext="$(echo $ext | tr [A-Z] [a-z])"
         #local ext="${ext,,*}"
         
-        local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")"
+        if echo "$myline" | grep -e "$sourcedir" > /dev/null
+        then
+            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
+        else
+            local dir=""
+        fi
          
+        ts=$(echo "$myline" | dodate)
         
-        local ts="$(echo "$myline" | ${datefunc})"
-        
-        #printf " sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+        #        "$myline" \
         #        "$sourcedir "\
         #        "$file" \
         #        "$base" \
@@ -515,27 +587,27 @@ function dofile {
         case "$ext" in
         
             *tar)
-                dotar "${dir}/${file}" "$tmpdir" "$ts"
+                dotar "${dir}${file}" "$tmpdir" "$ts"
                 ;;
                 
             *tar.gz)
-                dotargz "${dir}/${file}" "$tmpdir" "$ts"
+                dotargz "${dir}${file}" "$tmpdir" "$ts"
                 ;;
             
             *tgz)
-                dotargz "${dir}/${file}" "$tmpdir" "$ts"
+                dotargz "${dir}${file}" "$tmpdir" "$ts"
                 ;;
             
             *tar.bz2)
-                dotarbz2 "${dir}/${file}" "$tmpdir" "$ts"
+                dotarbz2 "${dir}${file}" "$tmpdir" "$ts"
                 ;;
             
             *zip)
-                dozip "${dir}/${file}" "$tmpdir" "$ts"
+                dozip "${dir}${file}" "$tmpdir" "$ts"
                 ;;
             
             *kmz)
-                dokmz "${dir}/${file}" "$tmpdir" "$ts"
+                dokmz "${dir}${file}" "$tmpdir" "$ts"
                 ;;
 
 #fixme this does not take into account world files that may be there too
@@ -546,10 +618,11 @@ function dofile {
                     doimg "${dir}/${file}"
                           "$tmpdir"
                           "$ts"
-                          $(gdalinfo "${tmpdir}${dir}/${file}")
+                          $(gdalinfo "${tmpdir}/${dir}/${file}")
                 fi
 
             esac
+        mv "${tmpdir}/${dir}/${file}" "${indir}/${dir}/${file}"
 
         rm -rf "${tmpdir}"
     
@@ -558,6 +631,8 @@ function dofile {
     echo >&3
     
 }
+
+
 ###############################################################################
 # function to get the extent of the ds
 ###############################################################################
@@ -1132,6 +1207,8 @@ function main {
     
     if ! [ -n "$limit" ] ; then limit="4" ; fi
     
+    if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
+
     ##### cd to the in dir #####
 
     cd "$indir"
@@ -1159,7 +1236,7 @@ function main {
 
     ##### finish up, make overvies etc... #####
     
-    if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
+    
 
     if ! finishup "$mirrorfile" "$datefunc"
     then
