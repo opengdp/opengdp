@@ -23,6 +23,9 @@ urlcgibin="@urlcgibin@"
 urlbase="@urlbase@"
 htmlbase="@htmlbase@"
 
+export GDAL_CACHEMAX=500
+
+
 ###############################################################################
 # function to proccess a single file
 ###############################################################################
@@ -56,28 +59,34 @@ function dosubimg {
         
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
         then
-            echo "needs warped has alpha"
-        
+            echo "needs warped needs alpha"
+            
+            #####  create a mask with the nearblack method #####
+            
+            gdalmask -nearblack -near 0 -internal "${tmpdir}/${img}" \
+                     "${tmpdir}/prewarp_${imgbase}.tif"
+            rm "${tmpdir}/${img}"
+                 
             ##### needs warped #####
         
             gdalwarp -co TILED=YES \
                      -dstalpha
                      -t_srs EPSG:4326 \
-                     "${tmpdir}/${img}" \
+                     "${tmpdir}/prewarp_${imgbase}.tif" \
                      "${tmpdir}/warped_${imgbase}.tif"
             
-            ##### rm the original image to free up ramdisk as fast as posible #####
-        
-            rm "${tmpdir}/${img}"
+            #####  create a mask and compress #####
             
-            ##### run nearblack on the file in place to avoid io #####
+            gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                     -nearblack -near 0 -internal \
+                     "${tmpdir}/warped_${imgbase}.tif" \
+                     "${tmpdir}/final_${imgbase}.tif"
+            rm "${tmpdir}/warped_${imgbase}.tif"
             
-            nearblack -setalpha "${tmpdir}/warped_${imgbase}.tif"
-        
         ##### since it has a alpha band already skip the nearblack #####
         
         else
-            echo "needs warped does not have alpha"
+            echo "needs warped has alpha"
         
             ##### needs warped #####
         
@@ -85,33 +94,22 @@ function dosubimg {
                      -t_srs EPSG:4326 \
                      "${tmpdir}/${img}" \
                      "${tmpdir}/warped_${imgbase}.tif"
-            
-            ##### rm the original image to free up ramdisk as fast as posible #####
-        
             rm "${tmpdir}/${img}"
+            
+            #####  create a mask and compress #####
+            
+            gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                     -nearblack -near 0 -internal \
+                     "${tmpdir}/warped_${imgbase}.tif" \
+                     "${tmpdir}/final_${imgbase}.tif"
+            rm "${tmpdir}/warped_${imgbase}.tif"
             
         fi
         
-        ##### add overviews #####
-        
-        gdaladdo -r average \
-                 "${tmpdir}/warped_${imgbase}.tif" \
-                 2 4 8 16 32
-        
-        ##### add a timestamp for indexers #####
-                
-        tiffset -s 306 \
-                "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
-                "${tmpdir}/warped_${imgbase}.tif"
-        
-        ##### move the output to the outdir #####
-        
-        mv "${tmpdir}/warped_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
-    
     ##### already the right proj #####
       
     else
-        echo "mo warp"
+        echo "no warp"
         
         ##### if the source is anything but a tif or does #####
         ##### not have a alpha band we need to copy       #####
@@ -119,58 +117,45 @@ function dosubimg {
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
            [[ "${imgextlower}" != "tif" ]]
         then
-            echo "no warp no alpha"
-        
-            nearblack -co TILED=YES \
-                      -of GTiff \
-                      -setalpha \
-                      "${tmpdir}/${img}" \
-                      -o "${tmpdir}/nearblack_${imgbase}.tif"
-        
-            ##### rm the original image to free up ramdisk as fast as posible #####
-        
+
+            #####  create a mask and compress #####
+            
+            gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                     -nearblack -near 0 -internal \
+                     "${tmpdir}/${img}"
+                     "${tmpdir}/final_${imgbase}.tif"
             rm "${tmpdir}/${img}"
             
-            ##### add overviews #####
-    
-            gdaladdo -r average \
-                     "${tmpdir}/nearblack_${imgbase}.tif" \
-                     2 4 8 16 32
-    
-            ##### add a timestamp for indexers #####
-            
-            tiffset -s 306 \
-                    "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
-                    "${tmpdir}/nearblack_${imgbase}.tif"
-    
-            ##### move the output to the outdir #####
-    
-            mv "${tmpdir}/nearblack_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
-        
-        
+      
         else
            echo "no warp has alpha"
 
-            ##### add overviews #####
-    
-            gdaladdo -r average \
-                     "${tmpdir}/${img}" \
-                     2 4 8 16 32
-    
-            ##### add a timestamp for indexers #####
+            gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                     -internal \
+                     "${tmpdir}/${img}"
+                     "${tmpdir}/final_${imgbase}.tif"
+            rm "${tmpdir}/${img}"
             
-            tiffset -s 306 \
-                    "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
-                    "${tmpdir}/${img}"
-    
-            ##### move the output to the outdir #####
-    
-            mv "${tmpdir}/${img}" "$outdir/${ts}/${imgbase}.tif"
-        
         fi
 
     fi
-    
+
+    ##### add overviews #####
+        
+    gdaladdo -r average \
+             "${tmpdir}/final_${imgbase}.tif" \
+             2 4 8 16 32
+        
+    ##### add a timestamp for indexers #####
+                
+    tiffset -s 306 \
+                "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
+                "${tmpdir}/final_${imgbase}.tif"
+        
+    ##### move the output to the outdir #####
+        
+    mv "${tmpdir}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
+        
     ##### add the file to the tile index #####
     
     ##### lock! #####
@@ -239,13 +224,16 @@ function doimg {
     
     ##### is the img too big? #####
     
-    if [[ $x -gt 6000 ]] || [[ $y -gt 6000 ]]
+    ((cutat=8192))
+    
+    
+    if [[ $x -gt 8192 ]] || [[ $y -gt 8192 ]]
     then
         
         ##### loop over x #####
         
-        ((xsize = 4096))
-        for ((xoff = 0; xoff < x; xoff += xsize))
+        ((xsize = $cutat))
+        for ((xoff = 0; xoff < x; xoff += $cutat))
         do
             
             ##### set the x size of the sub img #####
@@ -257,8 +245,8 @@ function doimg {
                 
             ##### loop over y #####
             
-            ((ysize = 4096))
-            for ((yoff = 0; yoff < y; yoff += 4096))
+            ((ysize = $cutat))
+            for ((yoff = 0; yoff < y; yoff += $cutat))
             do
                 
                 ##### set the y size of the sub img #####
