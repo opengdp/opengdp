@@ -70,7 +70,7 @@ function dosubimg {
             ##### needs warped #####
         
             gdalwarp -co TILED=YES \
-                     -dstalpha
+                     -dstalpha \
                      -t_srs EPSG:4326 \
                      "${tmpdir}/prewarp_${imgbase}.tif" \
                      "${tmpdir}/warped_${imgbase}.tif"
@@ -140,11 +140,21 @@ function dosubimg {
 
     fi
 
-    ##### add overviews #####
+    ##### get the xy size in pixels #####
         
-    gdaladdo -r average \
-             "${tmpdir}/final_${imgbase}.tif" \
-             2 4 8 16 32
+    read x y < <(echo "$info" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+    
+    ##### add overviews #####
+    
+    ((o=2))
+    ovrs=""
+    while (( o <= x / 64 )) || (( o <= y / 64 ))
+    do
+        ovrs="$ovrs $o"
+        ((o*=2))
+    done
+    
+    gdaladdo -r average "${tmpdir}/final_${imgbase}.tif" $ovrs
         
     ##### add a timestamp for indexers #####
                 
