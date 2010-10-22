@@ -64,7 +64,7 @@ function dosubimg {
             #####  create a mask with the nearblack method #####
             
             gdalmask -nearblack -near 0 -internal "${tmpdir}/${img}" \
-                     "${tmpdir}/prewarp_${imgbase}.tif"
+                     "${tmpdir}/prewarp_${imgbase}.tif" > /dev/null
             rm "${tmpdir}/${img}"
                  
             ##### needs warped #####
@@ -73,16 +73,16 @@ function dosubimg {
                      -dstalpha \
                      -t_srs EPSG:4326 \
                      "${tmpdir}/prewarp_${imgbase}.tif" \
-                     "${tmpdir}/warped_${imgbase}.tif"
+                     "${tmpdir}/warped_${imgbase}.tif" > /dev/null
             
             #####  create a mask and compress #####
             
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -nearblack -near 0 -internal \
                      "${tmpdir}/warped_${imgbase}.tif" \
-                     "${tmpdir}/final_${imgbase}.tif"
+                     "${tmpdir}/final_${imgbase}.tif" > /dev/null
             rm "${tmpdir}/warped_${imgbase}.tif"
-            
+
         ##### since it has a alpha band already skip the nearblack #####
         
         else
@@ -93,7 +93,7 @@ function dosubimg {
             gdalwarp -co TILED=YES \
                      -t_srs EPSG:4326 \
                      "${tmpdir}/${img}" \
-                     "${tmpdir}/warped_${imgbase}.tif"
+                     "${tmpdir}/warped_${imgbase}.tif"  > /dev/null
             rm "${tmpdir}/${img}"
             
             #####  create a mask and compress #####
@@ -101,11 +101,11 @@ function dosubimg {
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -nearblack -near 0 -internal \
                      "${tmpdir}/warped_${imgbase}.tif" \
-                     "${tmpdir}/final_${imgbase}.tif"
+                     "${tmpdir}/final_${imgbase}.tif"  > /dev/null
             rm "${tmpdir}/warped_${imgbase}.tif"
             
         fi
-        
+            
     ##### already the right proj #####
       
     else
@@ -117,13 +117,14 @@ function dosubimg {
         if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
            [[ "${imgextlower}" != "tif" ]]
         then
-
+            
+            echo "no warp no alpha"
             #####  create a mask and compress #####
             
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -nearblack -near 0 -internal \
-                     "${tmpdir}/${img}"
-                     "${tmpdir}/final_${imgbase}.tif"
+                     "${tmpdir}/${img}" \
+                     "${tmpdir}/final_${imgbase}.tif" > /dev/null
             rm "${tmpdir}/${img}"
             
       
@@ -132,14 +133,14 @@ function dosubimg {
 
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -internal \
-                     "${tmpdir}/${img}"
-                     "${tmpdir}/final_${imgbase}.tif"
+                     "${tmpdir}/${img}" \
+                     "${tmpdir}/final_${imgbase}.tif" > /dev/null
             rm "${tmpdir}/${img}"
             
         fi
 
     fi
-
+        
     ##### get the xy size in pixels #####
         
     read x y < <(echo "$info" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
@@ -154,13 +155,13 @@ function dosubimg {
         ((o*=2))
     done
     
-    gdaladdo -r average "${tmpdir}/final_${imgbase}.tif" $ovrs
+    gdaladdo -r average "${tmpdir}/final_${imgbase}.tif" $ovrs  > /dev/null
         
     ##### add a timestamp for indexers #####
                 
     tiffset -s 306 \
                 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
-                "${tmpdir}/final_${imgbase}.tif"
+                "${tmpdir}/final_${imgbase}.tif"  > /dev/null
         
     ##### move the output to the outdir #####
         
@@ -178,7 +179,7 @@ function dosubimg {
 		sleep 1
 	done
     
-    gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${imgbase}.tif"
+    gdaltindex "${outdir}/${dsname}${ts}.shp" "${outdir}/${ts}/${imgbase}.tif"  > /dev/null
     
     ##### unlock #####
     
@@ -191,8 +192,6 @@ function dosubimg {
     fi
     
 }
-
-
 
 ###############################################################################
 # function to bust a larger image into chunks and proccess
