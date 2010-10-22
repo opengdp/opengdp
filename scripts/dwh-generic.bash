@@ -1088,8 +1088,14 @@ function finishup {
     
     ##### loop over each date of data we got #####
 
-    grep "${mirrorfile}" -e "^get" |\
-     ${datefunc} |\
+    if [[ "$DWH_REOVER" != "reover" ]]
+    then
+        grep "${mirrorfile}" -e "^get" |\
+         ${datefunc} |\
+    else
+        find "${outdir}" -type d -name "[0-9]*" |\
+        sed 's:.*/::g'
+    fi |\
      sort |\
      uniq |\
      while read ts
@@ -1341,30 +1347,36 @@ function main {
 
     fi
     
-    ##### get the list of new files to fetch #####
-    
-    if ! getlist "$mirrorfile" "$fetchpattern"
+    if [[ "$DWH_REOVER" != "reover" ]]
     then
-        exit
-    fi
     
-    ##### loop over the commands in the mirrorfile #####
+        ##### get the list of new files to fetch #####
+        
+        if ! getlist "$mirrorfile" "$fetchpattern"
+        then
+            exit
+        fi
+        
+        ##### loop over the commands in the mirrorfile #####
+        
+        if ! [ -n "$dofunc" ] ; then dofunc="dofile" ; fi
+        
+        if ! mainloop "$mirrorfile" "$dofunc"
+        then
+            exit
+        fi
+
     
-    if ! [ -n "$dofunc" ] ; then dofunc="dofile" ; fi
+    else
     
-    if ! mainloop "$mirrorfile" "$dofunc"
-    then
-        exit
+        ##### finish up, make overvies etc... #####
+    
+        if ! finishup "$mirrorfile" "$datefunc"
+        then
+            exit
+        fi
     fi
 
-    ##### finish up, make overvies etc... #####
-    
-    
-
-    if ! finishup "$mirrorfile" "$datefunc"
-    then
-        exit
-    fi
 
     if [[ "$DWH_REBUILD" == "rebuild" ]]
     then
