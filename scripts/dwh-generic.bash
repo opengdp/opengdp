@@ -50,6 +50,15 @@ function dosubimg {
         local imgdir="${imgdir}/"
     fi
 
+        
+    ##### test if the image is in a lossy format #####
+    
+    if grep -e "COMPRESSION=.*JPEG" <<< "$info" > /dev/null || \
+       [[ "$imgextlower" == "sid" ]]
+       [[ "$imgextlower" == "pdf" ]]
+    then
+        local islossy=true
+    fi
     
     ##### test the projection ####
        
@@ -64,8 +73,14 @@ function dosubimg {
             
             #####  create a mask with the nearblack method #####
             
-            gdalmask -nearblack -near 0 -internal "${tmpdir}/${img}" \
-                     "${tmpdir}/prewarp_${imgbase}.tif" > /dev/null
+            if [[ "$islossy" == "true" ]]
+            then
+                gdalmask -nearblack -internal "${tmpdir}/${img}" \
+                         "${tmpdir}/prewarp_${imgbase}.tif" > /dev/null
+            else
+                gdalmask -nearblack -near 0 -internal "${tmpdir}/${img}" \
+                         "${tmpdir}/prewarp_${imgbase}.tif" > /dev/null
+            fi
             rm "${tmpdir}/${img}"
                  
             ##### needs warped #####
@@ -120,12 +135,20 @@ function dosubimg {
         then
             
             echo "no warp no alpha"
-            #####  create a mask and compress #####
             
-            gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                     -nearblack -near 0 -internal \
-                     "${tmpdir}/${img}" \
-                     "${tmpdir}/final_${imgbase}.tif" > /dev/null
+            #####  create a mask and compress #####
+            if [[ "$islossy" == "true" ]]
+            then
+                gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                         -nearblack -internal \
+                         "${tmpdir}/${img}" \
+                         "${tmpdir}/final_${imgbase}.tif" > /dev/null
+            else
+                gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                         -nearblack -near 0 -internal \
+                         "${tmpdir}/${img}" \
+                         "${tmpdir}/final_${imgbase}.tif" > /dev/null
+            fi
             rm "${tmpdir}/${img}"
             
       
@@ -230,6 +253,7 @@ function doimg {
     #        "$imgdir"
     #return
 
+    
     ##### get the xy size in pixels #####
         
     read x y < <(echo "$info" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
