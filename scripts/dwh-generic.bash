@@ -234,10 +234,10 @@ function doimg {
     
     ##### is the img too big? #####
     
-    ((cutat=8192))
+    ((cutat=16384))
     
     
-    if [[ $x -gt 8192 ]] || [[ $y -gt 8192 ]]
+    if [[ $x -gt $cutat ]] || [[ $y -gt $cutat ]]
     then
         
         ##### loop over x #####
