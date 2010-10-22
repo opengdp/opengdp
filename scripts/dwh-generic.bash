@@ -648,14 +648,14 @@ function getextent {
 ###############################################################################
 
 function writemap {
-    ts="$1"
-    extent="$2"
+    local ts="$1"
+    local extent="$2"
+    local scale="$3"
 
     if [[ "$doovr" == "yes" ]]
     then
         cat > "${outdir}/${dsname}${ts}.map" << EOF
         
-
   LAYER
     NAME '${dsname}_${ts}_nominmax'
     TYPE RASTER
@@ -673,7 +673,7 @@ function writemap {
       'wms_srs'          'EPSG:900913 EPSG:4326'
       'wms_extent'	 '$extent'
     END
-    OFFSITE 0 0 0
+
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
 
@@ -696,10 +696,10 @@ function writemap {
       'wms_srs'          'EPSG:900913 EPSG:4326'
       'wms_extent'	 '$extent'
     END
-    OFFSITE 0 0 0
+
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     GROUP '${dsname}_${ts}'
-    MAXSCALEDENOM 50000
+    MAXSCALEDENOM $scale
 
 
   END
@@ -721,10 +721,10 @@ function writemap {
       'wms_srs'          'EPSG:900913 EPSG:4326'
       'wms_extent'	 '$extent'
     END
-    OFFSITE 0 0 0
+
     DATA '${outdir}/${ts}/overview.tif'
     GROUP '${dsname}_${ts}'
-    MINSCALEDENOM 50000
+    MINSCALEDENOM $scale
 
 
   END
@@ -763,6 +763,7 @@ EOF
     
 }
 
+
 ###############################################################################
 # function to add an include line in the main mapfile
 ###############################################################################
@@ -788,17 +789,63 @@ EOF
 
 }
 
+function min {
+
+    if [[ $(bc <<< "scale = 16; $1-$2") = -* ]]
+    then
+        echo "$1"
+    else
+        echo "$2";
+    fi
+
+}
+
+
+      
 ###############################################################################
 # functiom to create a overview from the dataset
 ###############################################################################
 
 function makeoverview {
-    ts="$1"
-    extent="$2"
+    local ts="$1"
+    local extent="$2"
+    
+    local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+
+    gdalbuildvrt -overwrite \
+                 "${tmpdir}/${dsname}${ts}.vrt" \
+                 "${outdir}/${dsname}${ts}.shp" > /dev/null
+
+    read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
+                    grep -e "Pixel Size" |\
+                    sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+
+    local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
+    local scale=$(bc <<< "$orig + 30000")
+
+    ##### res = scale / (72 * 4374754) #####
+    
+    res=$(bc <<< "scale = 16; $scale / (72 * 4374754)")
+    
+    gdalbuildvrt -overwrite -tr $res $res \
+                 "${tmpdir}/${dsname}${ts}_2.vrt" \
+                 "${outdir}/${dsname}${ts}.shp" > /dev/null
+    
+    read x y < <( gdalinfo "${tmpdir}/${dsname}${ts}_2.vrt" |\
+                   grep -e "Size is" |\
+                   sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
 
     ${mapserverpath}/shp2img -m "$mapfile" -l "${dsname}_${ts}_nominmax" \
-     -o "${outdir}/${ts}/overview.tif" -s 12000 8000 -i image/tiff -e $extent
+     -o "${tmpdir}/${dsname}${ts}.tif" -s $x $y -i image/tiff -e $extent > /dev/null
 
+
+    gdalmask -internal -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+             "${tmpdir}/${dsname}${ts}.tif" \
+             "${outdir}/${ts}/overview.tif" > /dev/null
+    
+    rm -rf ${tmpdir} > /dev/null
+
+    echo ${scale%.*}
 }
 
 ###############################################################################
@@ -1005,27 +1052,36 @@ function finishup {
      uniq |\
      while read ts
      do
-
-        ##### get the extent of the ds #####
         
-        extent=$(getextent "$ts")
+        ##### write the map file #####
 
-        ##### rewrite the map file #####
-
-        writemap "$ts" "$extent"
+        writemap "$ts" "$extent" "50000"
 
         ##### add an include line in the main mapfile #####
         
         addinclude "$ts"
+
+        ##### get the extent of the ds #####
+        
+        extent=$(getextent "$ts")
 
         if [[ "$doovr" == "yes" ]]
         then
         
             ##### create a single file for larger area overviews #####
         
-            makeoverview "$ts" "$extent"
+            scale=$(makeoverview "$ts" "$extent")
             
         fi
+
+        ##### rewrite the map file with the correct scale #####
+
+        writemap "$ts" "$extent" "$scale"
+
+        ##### add an include line in the main mapfile #####
+        
+        addinclude "$ts"
+
         
         #####  write out a js file for geoext #####
         
@@ -1243,3 +1299,5 @@ function main {
 
     
 }
+
+
