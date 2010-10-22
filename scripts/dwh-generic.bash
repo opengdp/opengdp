@@ -23,6 +23,7 @@ urlcgibin="@urlcgibin@"
 urlbase="@urlbase@"
 htmlbase="@htmlbase@"
 
+
 export GDAL_CACHEMAX=500
 
 
@@ -193,6 +194,8 @@ function dosubimg {
     
 }
 
+
+
 ###############################################################################
 # function to bust a larger image into chunks and proccess
 ###############################################################################
@@ -303,9 +306,10 @@ function dotar {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
+    local origdir="$4"
    
     
-    for f in $(tar -tf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    for f in $(tar -tf "${origdir}/${zipfile}" --wildcards "$extglob")
     do
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
@@ -319,11 +323,11 @@ function dotar {
             local imgdir="${imgdir}/"
         fi
 
-        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
+        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -339,9 +343,10 @@ function dotargz {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
+    local origdir="$4"
     
 
-    for f in $(tar -tzf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    for f in $(tar -tzf "${origdir}/${zipfile}" --wildcards "$extglob")
     do
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
@@ -356,11 +361,11 @@ function dotargz {
         fi
 
         
-        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xzf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
+        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -376,9 +381,10 @@ function dotarbz2 {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
+    local origdir="$4"
     
 
-    for f in $(tar -tjf "${tmpdir}/${zipfile}" --wildcards "$extglob")
+    for f in $(tar -tjf "${origdir}/${zipfile}" --wildcards "$extglob")
     do
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
@@ -392,11 +398,11 @@ function dotarbz2 {
             local imgdir="${imgdir}/"
         fi
 
-        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "$f"
+        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "$f"
         
         ##### try to unzip a world file if its there #####
         
-        tar -xjf "${tmpdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
+        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -412,9 +418,10 @@ function dozip {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
+    local origdir="$4"
     
 
-    for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$extglob")
+    for f in $(zipinfo -1 "${origdir}/${zipfile}" "$extglob")
     do
         local imgfile="${f##*/}"
         local imgbase="${imgfile%.*}"
@@ -428,11 +435,11 @@ function dozip {
             local imgdir="${imgdir}/"
         fi  
 
-        unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir"
         
         ##### try to unzip a world file if its there #####
         
-        unzip "${tmpdir}/${zipfile}" "${imgdir}${imgbase}.??w" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}.??w" -d "$tmpdir"
         
         local info=$(gdalinfo "${tmpdir}/${f}")
         doimg "$f" "$tmpdir" "$ts" "$info"
@@ -449,20 +456,21 @@ function dokmz {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
+    local origdir="$4"
 
-    for f in $(zipinfo -1 "${tmpdir}/${zipfile}" "$baseglob.kml")
+    for f in $(zipinfo -1 "${origdir}/${zipfile}" "$baseglob.kml")
     do
         
         ##### extract the kml #####
         
-        unzip "${tmpdir}/${zipfile}" "$f" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir"
         
         ##### find and extract the corisponding img #####
         
         local img=$(grep '<GroundOverlay>' -A12 "$kml" |\
                     grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
         
-        unzip "${tmpdir}/${zipfile}" "$img" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir"
         
         local imgfile="${img##*}"
         local imgbase="${imgfile%.*}"
@@ -574,7 +582,14 @@ function dofile {
 
         local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
         
-        lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
+        
+        if [[ "$DWH_REBUILD" == "rebuild" ]]
+        then
+            local origdir="${indir/%\//}.old"
+        else
+            lftp -e "$(echo "$myline" | sed "s:get -O [/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit"
+            local origdir="$tmpdir"
+        fi
 
         if ! [ -d "$outdir/${ts}" ]
         then
@@ -584,42 +599,46 @@ function dofile {
         case "$ext" in
         
             *tar)
-                dotar "${dir}${file}" "$tmpdir" "$ts"
+                dotar "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
                 
             *tar.gz)
-                dotargz "${dir}${file}" "$tmpdir" "$ts"
+                dotargz "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *tgz)
-                dotargz "${dir}${file}" "$tmpdir" "$ts"
+                dotargz "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *tar.bz2)
-                dotarbz2 "${dir}${file}" "$tmpdir" "$ts"
+                dotarbz2 "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *zip)
-                dozip "${dir}${file}" "$tmpdir" "$ts"
+                dozip "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *kmz)
-                dokmz "${dir}${file}" "$tmpdir" "$ts"
+                dokmz "${dir}${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
 
 #fixme this does not take into account world files that may be there too
             
             *)
-                if gdalinfo "${tmpdir}${dir}/${file}"
+                if gdalinfo "${$origdir}/${dir}/${file}"
                 then
-                    doimg "${dir}/${file}"
+                    doimg "{$origdir}/${dir}/${file}"
                           "$tmpdir"
                           "$ts"
-                          $(gdalinfo "${tmpdir}/${dir}/${file}")
+                          $(gdalinfo "${origdir}/${dir}/${file}")
                 fi
 
             esac
-        mv "${tmpdir}/${dir}/${file}" "${indir}/${dir}/${file}"
+        
+        if [[ "$DWH_REBUILD" != "rebuild" ]]
+        then
+            mv "${tmpdir}/${dir}/${file}" "${indir}/${dir}/${file}"
+        fi
 
         rm -rf "${tmpdir}"
     
@@ -1270,6 +1289,33 @@ function main {
     
     host="$(hostname)"
     mirrorfile="$host.mirror.lftp"
+
+    ##### check if called for a rebuild #####
+
+    if [[ "$DWH_REBUILD" == "rebuild" ]]
+    then
+        echo "rebuilding"
+
+        if ! mv "$indir" "${indir/%\//}.old"
+        then
+            exit
+        fi
+
+        if ! mv "$outdir" "${outdir/%\//}.old"
+        then
+            exit
+        fi
+
+        if ! mkdir -p "$indir"
+        then
+            exit
+        fi
+        
+        cd "$indir"
+
+        baseurl="file://${indir/%\//}.old"
+
+    fi
     
     ##### get the list of new files to fetch #####
     
@@ -1296,7 +1342,14 @@ function main {
         exit
     fi
 
-    
-}
+    if [[ "$DWH_REBUILD" == "rebuild" ]]
+    then
+        echo "rebuilding"
+        rm "$indir"
 
+        mv "${indir/%\//}.old" "$indir"
+    
+    fi
+
+}
 

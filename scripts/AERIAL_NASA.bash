@@ -22,8 +22,8 @@
 dsname="AERIAL_NASA"
 baseurl="@edcftp@/AERIAL_NASA/"
 basedir="@basedir@"
-indir="${basedir}/source/${dsname}/"
-outdir="${basedir}/done/${dsname}/"
+indir="${basedir}/source/${dsname}"
+outdir="${basedir}/done/${dsname}"
 mapfile="@mapfile@"
 
 tmp="@tmp@"
