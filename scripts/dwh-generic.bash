@@ -1091,6 +1091,36 @@ function dodate {
 }
 
 ###############################################################################
+# function rebuild the tile indexes for a ds
+###############################################################################
+
+function rebuildtindexs {
+
+    ##### remove the old tindexs #####
+    
+    for shp in $(find ${outdir} -name "${dsname}[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].shp")
+    do
+        local base="${shp%.*}"
+        for ext in shp dbf prj shx
+        do
+            rm "${base}.${ext}"
+        done
+    done
+    
+    ##### make the ne tindexs #####
+    
+    for img in $(find ${outdir} -iname "*.tif")
+    do
+        local imgfile="${img##*/}"
+        if [[ "$imgfile" != overview* ]]
+        then
+            ts=$(${datefunc} <<< "$img")
+            gdaltindex "${outdir}/${dsname}${ts}.shp" "$img"  > /dev/null
+        fi
+    done
+}
+
+###############################################################################
 # function to add the data to the map file and create overviews
 ###############################################################################
 
@@ -1333,7 +1363,7 @@ function main {
     mirrorfile="$host.mirror.lftp"
 
     ##### check if called for a rebuild #####
-
+    
     if [[ "$DWH_REBUILD" == "rebuild" ]]
     then
         echo "rebuilding"
@@ -1359,7 +1389,7 @@ function main {
 
     fi
     
-    if [[ "$DWH_REOVER" != "reover" ]]
+    if [[ "$DWH_REOVER" != "reover" ]] && [[ "$DWH_RETINDEX" != "retindex" ]]
     then
     
         ##### get the list of new files to fetch #####
@@ -1377,16 +1407,20 @@ function main {
         then
             exit
         fi
-
     
-    else
+    fi
     
-        ##### finish up, make overvies etc... #####
     
-        if ! finishup "$mirrorfile" "$datefunc"
-        then
-            exit
-        fi
+    if [[ "$DWH_RETINDEX" == "retindex" ]] 
+    then
+        rebuildtindexs
+    fi
+        
+    ##### finish up, make overvies etc... #####
+    
+    if ! finishup "$mirrorfile" "$datefunc"
+    then
+        exit
     fi
 
 
