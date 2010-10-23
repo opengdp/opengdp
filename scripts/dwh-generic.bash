@@ -885,6 +885,18 @@ function makeoverview {
              "${tmpdir}/${dsname}${ts}.tif" \
              "${outdir}/${ts}/overview.tif" > /dev/null
     
+    ##### add overviews #####
+    
+    ((o=2))
+    ovrs=""
+    while (( o <= x / 64 )) || (( o <= y / 64 ))
+    do
+        ovrs="$ovrs $o"
+        ((o*=2))
+    done
+    
+    gdaladdo -r average "${outdir}/${ts}/overview.tif" $ovrs  > /dev/null
+    
     rm -rf ${tmpdir} > /dev/null
 
     echo ${scale%.*}
