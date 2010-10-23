@@ -1103,7 +1103,7 @@ function finishup {
     if [[ "$DWH_REOVER" != "reover" ]]
     then
         grep "${mirrorfile}" -e "^get" |\
-         ${datefunc} |\
+         ${datefunc}
     else
         find "${outdir}" -type d -name "[0-9]*" |\
         sed 's:.*/::g'
