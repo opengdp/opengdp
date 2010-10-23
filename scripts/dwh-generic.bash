@@ -649,9 +649,9 @@ function dofile {
 #fixme this does not take into account world files that may be there too
             
             *)
-                if gdalinfo "${$origdir}/${dir}/${file}"
+                if gdalinfo "${origdir}/${dir}/${file}"
                 then
-                    doimg "{$origdir}/${dir}/${file}"
+                    doimg "${origdir}/${dir}/${file}"
                           "$tmpdir"
                           "$ts"
                           $(gdalinfo "${origdir}/${dir}/${file}")
