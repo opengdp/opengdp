@@ -990,7 +990,7 @@ Ext.onReady(function() {
 
 EOF
 
-    for map in $(find $outdir -name "*.map")
+    for map in $(find $outdir -name "*.map" | sort )
     do
         if [[ "$doovr" == "yes" ]]
         then
@@ -1381,7 +1381,7 @@ function main {
     if [[ "$DWH_REBUILD" == "rebuild" ]]
     then
         echo "rebuilding"
-        rm "$indir"
+        rm -r "$indir"
 
         mv "${indir/%\//}.old" "$indir"
     
