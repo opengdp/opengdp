@@ -18,7 +18,7 @@ MAP
   END
 
   # Background color for the map canvas -- change as desired
-  IMAGECOLOR 0 0 0
+#  IMAGECOLOR 0 0 0
   IMAGEQUALITY 95
   IMAGETYPE png24
 
