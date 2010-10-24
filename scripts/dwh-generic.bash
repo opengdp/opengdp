@@ -40,7 +40,7 @@ function dosubimg {
     local imgfile="${img##*/}"
     local imgbase="${imgfile%.*}"
     local imgext="${imgfile##*.}"
-    local imgextlower="$(echo $imgext | tr [A-Z] [a-z])"
+    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
     
     local imgdir="${img%/*}"
     if [[ "$imgdir" = "$imgfile" ]]
@@ -523,8 +523,8 @@ function dokmz {
         
         ##### calc the pixel size #####
         
-        xp=$(echo "scale = 16; ($e - $w) / $x" | bc)
-        yp=$(echo "scale = 16; ($s - $n) / $y" | bc)
+        xp=$(bc <<< "scale = 16; ($e - $w) / $x")
+        yp=$(bc <<< "scale = 16; ($s - $n) / $y")
         
         ##### decide the world file ext #####
         
@@ -581,7 +581,7 @@ function dofile {
         local file="${myline##*/}"
         local base="${file%.*}"
         local ext="${file#*.}"
-        local ext="$(echo $ext | tr [A-Z] [a-z])"
+        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
         #local ext="${ext,,*}"
         
         if echo "$myline" | grep -e "$sourcedir" > /dev/null
@@ -591,7 +591,7 @@ function dofile {
             local dir=""
         fi
          
-        ts=$(echo "$myline" | dodate)
+        ts=$(${datefunc} <<< "$myline")
         
         #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
         #        "$myline" \
@@ -876,13 +876,37 @@ function makeoverview {
     read x y < <( gdalinfo "${tmpdir}/${dsname}${ts}_2.vrt" |\
                    grep -e "Size is" |\
                    sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+    
+    read ux uy lx ly <<< "$extent"
+    cat > "${tmpdir}/${dsname}${ts}.xml" << EOF
+<GDAL_WMS>
+    <Service name="WMS">
+        <ServerURL>${urlcgibin}?</ServerUrl>
+        <ImageFormat>image/tiff</ImageFormat>
+        <Transparent>TRUE</Transparent>
+        <Layers>${dsname}_${ts}_nominmax</Layers>
+    </Service>
+    
+    <DataWindow>
+        <UpperLeftX>${ux}</UpperLeftX>
+        <UpperLeftY>${uy}</UpperLeftY>
+        <LowerRightX>${lx}</LowerRightX>
+        <LowerRightY>${ly}</LowerRightY>
+        <SizeX>${x}</SizeX>
+        <SizeY>${y}</SizeY>
+    </DataWindow> 	
+    <Projection>EPSG:4326</Projection>
+    <BlockSizeX>256</BlockSizeX>
+    <BlockSizeY>256</BlockSizeY>
+    <OverviewCount>0</OverviewCount>
+    <MaxConnections>$((${limit}/2))</MaxConnections>
+    <Timeout>300</Timeout>
+</GDAL_WMS>
 
-    ${mapserverpath}/shp2img -m "$mapfile" -l "${dsname}_${ts}_nominmax" \
-     -o "${tmpdir}/${dsname}${ts}.tif" -s $x $y -i image/tiff -e $extent > /dev/null
-
+EOF
 
     gdalmask -internal -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-             "${tmpdir}/${dsname}${ts}.tif" \
+             "${tmpdir}/${dsname}${ts}.xml" \
              "${outdir}/${ts}/overview.tif" > /dev/null
     
     ##### add overviews #####
@@ -912,10 +936,10 @@ function comp_meter {
     lines=$2
     donelines=$3
     
-    decdone=$(echo "scale = 6; $donelines / $lines" | bc)
-    percdone=$(echo "scale = 0; $decdone * 100" | bc)
+    decdone=$(bc <<< "scale = 6; $donelines / $lines")
+    percdone=$(bc <<< "scale = 0; $decdone * 100")
     elap=$(($(date +%s) - started))
-    comp=$(echo "scale=0; $elap / $decdone" | bc)
+    comp=$(bc <<< "scale=0; $elap / $decdone")
     ((comp +=  started))
     
     printf "\r%3.0f%% complete. EST. finish at %s" $percdone "$(date -d "@${comp}")"
@@ -982,6 +1006,7 @@ function mainloop {
     done < "${mirrorfile}"
 
     wait
+
     echo
 
 }
