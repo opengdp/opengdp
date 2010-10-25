@@ -94,7 +94,7 @@ function dosubimg {
             #####  create a mask and compress #####
             
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                     -nearblack -near 0 -internal \
+                     -internal \
                      "${tmpdir}/warped_${imgbase}.tif" \
                      "${tmpdir}/final_${imgbase}.tif" > /dev/null
             rm "${tmpdir}/warped_${imgbase}.tif"
@@ -115,7 +115,7 @@ function dosubimg {
             #####  create a mask and compress #####
             
             gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                     -nearblack -near 0 -internal \
+                     -internal \
                      "${tmpdir}/warped_${imgbase}.tif" \
                      "${tmpdir}/final_${imgbase}.tif"  > /dev/null
             rm "${tmpdir}/warped_${imgbase}.tif"
@@ -139,19 +139,24 @@ function dosubimg {
             #####  create a mask and compress #####
             if [[ "$islossy" == "true" ]]
             then
-                gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                gdalmask -co TILED=YES \
                          -nearblack -internal \
                          "${tmpdir}/${img}" \
-                         "${tmpdir}/final_${imgbase}.tif" > /dev/null
+                         "${tmpdir}/masked_${imgbase}.tif" > /dev/null
             else
-                gdalmask -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                gdalmask -co TILED=YES \
                          -nearblack -near 0 -internal \
                          "${tmpdir}/${img}" \
-                         "${tmpdir}/final_${imgbase}.tif" > /dev/null
+                         "${tmpdir}/masked_${imgbase}.tif" > /dev/null
             fi
             rm "${tmpdir}/${img}"
             
-      
+            ##### translate to compress #####
+            
+            GDAL_TIFF_INTERNAL_MASK="YES" gdal_translate \
+                -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                "${tmpdir}/masked_${imgbase}.tif" \
+                "${tmpdir}/final_${imgbase}.tif" > /dev/null
         else
            echo "no warp has alpha"
 
