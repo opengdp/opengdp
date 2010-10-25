@@ -123,6 +123,7 @@ do
     edcftp=$(inputbox "enter the edcftp base url: " "http://edcftp.cr.usgs.gov/pub/data/disaster/201004_Oilspill_GulfOfMexico/data/")
 done
 
+
 ##### mapfile #####
 
 unset mapfile
@@ -444,7 +445,32 @@ done
 
 ##### map #####
 
-do_subst < "map/dwh.map" > "$mapfile"
+if [ -f  "$mapfile" ]
+then
+    ts=$(date +%s)
+    
+    mv  "$mapfile" "${mapfile}.${ts}.bak"
+    
+    do_subst < "map/dwh.map" > "$mapfile"
+    
+    grep "${mapfile}.${ts}.bak" -e INCLUDE |\
+     while read line
+        linenum=$(cat "$mapfile" |\
+                   grep -n -e "^[ ]*END[ ]*$" |\
+                   tail -n 1 |\
+                   cut -d ":" -f 1
+                 )
+
+        ed -s "$mapfile" << EOF
+${linenum}-1a
+${line}
+.
+w
+EOF
+    done
+else
+    do_subst < "map/dwh.map" > "$mapfile"
+fi
 
 ##### cgi #####
 
@@ -458,7 +484,36 @@ rm -f "$tmp"
 
 ##### html and js #####
 
-do_subst < "html/index.html" > "$htmlbase/index.html"
+if [ -f  "$htmlbase/index.html" ]
+then
+    ts=$(date +%s)
+    
+    mv  "$htmlbase/index.html" "$htmlbase/index.html.${ts}.bak"
+    
+    do_subst < "html/index.html" > "$htmlbase/index.html"
+
+    grep "$htmlbase/index.html.${ts}.bak" -e '<script type="text/javascript" src=".*.js"></script>' |\
+     while read line
+        if ! grep "html/index.html" -e "$line"
+        then
+            linenum=$(cat "${htmlbase}/index.html" |\
+                       grep -n -e "finish.js" |\
+                       tail -n 1 |\
+                       cut -d ":" -f 1
+                     )
+
+            ed -s "${htmlbase}/index.html" << EOF
+${linenum}-1a
+        <script type="text/javascript"
+.
+w
+EOF
+        fi
+    done
+else
+    do_subst < "html/index.html" > "$htmlbase/index.html"
+fi
+    
 do_subst < "html/setup.js" > "$htmlbase/setup.js"
 do_subst < "html/google.js" > "$htmlbase/google.js"
 do_subst < "html/finish.js" > "$htmlbase/finish.js"
