@@ -264,8 +264,7 @@ function doimg {
     ##### test if the image is in a lossy format #####
     
     if grep -e "COMPRESSION=.*JPEG" <<< "$info" > /dev/null || \
-       [[ "$imgextlower" == "sid" ]]
-       [[ "$imgextlower" == "pdf" ]]
+       [[ "$imgextlower" == "sid" ]] || [[ "$imgextlower" == "pdf" ]]
     then
         local islossy=true
     fi
