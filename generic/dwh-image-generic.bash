@@ -372,7 +372,7 @@ function doimg {
                 
                 ##### translate #####
                 
-                gdal_translate -srcwin $xoff $yoff $xsize $ysize \
+                gdal_translate -of VRT -srcwin $xoff $yoff $xsize $ysize \
                                "${tmpdir}/${img}"\
                                "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
         
@@ -383,7 +383,7 @@ function doimg {
                 
                 ##### rm the vrt #####
                 
-                "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
+                rm "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
             done
         done
     
