@@ -235,6 +235,7 @@ function doimg {
     local imgfile="${img##*/}"
     local imgbase="${imgfile%.*}"
     local imgext="${imgfile##*.}"
+    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
     local imgdir="${img%/*}"
     
     local imgdir="${img%/*}"
