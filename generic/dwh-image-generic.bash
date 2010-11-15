@@ -28,7 +28,8 @@ function dosubimg {
     local tmpdir="$2"
     local ts="$3"
     local info="$4"
-    
+    local islossy="$5"
+
     local imgfile="${img##*/}"
     local imgbase="${imgfile%.*}"
     local imgext="${imgfile##*.}"
@@ -60,14 +61,7 @@ function dosubimg {
         local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
     fi
 
-    ##### test if the image is in a lossy format #####
-    
-    if grep -e "COMPRESSION=.*JPEG" <<< "$info" > /dev/null || \
-       [[ "$imgextlower" == "sid" ]]
-       [[ "$imgextlower" == "pdf" ]]
-    then
-        local islossy=true
-    fi
+
     
     ##### test the projection ####
        
@@ -89,7 +83,6 @@ function dosubimg {
                 nearblack -co TILED=YES -setmask -near 0 -of GTiff "${tmpdir}/${img}" \
                          -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
             fi
-            #rm "${tmpdir}/${img}"
                  
             ##### needs warped #####
         
@@ -101,6 +94,8 @@ function dosubimg {
             
             #####  create a mask and compress #####
             
+            rm "${tmpram}/prewarp_${imgbase}.tif"
+
             gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
@@ -118,7 +113,6 @@ function dosubimg {
                      -t_srs EPSG:4326 \
                      "${tmpdir}/${img}" \
                      "${tmpram}/warped_${imgbase}.tif"  > /dev/null
-            #rm "${tmpdir}/${img}"
             
             #####  create a mask and compress #####
             
@@ -126,6 +120,7 @@ function dosubimg {
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
                      "${tmpram}/final_${imgbase}.tif"  > /dev/null
+
             rm "${tmpram}/warped_${imgbase}.tif"
             
         fi
@@ -160,6 +155,9 @@ function dosubimg {
             gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                 "${tmpram}/masked_${imgbase}.tif" \
                 "${tmpram}/final_${imgbase}.tif" > /dev/null
+            
+            rm "${tmpram}/masked_${imgbase}.tif"
+
         else
            echo "no warp has alpha"
 
@@ -167,7 +165,8 @@ function dosubimg {
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpdir}/${img}" \
                      "${tmpram}/final_${imgbase}.tif" > /dev/null
-            #rm "${tmpdir}/${img}"
+            
+            
             
         fi
 
@@ -261,6 +260,15 @@ function doimg {
        return
     fi
 
+    ##### test if the image is in a lossy format #####
+    
+    if grep -e "COMPRESSION=.*JPEG" <<< "$info" > /dev/null || \
+       [[ "$imgextlower" == "sid" ]]
+       [[ "$imgextlower" == "pdf" ]]
+    then
+        local islossy=true
+    fi
+
     ##### check if the image needs scaled #####
     
     if ! gdalinfo ${tmpdir}/${img} | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
@@ -340,7 +348,6 @@ function doimg {
             local ysize
             local yoff
             
-
             ((ysize = $cutat))
             for ((yoff = 0; yoff < y; yoff += $cutat))
             do
@@ -351,6 +358,17 @@ function doimg {
                 then
                     ((ysize = y - yoff))
                 fi
+
+                local myislossy="$islossy"
+
+                ##### make sure if were in the center of the img we turn off islossy #####
+                
+                if [[ "$islossy" == "yes" ]] && \
+                   ((yoff > 0 )) && (( ysize + yoff < y )) && \
+                   ((xoff > 0 )) && (( xsize + xoff < x ))
+                then
+                    myislossy="no"
+                fi
                 
                 ##### translate #####
                 
@@ -360,23 +378,21 @@ function doimg {
         
                 dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                          "$tmpdir" "$ts" \
-                         "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")"
-
+                         "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
+                         "$myislossy"
+                
+                ##### rm the vrt #####
+                
+                "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
             done
         done
-    
-        ##### rm the original image to free up ramdisk as fast as posible #####
-    
-        rm "${tmpdir}/${img}"
     
     ##### its not too big do the image as is #####
     
     else
     
-        dosubimg "${img}" \
-                 "$tmpdir" "$ts" \
-                 "$info"
-    
+        dosubimg "${img}" "$tmpdir" "$ts" \
+                 "$info" "$islossy"
     fi
 
 }

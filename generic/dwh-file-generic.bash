@@ -283,11 +283,11 @@ function dofile {
         then
             local origdir="${indir/%\//}.old"
         else
-            lftp -e "$(echo "$myline" | sed "s:get \(\(-.[ ]\)*\)[-/_.A-Za-z0-9]*:get \1${tmpdir}:") ; exit" > /dev/null 2> /dev/null
+            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:") ; exit" > /dev/null 2> /dev/null
             local origdir="$tmpdir"
         fi
         
-        echo "$(echo "$myline" | sed "s:get \(\(-.[ ]\)*\)[-/_.A-Za-z0-9]*:get \1${tmpdir}:")"
+
         echo
         if ! [ -d "$outdir/${ts}" ]
         then
