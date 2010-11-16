@@ -407,29 +407,39 @@ function doimg {
 #                    myislossy="no"
 #                fi
                 
+                if [ -n "$ramdisk" ]
+                then
+                    local tmpram=$(mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX")
+                else
+                    local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
+                fi
+
                 ##### translate #####
                 
                 if [[ "$imgextlower" == "sid" ]]
                 then
                     mrsiddecode -ulxy $xoff $yoff -wh $xsize $ysize  -s 0 \
                                 -i "${tmpdir}/${img}" \
-                                -o "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+                                -o "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
 
                     dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
-                             "$tmpdir" "$ts" \
-                             "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
+                             "$tmpram" "$ts" \
+                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
                              "$myislossy" "no"
 
                 else
                     gdal_translate -of VRT -srcwin $xoff $yoff $xsize $ysize \
                                    "${tmpdir}/${img}"\
-                                   "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                                   "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
             
                     dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
-                             "$tmpdir" "$ts" \
-                             "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
+                             "$tmpram" "$ts" \
+                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
                              "$myislossy" "no"
                 fi
+                
+                rm -rf "$tmpram"
+
             done
         done
     
