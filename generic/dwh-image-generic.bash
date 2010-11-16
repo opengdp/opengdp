@@ -29,6 +29,7 @@ function dosubimg {
     local ts="$3"
     local info="$4"
     local islossy="$5"
+    local isoriginal="$6"
 
     local imgfile="${img##*/}"
     local imgbase="${imgfile%.*}"
@@ -42,18 +43,24 @@ function dosubimg {
     else
         local imgdir="${imgdir}/"
     fi
-
-            
-    #printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n" \
-    #        "$img" \
-    #        "$tmpdir "\
-    #        "$ts" \
-    #        "$imgfile" \
-    #        "$imgbase" \
-    #        "$imgext" \
-    #        "$imgdir"
-    #return
     
+    ##### if we need a debug do it and return #####
+
+    if [ -n "$DEBUG_dosubimg" ]
+    then            
+        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n" \
+              "$img" \
+              "$tmpdir "\
+              "$ts" \
+              "$imgfile" \
+              "$imgbase" \
+              "$imgext" \
+              "$imgdir"
+        return
+    fi
+
+    ###### RAMDISK? #####
+
     if [ -n "$ramdisk" ]
     then
         local tmpram=$(mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX")
@@ -83,7 +90,12 @@ function dosubimg {
                 nearblack -co TILED=YES -setmask -near 0 -of GTiff "${tmpdir}/${img}" \
                          -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
             fi
-                 
+            
+            if [[ "$isoriginal" == "no" ]]
+            then
+                rm "${tmpdir}/${img}"
+            fi
+
             ##### needs warped #####
         
             gdalwarp -co TILED=YES \
@@ -114,6 +126,11 @@ function dosubimg {
                      "${tmpdir}/${img}" \
                      "${tmpram}/warped_${imgbase}.tif"  > /dev/null
             
+            if [[ "$isoriginal" == "no" ]]
+            then
+                rm "${tmpdir}/${img}"
+            fi
+
             #####  create a mask and compress #####
             
             gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
@@ -137,6 +154,7 @@ function dosubimg {
         then
             
             #####  create a mask and compress #####
+
             if [[ "$islossy" == "true" ]]
             then
                 nearblack -co TILED=YES -setmask -of GTiff \
@@ -148,8 +166,12 @@ function dosubimg {
                          "${tmpdir}/${img}" \
                          -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
             fi
-            #rm "${tmpdir}/${img}"
-            
+
+            if [[ "$isoriginal" == "no" ]]
+            then
+                rm "${tmpdir}/${img}"
+            fi
+
             ##### translate to compress #####
             
             gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
@@ -166,7 +188,11 @@ function dosubimg {
                      "${tmpdir}/${img}" \
                      "${tmpram}/final_${imgbase}.tif" > /dev/null
             
-            
+            if [[ "$isoriginal" == "no" ]]
+            then
+                rm "${tmpdir}/${img}"
+            fi
+
             
         fi
 
@@ -230,6 +256,7 @@ function doimg {
     local tmpdir="$2"
     local ts="$3"
     local info="$4"
+    local isoriginal="$5"
     
     
     local imgfile="${img##*/}"
@@ -246,6 +273,13 @@ function doimg {
         local imgdir="${imgdir}/"
     fi
     
+    ##### double check the info #####
+    
+    if [ -n "$info" ]
+    then
+        info="$(gdalinfo "${tmpdir}/${img}")"
+    fi
+   
     ##### if we need a debug do it and return #####
 
     if [ -n "$DEBUG_doimg" ]
@@ -271,10 +305,10 @@ function doimg {
 
     ##### check if the image needs scaled #####
     
-    if ! gdalinfo ${tmpdir}/${img} | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
+    if ! echo "$info" | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
     then
         
-        type="$(gdalinfo ${tmpdir}/${img} | grep -e "Band 1 " | sed 's|.*Type=\([a-zA-Z0-9]*\),.*|\1|')"
+        type="$(echo "$info" | grep -e "Band 1 " | sed 's|.*Type=\([a-zA-Z0-9]*\),.*|\1|')"
         case "$type" in
 
             UInt16)
@@ -317,7 +351,8 @@ function doimg {
     local x
     local y
 
-    read x y < <(gdalinfo "${tmpdir}/${img}" | grep -e "Size is" | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+    read x y < <(echo "$info" | grep -e "Size is"  | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/' )
+
     
     ##### is the img too big? #####
     
@@ -379,8 +414,8 @@ function doimg {
                 dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                          "$tmpdir" "$ts" \
                          "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
-                         "$myislossy"
-                
+                         "$myislossy" "no"
+
                 ##### rm the vrt #####
                 
                 rm "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
@@ -392,7 +427,7 @@ function doimg {
     else
     
         dosubimg "${img}" "$tmpdir" "$ts" \
-                 "$info" "$islossy"
+                 "$info" "$islossy" "$isoriginal"
     fi
 
 }

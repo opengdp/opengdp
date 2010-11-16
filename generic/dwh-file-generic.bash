@@ -51,8 +51,7 @@ function dotar {
         
         tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
         
-        local info=$(gdalinfo "${tmpdir}/${f}")
-        doimg "$f" "$tmpdir" "$ts" "$info"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
     done
     
 }
@@ -89,8 +88,7 @@ function dotargz {
         
         tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
         
-        local info=$(gdalinfo "${tmpdir}/${f}")
-        doimg "$f" "$tmpdir" "$ts" "$info"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
         
     done
 }
@@ -126,8 +124,7 @@ function dotarbz2 {
         
         tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
         
-        local info=$(gdalinfo "${tmpdir}/${f}")
-        doimg "$f" "$tmpdir" "$ts" "$info"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
         
     done
 }
@@ -165,8 +162,7 @@ function dozip {
         
         unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}.??w" -d "$tmpdir" > /dev/null 2> /dev/null
         
-        local info=$(gdalinfo "${tmpdir}/${f}")
-        doimg "$f" "$tmpdir" "$ts" "$info"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 
         
     done
@@ -230,13 +226,12 @@ function dokmz {
                        
         ##### proccess #####
         
-        local info=$(gdalinfo "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt")
-        doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" "$info"
+        doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" \
+              "$(gdalinfo "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt")" \
+              "no"
     done
 
 }
-
-
 
 ###############################################################################
 # function to proccess a file
@@ -328,7 +323,8 @@ function dofile {
                     doimg "${file}" \
                           "$tmpdir" \
                           "$ts" \
-                          $(gdalinfo "${origdir}/${file}")
+                          "$(gdalinfo "${origdir}/$file") \
+                          "yes"
                 fi
 
             esac
