@@ -48,14 +48,16 @@ function dosubimg {
 
     if [ -n "$DEBUG_dosubimg" ]
     then            
-        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n" \
+        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n islossy=%s\n isoriginal=%s\n " \
               "$img" \
               "$tmpdir "\
               "$ts" \
               "$imgfile" \
               "$imgbase" \
               "$imgext" \
-              "$imgdir"
+              "$imgdir" \
+              "$islossy" \
+              "$isoriginal"
         return
     fi
 
@@ -284,7 +286,7 @@ function doimg {
 
     if [ -n "$DEBUG_doimg" ]
     then
-        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n" \
+        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s \n" \
                "$img" \
                "$tmpdir "\
                "$ts" \
@@ -336,7 +338,7 @@ function doimg {
 
         gdal_translate -of VRT -ot byte -scale $scale \
                        "${tmpdir}/${img}"\
-                       "${tmpdir}/${imgdir}${imgbase}_scaled.vrt"
+                       "${tmpdir}/${imgdir}${imgbase}_scaled.vrt" > /dev/null
 
 
         img="${imgdir}${imgbase}_scaled.vrt"
@@ -396,29 +398,38 @@ function doimg {
 
                 local myislossy="$islossy"
 
-                ##### make sure if were in the center of the img we turn off islossy #####
-                
-                if [[ "$islossy" == "yes" ]] && \
-                   ((yoff > 0 )) && (( ysize + yoff < y )) && \
-                   ((xoff > 0 )) && (( xsize + xoff < x ))
-                then
-                    myislossy="no"
-                fi
+#                ##### make sure if were in the center of the img we turn off islossy #####
+#                
+#                if [[ "$islossy" == "yes" ]] && \
+#                   ((yoff > 0 )) && (( ysize + yoff < y )) && \
+#                   ((xoff > 0 )) && (( xsize + xoff < x ))
+#                then
+#                    myislossy="no"
+#                fi
                 
                 ##### translate #####
                 
-                gdal_translate -of VRT -srcwin $xoff $yoff $xsize $ysize \
-                               "${tmpdir}/${img}"\
-                               "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
-        
-                dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
-                         "$tmpdir" "$ts" \
-                         "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
-                         "$myislossy" "no"
+                if [[ "$imgextlower" == "sid" ]]
+                then
+                    mrsiddecode -ulxy $xoff $yoff -wh $xsize $ysize  -s 0 \
+                                -i "${tmpdir}/${img}" \
+                                -o "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
 
-                ##### rm the vrt #####
-                
-                rm "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt"
+                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+                             "$tmpdir" "$ts" \
+                             "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
+                             "$myislossy" "no"
+
+                else
+                    gdal_translate -of VRT -srcwin $xoff $yoff $xsize $ysize \
+                                   "${tmpdir}/${img}"\
+                                   "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+            
+                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
+                             "$tmpdir" "$ts" \
+                             "$(gdalinfo "${tmpdir}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
+                             "$myislossy" "no"
+                fi
             done
         done
     

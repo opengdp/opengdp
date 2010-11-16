@@ -260,16 +260,19 @@ function dofile {
          
         local ts=$(${datefunc} <<< "$myline")
         
-        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-        #        "$myline" \
-        #        "$sourcedir "\
-        #        "$file" \
-        #        "$base" \
-        #        "$ext" \
-        #        "$dir" \
-        #        "$ts"
-        #echo >&3
-        #return
+        if [ -n "$DEBUG_dofile" ]
+        then
+            printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+                    "$myline" \
+                    "$sourcedir "\
+                    "$file" \
+                    "$base" \
+                    "$ext" \
+                    "$dir" \
+                    "$ts"
+            echo >&3
+            return
+        fi
 
         local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
         
@@ -320,10 +323,11 @@ function dofile {
             *)
                 if gdalinfo "${origdir}/${file}" > /dev/null
                 then
+                    
                     doimg "${file}" \
                           "$tmpdir" \
                           "$ts" \
-                          "$(gdalinfo "${origdir}/$file") \
+                          "$(gdalinfo ${origdir}/$file)" \
                           "yes"
                 fi
 
