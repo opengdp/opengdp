@@ -70,7 +70,6 @@ function dosubimg {
         local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
     fi
 
-
     
     ##### test the projection ####
        
@@ -86,11 +85,23 @@ function dosubimg {
             
             if [[ "$islossy" == "true" ]]
             then
-                nearblack -co TILED=YES -setmask -of GTiff "${tmpdir}/${img}" \
-                         -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                if [[ "$nearwhite" == "true" ]]
+                then
+                    nearblack -co TILED=YES -setmask -white -of GTiff "${tmpdir}/${img}" \
+                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                else
+                    nearblack -co TILED=YES -setmask -of GTiff "${tmpdir}/${img}" \
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                fi
             else
-                nearblack -co TILED=YES -setmask -near 0 -of GTiff "${tmpdir}/${img}" \
-                         -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                if [[ "$nearwhite" == "true" ]]
+                then
+                    nearblack -co TILED=YES -setmask -near 0 -white -of GTiff "${tmpdir}/${img}" \
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                else
+                    nearblack -co TILED=YES -setmask -near 0 -of GTiff "${tmpdir}/${img}" \
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                fi
             fi
             
             if [[ "$isoriginal" == "no" ]]
@@ -159,14 +170,29 @@ function dosubimg {
 
             if [[ "$islossy" == "true" ]]
             then
-                nearblack -co TILED=YES -setmask -of GTiff \
-                         "${tmpdir}/${img}" \
-                         -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                if [[ "$nearwhite" == "true" ]]
+                then
+                    nearblack -co TILED=YES -setmask -white -of GTiff \
+                             "${tmpdir}/${img}" \
+                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                else
+                    nearblack -co TILED=YES -setmask -of GTiff \
+                             "${tmpdir}/${img}" \
+                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                fi
             else
-                nearblack -co TILED=YES -setmask -of GTiff \
-                         -near 0 \
-                         "${tmpdir}/${img}" \
-                         -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                if [[ "$nearwhite" == "true" ]]
+                then
+                    nearblack -co TILED=YES -setmask -white -of GTiff \
+                             -near 0 \
+                             "${tmpdir}/${img}" \
+                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                else
+                    nearblack -co TILED=YES -setmask -of GTiff \
+                             -near 0 \
+                             "${tmpdir}/${img}" \
+                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                fi
             fi
 
             if [[ "$isoriginal" == "no" ]]
