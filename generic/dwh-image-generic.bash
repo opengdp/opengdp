@@ -362,7 +362,7 @@ function doimg {
     if [[ "$doscale" == "TRUE" ]] || [ -n "$rescale" ]
     then
 
-        gdal_translate -of VRT -ot byte -scale $scale \
+        gdal_translate -of VRT -ot byte -scale $rescale \
                        "${tmpdir}/${img}"\
                        "${tmpdir}/${imgdir}${imgbase}_scaled.vrt" > /dev/null
 
