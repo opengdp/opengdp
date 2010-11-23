@@ -286,7 +286,6 @@ function dofile {
         fi
         
 
-        echo
         if ! [ -d "$outdir/${ts}" ]
         then
             mkdir -p "$outdir/${ts}"

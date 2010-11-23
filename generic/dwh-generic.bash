@@ -386,8 +386,8 @@ function main {
 
     case "$stage" in
         
-        ##### normal opp #####    
-        0)   
+        ##### normal op or -rebuild #####
+        0|1)   
 
             ##### get the list of new files to fetch #####
                 
@@ -395,11 +395,6 @@ function main {
             then
                 exit
             fi
-        ;;
-        ##### normal op or -rebuild #####
-    esac
-    case "$stage" in
-        0|1)
         
             ##### loop over the commands in the mirrorfile #####
         
