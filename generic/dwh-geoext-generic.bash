@@ -46,10 +46,13 @@ EOF
         fi 
         
         read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
-        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
+	
+        if float_cmp "$n < 86" && float_cmp "$s > -86"
+        then
+            read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
+            read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
         
-        cat << EOF
+            cat << EOF
     
   ${layer} = new OpenLayers.Layer.WMS(
     "${layer}",
@@ -69,6 +72,29 @@ EOF
   ${dsname}_layers.push( ${layer} );
 
 EOF
+        else
+
+            cat << EOF
+
+  ${layer} = new OpenLayers.Layer.WMS(
+    "${layer}",
+    "$urlcgibin",
+    {
+      layers: '${layer}',
+      format: 'image/png',
+      transparency: 'TRUE',
+    },
+    {
+      isBaseLayer: false,
+      visibility: false
+    }
+  );
+
+  ${dsname}_layers.push( ${layer} );
+
+EOF
+         fi
+
     done
 
     cat << EOF
@@ -146,10 +172,6 @@ EOF
         else
             layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
         fi
-        
-        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
-        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
         
         cat << EOF
 

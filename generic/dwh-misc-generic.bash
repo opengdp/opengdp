@@ -90,6 +90,31 @@ function getlist {
     
 }
 
+###############################################################################
+# function to get the a list of new files
+###############################################################################
+
+
+function float_cmp {
+
+    local cond=0
+    if [[ $# -gt 0 ]]
+    then
+        cond=$(echo "$*" | bc -q 2>/dev/null)
+        if [[ -z "$cond" ]]
+        then
+            cond=0
+        fi
+        if [[ "$cond" != 0  &&  "$cond" != 1 ]]
+        then
+            cond=0
+        fi
+    fi
+    local res=$((cond == 0))
+    return $res
+}
+
+
 function dotc {
 
 (

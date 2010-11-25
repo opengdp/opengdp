@@ -70,7 +70,7 @@ function dosubimg {
         local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
     fi
 
-    
+
     ##### test the projection ####
        
     if ! echo $info | grep 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563, AUTHORITY."EPSG","7030".., AUTHORITY."EPSG","6326".., PRIMEM.."Greenwich",0.*., UNIT."degree",0.0174532925199433., AUTHORITY."EPSG","4326"..' > /dev/null
@@ -330,7 +330,19 @@ function doimg {
     then
         local islossy=true
     fi
-
+    
+    ##### is the image bnw? #####
+    
+    if [[ "$bnw" == "yes" ]]
+    then
+        gdalbuildvrt -separate "${tmpdir}/${imgdir}${imgbase}_bnw.vrt" "${tmpdir}/${img}" "${tmpdir}/${img}" "${tmpdir}/${img}"
+        
+        img="${imgdir}${imgbase}_bnw.vrt"
+        imgfile="${img##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+    fi
+    
     ##### check if the image needs scaled #####
     
     if ! echo "$info" | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
