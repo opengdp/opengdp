@@ -88,19 +88,19 @@ function dosubimg {
             then
                 if [[ "$nearwhite" == "true" ]]
                 then
-                    nearblack -co TILED=YES -setmask -white -of GTiff "${tmpdir}/${img}" \
+                    nearblack -co TILED=YES -setmask -nb 0 -white -of GTiff "${tmpdir}/${img}" \
                               -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
                 else
-                    nearblack -co TILED=YES -setmask -of GTiff "${tmpdir}/${img}" \
+                    nearblack -co TILED=YES -setmask -nb 0 -of GTiff "${tmpdir}/${img}" \
                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
                 fi
             else
                 if [[ "$nearwhite" == "true" ]]
                 then
-                    nearblack -co TILED=YES -setmask -near 0 -white -of GTiff "${tmpdir}/${img}" \
+                    nearblack -co TILED=YES -setmask -near 0 -nb 0 -white -of GTiff "${tmpdir}/${img}" \
                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
                 else
-                    nearblack -co TILED=YES -setmask -near 0 -of GTiff "${tmpdir}/${img}" \
+                    nearblack -co TILED=YES -setmask -near 0 -nb 0 -of GTiff "${tmpdir}/${img}" \
                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
                 fi
             fi
@@ -122,7 +122,7 @@ function dosubimg {
             
             rm "${tmpram}/prewarp_${imgbase}.tif"
 
-            gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
                      "${tmpram}/final_${imgbase}.tif" > /dev/null
@@ -147,7 +147,7 @@ function dosubimg {
 
             #####  create a mask and compress #####
             
-            gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
                      "${tmpram}/final_${imgbase}.tif"  > /dev/null
@@ -173,11 +173,11 @@ function dosubimg {
             then
                 if [[ "$nearwhite" == "true" ]]
                 then
-                    nearblack -co TILED=YES -setmask -white -of GTiff \
+                    nearblack -co TILED=YES -nb 0 -setmask -white -of GTiff \
                              "${tmpdir}/${img}" \
                              -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
                 else
-                    nearblack -co TILED=YES -setmask -of GTiff \
+                    nearblack -co TILED=YES -nb 0 -setmask -of GTiff \
                              "${tmpdir}/${img}" \
                              -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
                 fi
@@ -185,12 +185,12 @@ function dosubimg {
                 if [[ "$nearwhite" == "true" ]]
                 then
                     nearblack -co TILED=YES -setmask -white -of GTiff \
-                             -near 0 \
+                             -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
                              -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
                 else
                     nearblack -co TILED=YES -setmask -of GTiff \
-                             -near 0 \
+                             -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
                              -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
                 fi
@@ -203,7 +203,7 @@ function dosubimg {
 
             ##### translate to compress #####
             
-            gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                 "${tmpram}/masked_${imgbase}.tif" \
                 "${tmpram}/final_${imgbase}.tif" > /dev/null
             
@@ -212,7 +212,7 @@ function dosubimg {
         else
            echo "no warp has alpha"
 
-            gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpdir}/${img}" \
                      "${tmpram}/final_${imgbase}.tif" > /dev/null
