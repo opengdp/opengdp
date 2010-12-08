@@ -44,7 +44,8 @@ function writemap_nominmax {
     END
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    
+
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 EOF
 
@@ -83,7 +84,7 @@ function writemap_withover {
     GROUP '${dsname}_${ts}'
     MAXSCALEDENOM $scale
 
-
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 
   LAYER
@@ -108,7 +109,7 @@ function writemap_withover {
     GROUP '${dsname}_${ts}'
     MINSCALEDENOM $scale
 
-
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 
 EOF
@@ -143,10 +144,10 @@ function writemap_noover {
       'wms_srs'          'EPSG:900913 EPSG:4326'
       'wms_extent'	 '$extent'
     END
-    OFFSITE 0 0 0
+    
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
-
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 
 EOF
