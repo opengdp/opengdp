@@ -323,6 +323,14 @@ function dofile {
                 if gdalinfo "${origdir}/${file}" > /dev/null
                 then
                     
+
+                    ##### hack to make rebuild work here #####
+                    
+                    if [[ "$DWH_REBUILD" == "rebuild" ]]
+                    then
+                        ln -s "${origdir}/${file}" "${tmpdir}/${file}"
+                    fi
+
                     doimg "${file}" \
                           "$tmpdir" \
                           "$ts" \
