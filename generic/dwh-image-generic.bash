@@ -456,7 +456,10 @@ function doimg {
                 
                 if [[ "$imgextlower" == "sid" ]]
                 then
-                    mrsiddecode -ulxy $xoff $yoff -wh $xsize $ysize  -s 0 \
+                    mrsiddecode -ulxy $xoff $yoff -wh \
+                                $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
+                                $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
+                                -s 0 \
                                 -i "${tmpdir}/${img}" \
                                 -o "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
 
@@ -466,7 +469,9 @@ function doimg {
                              "$myislossy" "no"
 
                 else
-                    gdal_translate -of VRT -srcwin $xoff $yoff $xsize $ysize \
+                    gdal_translate -of VRT -srcwin $xoff $yoff \
+                                   $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
+                                   $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
                                    "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
             
