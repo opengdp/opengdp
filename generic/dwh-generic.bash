@@ -73,7 +73,7 @@ function mainloop {
     
     ##### setup for the est completion time #####
     
-    lines=$(wc -l "${mirrorfile}" | cut -d " " -f 1)
+    lines=$(grep "${mirrorfile}" -e "^get" | wc -l  | cut -d " " -f 1 )
     ((donelines=0))
     started=$(date +%s)
     
