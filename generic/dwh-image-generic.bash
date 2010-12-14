@@ -463,10 +463,21 @@ function doimg {
                                 -i "${tmpdir}/${img}" \
                                 -o "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
 
-                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+                    ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
+                    
+                    gdal_translate -of VRT \
+                                    -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
+                                    "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" \
+                                    "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+
+                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
+                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
                              "$myislossy" "no"
+                    
+                    ###### rm the tif #####
+
+                    rm "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif"
 
                 else
                     gdal_translate -of VRT -srcwin $xoff $yoff \

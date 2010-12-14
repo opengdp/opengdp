@@ -295,7 +295,7 @@ function dofile {
         
         if [[ "$DWH_REBUILD" == "rebuild" ]]
         then
-            local origdir="${indir/%\//}.old"
+            local origdir="${indir/%\//}.old/${dir}"
         else
             lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:") ; exit" > /dev/null 2> /dev/null
             local origdir="$tmpdir"
