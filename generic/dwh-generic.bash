@@ -84,12 +84,9 @@ function mainloop {
         
         ##### if it is a mkdir command do it now #####
         
-        if echo "$line" | grep -e "^mkdir" > /dev/null
+        if grep -e "^mkdir" <<< "$line" > /dev/null
         then
             lftp -e "$line ; exit"
-            
-            ((donelines++))
-            
             continue
         fi
         
@@ -106,7 +103,11 @@ function mainloop {
             read <&3
             ((doing--))
             
-            ((donelines++))
+            if grep -e "^get" <<< "$line" > /dev/null
+            then
+                ((donelines++))
+            fi
+
             comp_meter $started $lines $donelines
             
             ${dofunc} "$line"  &

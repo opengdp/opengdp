@@ -49,11 +49,11 @@ function dotar {
         
         ##### try to unzip a world file if its there #####
         
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
+        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
         
         ##### try to unzip a aux file if its there #####
         
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.aux" > /dev/null 2> /dev/null
+        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
     done
@@ -90,11 +90,11 @@ function dotargz {
         
         ##### try to unzip a world file if its there #####
         
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
+        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
         
         ##### try to unzip a aux file if its there #####
         
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.aux" > /dev/null 2> /dev/null
+        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
         
@@ -130,11 +130,11 @@ function dotarbz2 {
         
         ##### try to unzip a world file if its there #####
         
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.??w" > /dev/null 2> /dev/null
+        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
         
         ##### try to unzip a aux file if its there #####
         
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}.aux" > /dev/null 2> /dev/null
+        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
         
@@ -172,11 +172,11 @@ function dozip {
         
         ##### try to unzip a world file if its there #####
         
-        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}.??w" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
         
         ##### try to unzip a aux file if its there #####
         
-        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}.aux" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" -d "$tmpdir" > /dev/null 2> /dev/null
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 

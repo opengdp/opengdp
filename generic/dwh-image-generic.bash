@@ -465,10 +465,18 @@ function doimg {
 
                     ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
                     
-                    gdal_translate -of VRT \
-                                    -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
-                                    "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" \
-                                    "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                    if grep -e "PROJCS.*\]\][^,]" <<< $info > /dev/null
+                    then
+                        gdal_translate -of VRT \
+                                        -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
+                                        "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" \
+                                        "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                    else
+                        echo "ERROR: no srs for ${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif"
+                        ls -l ${tmpram}/${imgdir}
+                        rm -rf "$tmpram"
+                        return
+                    fi
 
                     dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
