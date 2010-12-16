@@ -165,7 +165,7 @@ function getlist {
         mv "${mirrorfile}" "${mirrorfile}.old"
         mv "${mirrorfile}.new" "${mirrorfile}"
     fi
- exit
+
 }
 
 
