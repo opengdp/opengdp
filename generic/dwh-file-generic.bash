@@ -297,7 +297,7 @@ function dofile {
         then
             local origdir="${indir/%\//}.old/${dir}"
         else
-            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:") ; exit" > /dev/null 2> /dev/null
+            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
             local origdir="$tmpdir"
         fi
         

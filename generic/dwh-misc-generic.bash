@@ -83,12 +83,91 @@ function dodate {
 ###############################################################################
 
 function getlist {
-    mirrorfile="$1"
-    patern="$2"
+    local mirrorfile="$1"
+    local patern="$2"
 
-    lftp "$baseurl" -e "mirror --script=${mirrorfile} -I "$patern"; exit"
+    ##### not as multiple fetch #####
     
+    if [ "${#multifetchpattern[@]}" == "0" ]
+    then
+        lftp "$baseurl" -e "mirror --script=${mirrorfile} -I "$patern"; exit"
+
+    ##### a multiple fetch #####
+
+    else
+        
+        ##### go though the paterns #####
+
+        patern=""
+        local nump=0
+        for p in "${multifetchpattern[@]}"
+        do
+            ((nump++))
+            
+            ##### create a group of -I switches for lftps mirror #####
+
+            patern="$patern -I $p"
+        done
+        
+        ##### keep track of the last patern so we can make sure #####
+        ##### its the last file fetched. this file will be the  #####
+        ##### one gdal operattes on. we need the jpeg not the   #####
+        ##### world or aux                                      #####
+
+        local lastp="$p"
+        echo lastp = "$lastp"
+
+        ##### get the list of files to fetch #####
+
+        lftp "$baseurl" -e "mirror --script=${mirrorfile} $patern; exit"
+        
+        ##### put all the mkdir commands at the top of the file #####
+
+        grep "${mirrorfile}" -e "^mkdir" > "${mirrorfile}.new"
+        
+        ##### parse the get commands to make each group a single line #####
+        
+        local done=no
+        while true
+        do
+            local lastline=""
+            
+            ##### loop number of patern times and read #####
+
+            for ((i = 0 ; i < nump ; i++))
+            do
+                if ! read line 
+                then
+                    done=yes
+                    break
+                fi
+
+                if ! [[ "$line" == $lastp ]]
+                then
+                    echo -n "${line};"
+                else
+                    lastline="$line"
+                fi
+            done
+
+            if [ -n "$lastline" ]
+            then
+                echo "${lastline}"
+            fi
+        
+            if [[ "$done" == "yes" ]]
+            then
+                break
+            fi
+
+        done < <( grep "${mirrorfile}" -e "^get" ) >> "${mirrorfile}.new"
+
+        mv "${mirrorfile}" "${mirrorfile}.old"
+        mv "${mirrorfile}.new" "${mirrorfile}"
+    fi
+ exit
 }
+
 
 ###############################################################################
 # function to get the a list of new files
