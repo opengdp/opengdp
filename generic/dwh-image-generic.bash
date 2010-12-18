@@ -332,6 +332,25 @@ function doimg {
         local islossy=true
     fi
     
+    ##### do we need to add a srs to the image #####
+    
+    if [ -n "$s_srs" ]
+    then
+        ##### create a vrt with the proj #####
+        
+        gdal_translate -a_srs "$s_srs" \
+                       -a_ullr $w $n $e $s \
+                       -of VRT -mask none \
+                       "${tmpdir}/${img}" \
+                       "${tmpdir}/${imgdir}${imgbase}_srs.vrt"
+
+        img="${imgdir}${imgbase}_srs.vrt"
+        imgfile="${img##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
+    fi
+
     ##### is the image bnw? #####
     
     if [[ "$bnw" == "yes" ]]

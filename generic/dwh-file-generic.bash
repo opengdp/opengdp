@@ -176,7 +176,7 @@ function dozip {
         
         ##### try to unzip a aux file if its there #####
         
-        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" "${imgdir}${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 
