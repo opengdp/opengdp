@@ -339,7 +339,6 @@ function doimg {
         ##### create a vrt with the proj #####
         
         gdal_translate -a_srs "$s_srs" \
-                       -a_ullr $w $n $e $s \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
                        "${tmpdir}/${imgdir}${imgbase}_srs.vrt"
