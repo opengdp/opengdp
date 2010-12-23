@@ -504,6 +504,23 @@ function doimg {
                     ###### rm the tif #####
 
                     rm "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif"
+                
+                ##### if its ecw then use a tif for the temp step. libecw + nearblack = fail #####
+
+                elif [[ "$imgextlower" == "ecw" ]] || [[ "$imgextlower" == "vrt" ]] && grep "${tmpdir}/${img}" -e "SourceFilename.*[.]ecw<" > /dev/null
+                then
+                    gdal_translate -srcwin $xoff $yoff \
+                                   $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
+                                   $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
+                                   "${tmpdir}/${img}"\
+                                   "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+            
+                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+                             "$tmpram" "$ts" \
+                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
+                             "true" "no"
+                
+                ##### any other kind of image #####
 
                 else
                     gdal_translate -of VRT -srcwin $xoff $yoff \
