@@ -155,28 +155,57 @@ function dozip {
     
     for f in $(zipinfo -1 "${origdir}/${zipfile}" "$extglob")
     do
-        local imgfile="${f##*/}"
-        local imgbase="${imgfile%.*}"
-        local imgext="${imgfile##*.}"
-
-        local imgdir="${f%/*}"
-        if [[ "$imgdir" = "$imgfile" ]]
+        if ! grep '\\' <<< "$f" > /dev/null
         then
-            local imgdir=""
-        else
-            local imgdir="${imgdir}/"
-        fi  
+            local imgfile="${f##*/}"
+            local imgbase="${imgfile%.*}"
+            local imgext="${imgfile##*.}"
 
-        
-        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" > /dev/null 2> /dev/null
-        
-        ##### try to unzip a world file if its there #####
-        
-        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
-        
-        ##### try to unzip a aux file if its there #####
-        
-        unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" "${imgdir}${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
+            local imgdir="${f%/*}"
+            if [[ "$imgdir" = "$imgfile" ]]
+            then
+                local imgdir=""
+            else
+                local imgdir="${imgdir}/"
+            fi
+    
+            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" #> /dev/null 2> /dev/null
+            
+            ##### try to unzip a world file if its there #####
+            
+            unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
+            
+            ##### try to unzip a aux file if its there #####
+            
+            unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" "${imgdir}${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
+
+        else
+            local imgfile="${f##*\\}"
+            local imgbase="${imgfile%.*}"
+            local imgext="${imgfile##*.}"
+
+            local imgdir="${f%\\*}"
+            if [[ "$imgdir" = "$imgfile" ]]
+            then
+                local imgdir=""
+            else
+                local imgdir="${imgdir}\\"
+            fi
+
+            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" #> /dev/null 2> /dev/null
+            
+            ##### try to unzip a world file if its there #####
+            
+            unzip "${origdir}/${zipfile}" "*${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
+            
+            ##### try to unzip a aux file if its there #####
+            
+            unzip "${origdir}/${zipfile}" "*${imgbase}*.aux" "*${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
+
+            f="${f/\\//}"
+
+        fi
+
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 
