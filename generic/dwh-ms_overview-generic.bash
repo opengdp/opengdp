@@ -41,7 +41,7 @@ cd "$outdir"
                     sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
 
     local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
-    local scale=$(bc <<< "$orig + 30000")
+    local scale=$(bc <<< "$orig + 40000")
 
     ##### res = scale / (72 * 4374754) #####
     

@@ -70,7 +70,6 @@ function dosubimg {
         local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
     fi
 
-
     ##### test the projection ####
        
     if ! echo $info | grep 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]' > /dev/null
@@ -210,8 +209,7 @@ function dosubimg {
             rm "${tmpram}/masked_${imgbase}.tif"
 
         else
-           echo "no warp has alpha"
-
+           
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpdir}/${img}" \
@@ -469,17 +467,18 @@ function doimg {
                 else
                     local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
                 fi
-
+                
                 ##### translate #####
                 
                 if [[ "$imgextlower" == "sid" ]]
                 then
+
                     mrsiddecode -ulxy $xoff $yoff -wh \
                                 $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                 $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                 -s 0 \
                                 -i "${tmpdir}/${img}" \
-                                -o "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null
 
                     ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
                     
@@ -487,23 +486,23 @@ function doimg {
                     then
                         gdal_translate -of VRT \
                                         -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
-                                        "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" \
-                                        "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
+                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
                     else
-                        echo "ERROR: no srs for ${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif"
-                        ls -l ${tmpram}/${imgdir}
+                        echo "ERROR: no srs for ${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
+                        ls -l ${tmpram}/
                         rm -rf "$tmpram"
                         return
                     fi
 
-                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
+                    dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
+                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
                              "$myislossy" "no"
                     
                     ###### rm the tif #####
 
-                    rm "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif"
+                    rm "${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
                 
                 ##### if its ecw then use a tif for the temp step. libecw + nearblack = fail #####
 
@@ -513,11 +512,11 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null
             
-                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.tif" \
+                    dosubimg "${imgbase}_${xoff}_${yoff}.tif" \
                              "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.tif")" \
+                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.tif")" \
                              "true" "no"
                 
                 ##### any other kind of image #####
@@ -527,11 +526,11 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
             
-                    dosubimg "${imgdir}/${imgbase}_${xoff}_${yoff}.vrt" \
+                    dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgdir}${imgbase}_${xoff}_${yoff}.vrt")" \
+                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
                              "$myislossy" "no"
                 fi
                 
@@ -567,7 +566,7 @@ function rebuildtindexs {
         done
     done
     
-    ##### make the ne tindexs #####
+    ##### make the new tindexs #####
     
     for img in $(find ${outdir} -iname "*.tif")
     do

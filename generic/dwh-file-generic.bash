@@ -169,7 +169,7 @@ function dozip {
                 local imgdir="${imgdir}/"
             fi
     
-            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" #> /dev/null 2> /dev/null
+            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" > /dev/null 2> /dev/null
             
             ##### try to unzip a world file if its there #####
             
@@ -192,7 +192,7 @@ function dozip {
                 local imgdir="${imgdir}\\"
             fi
 
-            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" #> /dev/null 2> /dev/null
+            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" > /dev/null 2> /dev/null
             
             ##### try to unzip a world file if its there #####
             
