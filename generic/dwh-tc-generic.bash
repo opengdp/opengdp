@@ -19,9 +19,18 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+function print_res {
+    maxResolution=156543.0339 
+    for (( zoom=0; zoom<=24; ++zoom ))
+    do
+        bc -l <<<"$maxResolution / 2^${zoom}"
+    done
+}
 
 function dotc {
 
+
+    res=$(print_res | tr "\n" "," | sed -r 's/,$//')
 (
     for map in $(find $outdir -name "*.map" | sort )
     do
@@ -32,20 +41,44 @@ function dotc {
             layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
         fi
         
-        cat << EOF
+        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
+	
+        if float_cmp "$n < 86" && float_cmp "$s > -86"
+        then
+            read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
+            read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
+        
+            cat << EOF
 
 [${layer}]
 type=WMS
 url=${urlcgibin}?
-layers=EPA_ASPECT_20100612
+layers=${layer}
 extension=png
 tms_type=google
 levels=24
 spherical_mercator=true
-
+resolutions=${res}
+bbox=${gw},${gs},${ge},${gn}
 EOF
+
+        else    
+            cat << EOF
+
+[${layer}]
+type=WMS
+url=${urlcgibin}?
+layers=${layer}
+extension=png
+tms_type=google
+levels=24
+spherical_mercator=true
+EOF
+       fi
+
+
 
     done
 ) > ${basedir}/${dsname}.tilecache.conf
 
-
+}

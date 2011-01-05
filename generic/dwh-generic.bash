@@ -29,6 +29,7 @@ source dwh-file-generic.bash
 source dwh-mapfile-generic.bash
 source dwh-ms_overview-generic.bash
 source dwh-geoext-generic.bash
+source dwh-tc-generic.bash
 
 
 source dwh-proj_def.bash

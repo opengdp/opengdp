@@ -194,7 +194,7 @@ function float_cmp {
 }
 
 
-function dotc {
+function dotc_old {
 
 (
     for map in $(find $outdir -name "*.map" | sort )
