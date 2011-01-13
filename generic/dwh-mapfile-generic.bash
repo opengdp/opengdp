@@ -105,7 +105,7 @@ function writemap_withover {
       'wms_extent'	 '$extent'
     END
 
-    DATA '${outdir}/${ts}/overview.tif'
+    TILEINDEX "${outdir}/overview_${dsname}${ts}.shp"
     GROUP '${dsname}_${ts}'
     MINSCALEDENOM $scale
 
@@ -155,6 +155,45 @@ EOF
     
 }
 
+function writemap_NewWorld {
+    local ts="$1"
+    local extent="$2"
+    
+    cat > "${outdir}/NewWorld_${dsname}${ts}.map" << EOF
+
+  LAYER
+    NAME '${dsname}_${ts}'
+    TYPE RASTER
+    STATUS ON
+    DUMP TRUE
+    PROJECTION
+     'proj=longlat'
+     'ellps=WGS84'
+     'datum=WGS84'
+     'no_defs'
+     ''
+    END
+    METADATA
+      'wms_title'        '${dsname}_${ts}'
+      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_extent'	 '$extent'
+    END
+    
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+
+    GROUP 'NewWorld'
+    MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
+
+    PROCESSING "RESAMPLE=AVERAGE"
+
+  END
+
+EOF
+
+
+    
+}
+
 
 ###############################################################################
 # function to add an include line in the main mapfile
@@ -177,6 +216,21 @@ ${linenum}-1a
 .
 w
 EOF
+    fi
+
+}
+
+
+###############################################################################
+# function to add an include line in the NewWorld mapfile
+###############################################################################
+
+function addinclude_NewWorld {
+    ts="$1"
+
+    if ! grep "$NewWorld_mapfile" -e "${outdir}/${dsname}${ts}.map" > /dev/null
+    then
+        echo "  INCLUDE '${outdir}/NewWorld_${dsname}${ts}.map'" >> "$NewWorld_mapfile"
     fi
 
 }

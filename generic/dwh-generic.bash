@@ -465,6 +465,10 @@ function main {
 
                 addinclude "$ts"
 
+                ##### add an include line in the main Newworld mapfile #####
+
+                addinclude_NewWorld "$ts"
+
         
                 ##### get the extent of the ds #####
        
@@ -475,7 +479,7 @@ function main {
 
                     ##### write a temp map file #####
 
-                    writemap_nominmax "$ts" "$extent"
+                    writemap_noover "$ts" "$extent"
 
                     ##### create a single file for larger area overviews #####
                 
@@ -492,6 +496,11 @@ function main {
                     writemap_noover "$ts" "$extent"
                     
                 fi
+                
+                ##### create a map file for new world #####
+
+                writemap_NewWorld "$ts" "$extent"
+
             done
         
 
@@ -516,6 +525,10 @@ function main {
 
                 addinclude "$ts"
                 
+                ##### add an include line in the main Newworld mapfile #####
+
+                addinclude_NewWorld "$ts"
+                
                 ##### get the extent of the ds #####
 
                 extent=$(getextent "$ts")
@@ -525,7 +538,7 @@ function main {
 
                     ##### get the overview scale from the old mapfile #####
 
-                    scale=$(grep "${outdir}/${dsname}${ts}.map" -e "MAXSCALEDENOM" | sed 's/.*\([0-9]*\).*/\1/')
+                    scale=$(getoverviewscale "$ts")
                     
                     ##### write the map file with the correct scale #####
 
@@ -538,6 +551,11 @@ function main {
                     writemap_noover "$ts" "$extent"
                     
                 fi
+                
+                ##### create a map file for new world #####
+
+                writemap_NewWorld "$ts" "$extent"
+
             done
         
             if ((stop == 1))

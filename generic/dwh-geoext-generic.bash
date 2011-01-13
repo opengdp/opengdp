@@ -36,7 +36,7 @@ Ext.onReady(function() {
 
 EOF
 
-    for map in $(find $outdir -name "*.map" | sort )
+    for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
         then
@@ -130,7 +130,8 @@ EOF
 
     ##### make sure the js is loaded by index.html
     
-    if ! grep "${htmlbase}/index.html" -e "${dsname}.js" > /dev/null
+    if ! grep "${htmlbase}/index.html" -e "${dsname}.js" > /dev/null && \
+       ! grep "${htmlbase}/index.html" -e "${dsname}_tc.js" > /dev/null       
     then
         linenum=$(cat "${htmlbase}/index.html" |\
                    grep -n -e "finish.js" |\
@@ -164,7 +165,7 @@ Ext.onReady(function() {
 
 EOF
 
-    for map in $(find $outdir -name "*.map" | sort )
+    for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
         then

@@ -23,46 +23,86 @@
 # functiom to create a overview from the dataset
 ###############################################################################
 
-function makeoverview {
+function getoverviewscale {
+
 (
 cd "$outdir"
     local ts="$1"
-    local extent="$2"
     
+    local blocksize=256
 
     local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
 
+    local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
+                       grep "  location (String) = " |\
+                       head -n 1 |\
+                       sed 's/  location (String) = //')
+    
     GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
                  "${tmpdir}/${dsname}${ts}.vrt" \
-                 "${outdir}/${dsname}${ts}.shp" > /dev/null
+                 "${outdir}/${firstfile}" > /dev/null
 
     read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
                     grep -e "Pixel Size" |\
                     sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
 
     local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
-    local scale=$(bc <<< "$orig + 40000")
+    local scale=$(bc <<< "$orig + 150000")
+
+    rm -rf ${tmpdir} > /dev/null
+
+    echo ${scale%.*}
+)
+}
+
+###############################################################################
+# functiom to create a overview from the dataset
+###############################################################################
+
+function makeoverview {
+
+(
+cd "$outdir"
+    local ts="$1"
+    local extent="$2"
+    
+    local blocksize=256
+
+    local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+
+    local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
+                       grep "  location (String) = " |\
+                       head -n 1 |\
+                       sed 's/  location (String) = //')
+    
+    GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
+                 "${tmpdir}/${dsname}${ts}.vrt" \
+                 "${outdir}/${firstfile}" > /dev/null
+
+    read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
+                    grep -e "Pixel Size" |\
+                    sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+
+    local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
+    local scale=$(bc <<< "$orig + 150000")
 
     ##### res = scale / (72 * 4374754) #####
     
     res=$(bc <<< "scale = 16; $scale / (72 * 4374754)")
-    
-    GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite -tr $res $res \
-                 "${tmpdir}/${dsname}${ts}_2.vrt" \
-                 "${outdir}/${dsname}${ts}.shp" > /dev/null
-    
-    read x y < <( gdalinfo "${tmpdir}/${dsname}${ts}_2.vrt" |\
-                   grep -e "Size is" |\
-                   sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
-    
+
     read ux ly lx uy <<< "$extent"
+
+    x=$(bc <<< "scale=0; ($lx - $ux) / $res")
+    y=$(bc <<< "scale=0; ($uy - $ly) / $res")
+
+    
     cat > "${tmpdir}/${dsname}${ts}.xml" << EOF
 <GDAL_WMS>
     <Service name="WMS">
         <ServerURL>${urlcgibin}?</ServerUrl>
         <ImageFormat>image/tiff</ImageFormat>
         <Transparent>TRUE</Transparent>
-        <Layers>${dsname}_${ts}_nominmax</Layers>
+        <Layers>${dsname}_${ts}</Layers>
     </Service>
     
     <DataWindow>
@@ -72,31 +112,39 @@ cd "$outdir"
         <LowerRightY>${ly}</LowerRightY>
         <SizeX>${x}</SizeX>
         <SizeY>${y}</SizeY>
-    </DataWindow> 	
+    </DataWindow>
     <Projection>EPSG:4326</Projection>
     <BandsCount>4</BandsCount>
-    <BlockSizeX>256</BlockSizeX>
-    <BlockSizeY>256</BlockSizeY>
+    <BlockSizeX>${blocksize}</BlockSizeX>
+    <BlockSizeY>${blocksize}</BlockSizeY>
     <OverviewCount>0</OverviewCount>
-    <MaxConnections>$((${limit}/2))</MaxConnections>
+    <MaxConnections>$((${limit} * 2))</MaxConnections>
     <Timeout>300</Timeout>
 </GDAL_WMS>
 
 EOF
 
-    gdal_translate -co TILED=YES -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                   -b 1 -b 2 -b 3 -mask 4 \
-                   "${tmpdir}/${dsname}${ts}.xml" \
-                   "${tmpdir}/overview.tif" > /dev/null
+    ##### translate #####
 
-    ##### add overviews #####
+    gdal_translate -co TILED=YES -co BLOCKXSIZE=${blocksize} -co BLOCKYSIZE=${blocksize} \
+                  -b 1 -b 2 -b 3 -b 4 \
+                  "${tmpdir}/${dsname}${ts}.xml" \
+                  "${tmpdir}/overview.tif" > /dev/null
     
-    addo "${tmpdir}/overview.tif"
-    
-    mv "${tmpdir}/overview.tif" "${outdir}/${ts}/overview.tif"
+    isoverview=true
+
+    doimg "overview.tif" \
+          "$tmpdir" \
+          "$ts" \
+          "$(gdalinfo "${tmpdir}/overview.tif")" \
+          "yes"
+
     rm -rf ${tmpdir} > /dev/null
+
+    unset isoverview
 
     echo ${scale%.*}
 )
+
 }
 

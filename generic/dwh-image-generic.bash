@@ -162,9 +162,20 @@ function dosubimg {
         ##### if the source is anything but a tif or does #####
         ##### not have a alpha band we need to copy       #####
         
-        if ! echo "$info" | grep 'ColorInterp=Alpha' > /dev/null ||
-           [[ "${imgextlower}" != "tif" ]]
+        if echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
         then
+
+            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
+                     -b 1 -b 2 -b 3 -mask 4 \
+                     "${tmpdir}/${img}" \
+                     "${tmpram}/final_${imgbase}.tif" > /dev/null
+            
+            if [[ "$isoriginal" == "no" ]]
+            then
+                rm "${tmpdir}/${img}"
+            fi
+
+        else
             
             #####  create a mask and compress #####
 
@@ -199,30 +210,7 @@ function dosubimg {
             then
                 rm "${tmpdir}/${img}"
             fi
-
-            ##### translate to compress #####
-            
-            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                "${tmpram}/masked_${imgbase}.tif" \
-                "${tmpram}/final_${imgbase}.tif" > /dev/null
-            
-            rm "${tmpram}/masked_${imgbase}.tif"
-
-        else
-           
-            gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
-                     -b 1 -b 2 -b 3 -mask 4 \
-                     "${tmpdir}/${img}" \
-                     "${tmpram}/final_${imgbase}.tif" > /dev/null
-            
-            if [[ "$isoriginal" == "no" ]]
-            then
-                rm "${tmpdir}/${img}"
-            fi
-
-            
         fi
-
     fi
         
     ##### add overviews #####
@@ -255,11 +243,21 @@ function dosubimg {
     ##### make the tileindex in a subshell so we can cd with no adverse effect #####
     ##### this costs like 2s of system time per 4000 calls #####
 
-    (
-        cd ${outdir}
-        gdaltindex "${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
-    )
+    if [ -n "$isoverview" ]
+    then
+        (
+            cd ${outdir}
+            gdaltindex "overview_${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
+        )
+    else
+ 
+        (
+            cd ${outdir}
+            gdaltindex "${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
+        )
     
+    fi
+
     ##### unlock #####
     
     rmdir "${lock}"
