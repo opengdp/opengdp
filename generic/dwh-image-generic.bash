@@ -185,11 +185,11 @@ function dosubimg {
                 then
                     nearblack -co TILED=YES -nb 0 -setmask -white -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
                 else
                     nearblack -co TILED=YES -nb 0 -setmask -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
                 fi
             else
                 if [[ "$nearwhite" == "true" ]]
@@ -197,12 +197,12 @@ function dosubimg {
                     nearblack -co TILED=YES -setmask -white -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
                 else
                     nearblack -co TILED=YES -setmask -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/masked_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
                 fi
             fi
 

@@ -291,18 +291,22 @@ function dofile {
         local sourcedir=${sourcedir//\/\///}
         
         local file="${myline##*/}"
+
+        file=$(sed 's/.* -o //' <<< "$file")
+
         local base="${file%.*}"
-        local ext="${file#*.}"
+        local ext="${file##*.}"
         local ext="$(tr [A-Z] [a-z] <<< "$ext")"
         #local ext="${ext,,*}"
         
-        if echo "$myline" | grep -e "$sourcedir" > /dev/null
+        if echo "$myline" | grep -e "$sourcedir/" > /dev/null
         then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
+            local dir="$(echo "$myline" | sed "s|.*$sourcedir/\(.*\) [A-Za-z]*:/.*|\1|")/"
+
         else
             local dir=""
         fi
-         
+        
         local ts=$(${datefunc} <<< "$myline")
         
         if [ -n "$DEBUG_dofile" ]
