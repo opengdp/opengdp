@@ -36,6 +36,8 @@ Ext.onReady(function() {
 
 EOF
 
+    ##### loop over the map files and look for layer names #####
+
     for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
@@ -45,14 +47,27 @@ EOF
             layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
         fi 
         
+        ##### get the layers extent #####
+
         read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
+
+        ##### make sure north and south arent out of bounds for 900913 #####
 	
-        if float_cmp "$n < 86" && float_cmp "$s > -86"
+        if float_cmp "$n > 86"
         then
-            read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-            read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
+            n=86
+        fi
+        if float_cmp "$s < -86"
+        then
+            s="-86"
+        fi
+
+        ##### convert the extent to 900913 #####
+
+        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
+        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
         
-            cat << EOF
+        cat << EOF
     
   ${layer} = new OpenLayers.Layer.WMS(
     "${layer}",
@@ -65,6 +80,7 @@ EOF
     {
       isBaseLayer: false,
       visibility: false,
+      'perm': true,
       'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})
     }
   );
@@ -72,28 +88,6 @@ EOF
   ${dsname}_layers.push( ${layer} );
 
 EOF
-        else
-
-            cat << EOF
-
-  ${layer} = new OpenLayers.Layer.WMS(
-    "${layer}",
-    "$urlcgibin",
-    {
-      layers: '${layer}',
-      format: 'image/png',
-      transparency: 'TRUE',
-    },
-    {
-      isBaseLayer: false,
-      visibility: false
-    }
-  );
-
-  ${dsname}_layers.push( ${layer} );
-
-EOF
-         fi
 
     done
 
@@ -165,6 +159,8 @@ Ext.onReady(function() {
 
 EOF
 
+    ##### loop over the map files and look for layer names #####
+
     for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
@@ -173,6 +169,24 @@ EOF
         else
             layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
         fi
+
+        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
+
+        ##### make sure north and south arent out of bounds for 900913 #####
+	
+        if float_cmp "$n > 86"
+        then
+            n=86
+        fi
+        if float_cmp "$s < -86"
+        then
+            s="-86"
+        fi
+        
+        ##### convert the extent to 900913 #####
+
+        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
+        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
         
         cat << EOF
 
@@ -186,7 +200,9 @@ EOF
     },
     {
       isBaseLayer: false,
-      visibility: false
+      visibility: false,
+      'perm': true,
+      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})
     }
   );
 
