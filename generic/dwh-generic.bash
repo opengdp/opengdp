@@ -527,7 +527,10 @@ function main {
                 
                 ##### add an include line in the main Newworld mapfile #####
 
-                addinclude_NewWorld "$ts"
+                if [ -n "$NewWorld_mapfile" ]
+                then
+                    addinclude_NewWorld "$ts"
+                fi
                 
                 ##### get the extent of the ds #####
 
@@ -554,7 +557,10 @@ function main {
                 
                 ##### create a map file for new world #####
 
-                writemap_NewWorld "$ts" "$extent"
+                if [ -n "$NewWorld_mapfile" ]
+                then
+                    writemap_NewWorld "$ts" "$extent"
+                fi
 
             done
         

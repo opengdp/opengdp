@@ -59,7 +59,7 @@ function writemap_withover {
     local ts="$1"
     local extent="$2"
     local scale="$3"
-
+    
     cat > "${outdir}/${dsname}${ts}.map" << EOF
         
   LAYER
@@ -83,7 +83,7 @@ function writemap_withover {
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     GROUP '${dsname}_${ts}'
     MAXSCALEDENOM $scale
-
+    $offsite
     PROCESSING "RESAMPLE=AVERAGE"
   END
 
@@ -108,7 +108,7 @@ function writemap_withover {
     TILEINDEX "${outdir}/overview_${dsname}${ts}.shp"
     GROUP '${dsname}_${ts}'
     MINSCALEDENOM $scale
-
+    $offsite
     PROCESSING "RESAMPLE=AVERAGE"
   END
 
@@ -146,7 +146,7 @@ function writemap_noover {
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-
+    $offsite
     PROCESSING "RESAMPLE=AVERAGE"
   END
 

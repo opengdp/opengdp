@@ -38,7 +38,7 @@ EOF
 
     ##### loop over the map files and look for layer names #####
 
-    for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
+    for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
         then
@@ -161,7 +161,7 @@ EOF
 
     ##### loop over the map files and look for layer names #####
 
-    for map in $(find $outdir -name "*.map" | grep -v "NewWorld_" | sort )
+    for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
     do
         if [[ "$doovr" == "yes" ]]
         then
