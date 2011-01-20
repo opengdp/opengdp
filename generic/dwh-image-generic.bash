@@ -88,19 +88,19 @@ function dosubimg {
                 if [[ "$nearwhite" == "true" ]]
                 then
                     nearblack -co TILED=YES -setmask -nb 0 -white -of GTiff "${tmpdir}/${img}" \
-                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
                 else
                     nearblack -co TILED=YES -setmask -nb 0 -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
                 fi
             else
                 if [[ "$nearwhite" == "true" ]]
                 then
                     nearblack -co TILED=YES -setmask -near 0 -nb 0 -white -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
                 else
                     nearblack -co TILED=YES -setmask -near 0 -nb 0 -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
                 fi
             fi
             
@@ -115,7 +115,7 @@ function dosubimg {
                      -dstalpha \
                      -t_srs EPSG:4326 \
                      "${tmpram}/prewarp_${imgbase}.tif" \
-                     "${tmpram}/warped_${imgbase}.tif" > /dev/null
+                     "${tmpram}/warped_${imgbase}.tif" > /dev/null || return
             
             #####  create a mask and compress #####
             
@@ -124,7 +124,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
-                     "${tmpram}/final_${imgbase}.tif" > /dev/null
+                     "${tmpram}/final_${imgbase}.tif" > /dev/null || return
             rm "${tmpram}/warped_${imgbase}.tif"
 
         ##### since it has a alpha band already skip the nearblack #####
@@ -137,7 +137,7 @@ function dosubimg {
             gdalwarp -co TILED=YES \
                      -t_srs EPSG:4326 \
                      "${tmpdir}/${img}" \
-                     "${tmpram}/warped_${imgbase}.tif"  > /dev/null
+                     "${tmpram}/warped_${imgbase}.tif"  > /dev/null || return
             
             if [[ "$isoriginal" == "no" ]]
             then
@@ -149,7 +149,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
-                     "${tmpram}/final_${imgbase}.tif"  > /dev/null
+                     "${tmpram}/final_${imgbase}.tif"  > /dev/null || return
 
             rm "${tmpram}/warped_${imgbase}.tif"
             
@@ -168,7 +168,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpdir}/${img}" \
-                     "${tmpram}/final_${imgbase}.tif" > /dev/null
+                     "${tmpram}/final_${imgbase}.tif" > /dev/null || return
             
             if [[ "$isoriginal" == "no" ]]
             then
@@ -185,11 +185,11 @@ function dosubimg {
                 then
                     nearblack -co TILED=YES -nb 0 -setmask -white -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || return
                 else
                     nearblack -co TILED=YES -nb 0 -setmask -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || return
                 fi
             else
                 if [[ "$nearwhite" == "true" ]]
@@ -197,12 +197,12 @@ function dosubimg {
                     nearblack -co TILED=YES -setmask -white -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || return
                 else
                     nearblack -co TILED=YES -setmask -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || return
                 fi
             fi
 
@@ -225,7 +225,7 @@ function dosubimg {
         
     ##### move the output to the outdir #####
     
-    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif"
+    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif" || return
     
     rm -rf "${tmpram}"
     ##### add the file to the tile index #####
@@ -476,7 +476,7 @@ function doimg {
                                 $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                 -s 0 \
                                 -i "${tmpdir}/${img}" \
-                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || return
 
                     ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
                     
@@ -485,7 +485,7 @@ function doimg {
                         gdal_translate -of VRT \
                                         -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
                                         "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
-                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || return
                     else
                         echo "ERROR: no srs for ${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
                         ls -l ${tmpram}/
@@ -496,7 +496,7 @@ function doimg {
                     dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
                              "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
-                             "$myislossy" "no"
+                             "$myislossy" "no" || return
                     
                     ###### rm the tif #####
 
@@ -510,12 +510,12 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || return
             
                     dosubimg "${imgbase}_${xoff}_${yoff}.tif" \
                              "$tmpram" "$ts" \
                              "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.tif")" \
-                             "true" "no"
+                             "true" "no" || return
                 
                 ##### any other kind of image #####
 
@@ -524,12 +524,12 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || return
             
                     dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
                              "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
-                             "$myislossy" "no"
+                             "$myislossy" "no" || return
                 fi
                 
                 rm -rf "$tmpram"
@@ -542,7 +542,7 @@ function doimg {
     else
     
         dosubimg "${img}" "$tmpdir" "$ts" \
-                 "$info" "$islossy" "$isoriginal"
+                 "$info" "$islossy" "$isoriginal" || return
     fi
 
 }

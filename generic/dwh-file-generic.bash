@@ -45,7 +45,7 @@ function dotar {
             local imgdir="${imgdir}/"
         fi
 
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null
+        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
         
         ##### try to unzip a world file if its there #####
         
@@ -55,7 +55,7 @@ function dotar {
         
         tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
     done
     
 }
@@ -86,7 +86,7 @@ function dotargz {
         fi
 
         
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null
+        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
         
         ##### try to unzip a world file if its there #####
         
@@ -96,7 +96,7 @@ function dotargz {
         
         tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
         
     done
 }
@@ -126,7 +126,7 @@ function dotarbz2 {
             local imgdir="${imgdir}/"
         fi
 
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null
+        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
         
         ##### try to unzip a world file if its there #####
         
@@ -136,7 +136,7 @@ function dotarbz2 {
         
         tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
         
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
         
     done
 }
@@ -169,7 +169,7 @@ function dozip {
                 local imgdir="${imgdir}/"
             fi
     
-            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" > /dev/null 2> /dev/null
+            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" > /dev/null 2> /dev/null || return
             
             ##### try to unzip a world file if its there #####
             
@@ -192,7 +192,7 @@ function dozip {
                 local imgdir="${imgdir}\\"
             fi
 
-            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" > /dev/null 2> /dev/null
+            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" > /dev/null 2> /dev/null || return
             
             ##### try to unzip a world file if its there #####
             
@@ -207,7 +207,7 @@ function dozip {
         fi
 
         
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
 
         
     done
@@ -233,14 +233,14 @@ function dokmz {
 
         ##### extract the kml #####
         
-        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" || return
         
         ##### find and extract the corisponding img #####
         
         local img=$(grep '<GroundOverlay>' -A12 "${tmpdir}/$f" |\
                     grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
         
-        unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir"
+        unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir" || return
         
         local imgfile="${img##*/}"
         local imgbase="${imgfile%.*}"
@@ -267,13 +267,13 @@ function dokmz {
                        -a_ullr $w $n $e $s \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
-                       "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt"
+                       "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt" || return
                        
         ##### proccess #####
         
         doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" \
               "$(gdalinfo "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt")" \
-              "no"
+              "no" || return
     done
 
 }
@@ -389,7 +389,9 @@ function dofile {
 
             esac
         
-        if [[ "$DWH_REBUILD" != "rebuild" ]]
+        status=$?
+
+        if (($? == 0)) && [[ "$DWH_REBUILD" != "rebuild" ]]
         then
             mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
         fi
@@ -399,6 +401,8 @@ function dofile {
     fi    
 
     echo >&3
+    
+    return $status
     
 }
 

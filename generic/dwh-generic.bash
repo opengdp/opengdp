@@ -180,6 +180,12 @@ function main {
                 ((stop=1))
                 shift
                 ;;
+            -findtile|--findtile)
+                findtile="$2 $3"
+                shift
+                shift
+                shift
+                ;;
             -*)
                 echo "invalid option: $1" 1>&2
                 usage $0
@@ -358,6 +364,16 @@ function main {
     
     host="$(hostname)"
     mirrorfile="$host.mirror.lftp"
+    
+    ##### findtile #####
+    
+    if [ -n "$findtile" ]
+    then
+        
+        ogrinfo "$outdir" -al -spat $findtile $findtile | grep "  location (String) = "
+        exit
+    fi
+    
 
     ##### check if called for a rebuild #####
     
