@@ -102,8 +102,10 @@ Ext.onReady(function() {
 
   map.addControl(new OpenLayers.Control.Permalink());
  
+
   if (!map.getCenter() || map.getCenter().lon == 0) {
-    map.setCenter(center, zoom);
+    var proj = new OpenLayers.Projection("EPSG:4326");
+    map.setCenter(center.transform(proj, map.getProjectionObject()));
   }
 
   mapPanel = new GeoExt.MapPanel({
