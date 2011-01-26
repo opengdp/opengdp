@@ -75,7 +75,7 @@ EOF
     {
       layers: '${layer}',
       format: 'image/png',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       isBaseLayer: false,
@@ -196,7 +196,7 @@ EOF
     {
       layers: '${layer}',
       format: 'image/png',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       isBaseLayer: false,
