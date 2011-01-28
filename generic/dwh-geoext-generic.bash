@@ -27,6 +27,14 @@
 
 function dogeoext {
 
+    if [ -n attribution ]
+    then
+        attrib=",
+      attribution: '${attribution}'"
+    else
+        attrib=""
+    fi
+
 (
     cat << EOF
 
@@ -81,7 +89,7 @@ EOF
       isBaseLayer: false,
       visibility: false,
       'perm': true,
-      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})
+      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})${attrib}
     }
   );
 
@@ -202,7 +210,7 @@ EOF
       isBaseLayer: false,
       visibility: false,
       'perm': true,
-      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})
+      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})${attrib}
     }
   );
 
