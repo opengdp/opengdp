@@ -31,6 +31,7 @@ function writemap_nominmax {
     STATUS ON
     DUMP TRUE
     PROJECTION
+     'init=epsg:4326'
      'proj=longlat'
      'ellps=WGS84'
      'datum=WGS84'
@@ -68,6 +69,7 @@ function writemap_withover {
     STATUS ON
     DUMP TRUE
     PROJECTION
+     'init=epsg:4326'
      'proj=longlat'
      'ellps=WGS84'
      'datum=WGS84'
@@ -93,6 +95,7 @@ function writemap_withover {
     STATUS ON
     DUMP TRUE
     PROJECTION
+     'init=epsg:4326'
      'proj=longlat'
      'ellps=WGS84'
      'datum=WGS84'
@@ -133,6 +136,7 @@ function writemap_noover {
     STATUS ON
     DUMP TRUE
     PROJECTION
+     'init=epsg:4326'
      'proj=longlat'
      'ellps=WGS84'
      'datum=WGS84'
