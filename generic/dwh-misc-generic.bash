@@ -223,3 +223,50 @@ EOF
 ) > ${basedir}/${dsname}.tilecache.conf
 }
 
+################################################################################
+# function to get the geotransform
+#
+# usage:
+#       read xo xd xr yo yr yd < <(get_transform "myfile.tif")
+################################################################################
+
+function get_transform {
+    local infile="$1"
+    local xo
+    local xd
+    local xr
+    local yo
+    local yr
+    local yd
+
+    local tmpdir=$(mktemp -d -p "${tmp}" "${dsname}XXXXXXXXXX")
+
+
+    gdalbuildvrt -overwrite \
+                "${tmpdir}/testy.vrt" \
+                "$infile" > /dev/null || return
+
+    read xo xd xr yo yr yd < <(grep GeoTransform "${tmpdir}/testy.vrt" | sed -r 's/<.?GeoTransform>//g' | sed 's/,//g' | sed 's/e[+]*/*10^/g')
+    xo=$(bc <<<"scale = 20; $xo")
+    xd=$(bc <<<"scale = 20; $xd")
+    xr=$(bc <<<"scale = 20; $xr")
+    yo=$(bc <<<"scale = 20; $yo")
+    yd=$(bc <<<"scale = 20; $yd")
+    yr=$(bc <<<"scale = 20; $yr")
+
+    rm -r "$tmpdir"
+
+    echo $xo $xd $xr $yo $yr $yd
+
+}
+
+################################################################################
+# function to get the size of an image
+################################################################################
+
+function get_size {
+
+    gdalinfo $1 | grep -e "Size is"  | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/'
+
+}
+

@@ -293,10 +293,21 @@ function dofile {
         local file="${myline##*/}"
 
         file=$(sed 's/.* -o //' <<< "$file")
-
+        
         local base="${file%.*}"
+        local base2="${base%.*}"
         local ext="${file##*.}"
+        local ext2="${base##*.}"
         local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+        local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+
+        if [[ "$ext2" == "tar" ]]
+        then
+            ext="${ext2}.${ext}"
+            base="$base2"
+        fi
+
+        
         #local ext="${ext,,*}"
         
         if echo "$myline" | grep -e "$sourcedir/" > /dev/null
