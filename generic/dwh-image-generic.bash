@@ -569,8 +569,8 @@ function rebuildtindexs {
     for img in $(find ${outdir} -iname "*.tif")
     do
         local imgfile="${img##*/}"
-        local dir="${img%/*}"
-        local ts="${dir: -8}"
+        local ts=$( sed 's:.*/\([0-9]\{8\}\).*:\1:' <<<"$img")
+        local imgfile=$( sed "s:.*/$ts/\(.*\):\1:" <<<"$img")
         if [[ "$imgfile" != overview* ]]
         then
             
