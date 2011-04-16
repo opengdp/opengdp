@@ -457,7 +457,15 @@ function sub_main {
 
 function main {
     
+    ##### project #####
+
+    if ! [[ -n "${project}" ]]
+    then
+        echo "ERROR: var project not set"
+        exit
+    fi
     
+
     ##### dsname #####
     
     if ! [[ -n "${dsname}" ]]
