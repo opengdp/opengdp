@@ -134,11 +134,11 @@ echo "                            [ -reover ] || [ -remapfile || [ -regeoext ]"
 }
 
 ###############################################################################
-# main
+# sub main function
 ###############################################################################
 
-function main {
-    
+function sub_main {
+
     ((stage = 0))
     ((stop = 0))
 
@@ -200,176 +200,6 @@ function main {
         ((stop = 0))
     fi
 
-    
-    ##### dsname #####
-    
-    if ! [[ -n "${dsname}" ]]
-    then
-        echo "ERROR: var dsname not set"
-        exit
-    fi
-    
-    ##### fetch url #####
-    
-    if ! [[ -n "${baseurl}" ]]
-    then
-        echo "ERROR: var baseurl not set"
-        exit
-    fi
-    
-    ##### basedir #####
-    
-    if ! [[ -n "${basedir}" ]]
-    then
-        echo "ERROR: var basedir not set"
-        exit
-    fi
-    
-    if ! [ -d "$basedir" ]
-    then
-        echo "ERROR: no such dir $basedir"
-        exit
-    fi
-    
-    if ! [ -w "$basedir" ]
-    then
-        echo "ERROR: no write access to $basedir"
-        exit
-    fi
-    
-    ##### indir #####
-    
-    if ! [[ -n "${indir}" ]]
-    then
-        echo "ERROR: var indir not set"
-        exit
-    fi
-    
-    
-    if ! [ -d "$indir" ]
-    then
-        if ! mkdir -p "$indir"
-        then
-            exit
-        fi
-    fi
-    
-    if ! [ -w "$indir" ]
-    then
-        echo "ERROR: no write access to $indir"
-        exit
-    fi
-    
-    ##### outdir #####
-    
-    if ! [[ -n "${outdir}" ]]
-    then
-        echo "ERROR: var outdir not set"
-        exit
-    fi
-    
-    if ! [ -d "$outdir" ]
-    then
-        if ! mkdir -p "$outdir"
-        then
-            exit
-        fi
-    fi
-    
-    if ! [ -w "$outdir" ]
-    then
-        echo "ERROR: no write access to $outdir"
-        exit
-    fi
-    
-    ##### tmp dir #####
-    
-    if ! [ -n "$tmp" ] ; then tmp="/tmp/" ; fi
-    
-    if ! [ -d "$tmp" ]
-    then
-        echo "ERROR: no such dir $tmp"
-        exit
-    fi
-    
-    if ! [ -w "$tmp" ]
-    then
-        echo "ERROR: no write access to $tmp"
-        exit
-    fi
-    
-    ##### mapfile #####
-    
-    if ! [[ -n "${mapfile}" ]]
-    then
-        echo "ERROR: var mapfile not set"
-        exit
-    fi
-    
-    if ! [ -f "$mapfile" ]
-    then
-        write_main_map
-    fi
-
-    if ! [ -f "$mapfile" ]
-    then
-        echo "ERROR: no such file $mapfile"
-        exit
-    fi
-
-    if ! [ -w "$mapfile" ]
-    then
-        echo "ERROR: no write access to $mapfile"
-        exit
-    fi
-    
-    ##### mapserverpath #####
-    
-    if ! [ -n "$mapserverpath" ] ; then mapserverpath="/usr/local/src/mapserver/mapserver/" ; fi
-    
-    if ! [ -d "$mapserverpath" ]
-    then
-        echo "ERROR: no such dir $mapserverpath"
-        exit
-    fi
-    
-    if ! [ -x "${mapserverpath}/shp2img" ]
-    then
-        echo "ERROR: no executable ${mapserverpath}/shp2img"
-        exit
-    fi
-    
-    ##### do ovrview default #####
-    
-    if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
-
-    ##### fetch pattern default #####
-    
-    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
-    
-    ##### unzip untar... pattern default #####
-    
-    if ! [ -n "$extglob" ] ; then extglob="*.tif" ; fi
-    
-    ##### unzip kmz pattern default #####
-    
-    if ! [ -n "$baseglob" ] ; then baseglob="tile-*" ; fi
-    
-    ##### proccess limit default #####
-    
-    if ! [ -n "$limit" ] ; then limit="4" ; fi
-    
-    if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
-
-    ##### cd to the in dir #####
-
-    cd "$indir"
-
-    ##### file name for the mirror file #####
-    
-    host="$(hostname)"
-    mirrorfile="$host.mirror.lftp"
-    
     ##### findtile #####
     
     if [ -n "$findtile" ]
@@ -619,6 +449,185 @@ function main {
         mv "${indir/%\//}.old" "$indir"
             
     fi
+
+}
+###############################################################################
+# main
+###############################################################################
+
+function main {
+    
+    
+    ##### dsname #####
+    
+    if ! [[ -n "${dsname}" ]]
+    then
+        echo "ERROR: var dsname not set"
+        exit
+    fi
+    
+    ##### fetch url #####
+    
+    if ! [[ -n "${baseurl}" ]]
+    then
+        echo "ERROR: var baseurl not set"
+        exit
+    fi
+    
+    ##### basedir #####
+    
+    if ! [[ -n "${basedir}" ]]
+    then
+        echo "ERROR: var basedir not set"
+        exit
+    fi
+    
+    if ! [ -d "$basedir" ]
+    then
+        echo "ERROR: no such dir $basedir"
+        exit
+    fi
+    
+    if ! [ -w "$basedir" ]
+    then
+        echo "ERROR: no write access to $basedir"
+        exit
+    fi
+    
+    ##### indir #####
+    
+    if ! [[ -n "${indir}" ]]
+    then
+        echo "ERROR: var indir not set"
+        exit
+    fi
+    
+    
+    if ! [ -d "$indir" ]
+    then
+        if ! mkdir -p "$indir"
+        then
+            exit
+        fi
+    fi
+    
+    if ! [ -w "$indir" ]
+    then
+        echo "ERROR: no write access to $indir"
+        exit
+    fi
+    
+    ##### outdir #####
+    
+    if ! [[ -n "${outdir}" ]]
+    then
+        echo "ERROR: var outdir not set"
+        exit
+    fi
+    
+    if ! [ -d "$outdir" ]
+    then
+        if ! mkdir -p "$outdir"
+        then
+            exit
+        fi
+    fi
+    
+    if ! [ -w "$outdir" ]
+    then
+        echo "ERROR: no write access to $outdir"
+        exit
+    fi
+    
+    ##### tmp dir #####
+    
+    if ! [ -n "$tmp" ] ; then tmp="/tmp/" ; fi
+    
+    if ! [ -d "$tmp" ]
+    then
+        echo "ERROR: no such dir $tmp"
+        exit
+    fi
+    
+    if ! [ -w "$tmp" ]
+    then
+        echo "ERROR: no write access to $tmp"
+        exit
+    fi
+    
+    ##### mapfile #####
+    
+    if ! [[ -n "${mapfile}" ]]
+    then
+        echo "ERROR: var mapfile not set"
+        exit
+    fi
+    
+    if ! [ -f "$mapfile" ]
+    then
+        write_main_map
+    fi
+
+    if ! [ -f "$mapfile" ]
+    then
+        echo "ERROR: no such file $mapfile"
+        exit
+    fi
+
+    if ! [ -w "$mapfile" ]
+    then
+        echo "ERROR: no write access to $mapfile"
+        exit
+    fi
+    
+    ##### mapserverpath #####
+    
+    if ! [ -n "$mapserverpath" ] ; then mapserverpath="/usr/local/src/mapserver/mapserver/" ; fi
+    
+    if ! [ -d "$mapserverpath" ]
+    then
+        echo "ERROR: no such dir $mapserverpath"
+        exit
+    fi
+    
+    if ! [ -x "${mapserverpath}/shp2img" ]
+    then
+        echo "ERROR: no executable ${mapserverpath}/shp2img"
+        exit
+    fi
+    
+    ##### do ovrview default #####
+    
+    if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
+
+    ##### fetch pattern default #####
+    
+    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
+    
+    ##### unzip untar... pattern default #####
+    
+    if ! [ -n "$extglob" ] ; then extglob="*.tif" ; fi
+    
+    ##### unzip kmz pattern default #####
+    
+    if ! [ -n "$baseglob" ] ; then baseglob="tile-*" ; fi
+    
+    ##### proccess limit default #####
+    
+    if ! [ -n "$limit" ] ; then limit="4" ; fi
+    
+    if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
+
+    ##### cd to the in dir #####
+
+    cd "$indir"
+
+    ##### file name for the mirror file #####
+    
+    host="$(hostname)"
+    mirrorfile="$host.mirror.lftp"
+    
+    sub_main "$@"
 
 }
 
