@@ -308,6 +308,11 @@ function main {
     
     if ! [ -f "$mapfile" ]
     then
+        write_main_map
+    fi
+
+    if ! [ -f "$mapfile" ]
+    then
         echo "ERROR: no such file $mapfile"
         exit
     fi
