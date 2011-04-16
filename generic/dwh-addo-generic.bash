@@ -46,7 +46,7 @@ function addo {
         ((o*=2))
     done
     
-    gdaladdo -clean -r average "$file" $ovrs > /dev/null
+    gdaladdo -clean -r ${resample_alg} "$file" $ovrs > /dev/null
     
 }
 ###############################################################################
@@ -74,7 +74,7 @@ function readdo2 {
         ((o*=2))
     done
     
-    gdaladdo -clean -r average "$file" $ovrs > /dev/null
+    gdaladdo -clean -r ${resample_alg} "$file" $ovrs > /dev/null
     
     echo >&3
 }

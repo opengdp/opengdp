@@ -608,6 +608,10 @@ function main {
     
     if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
 
+    ##### resamp_alg #####
+    
+    if ! [ -n "$resample_alg" ] ; then resample_alg="average" ; fi
+
     ##### fetch pattern default #####
     
     if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
