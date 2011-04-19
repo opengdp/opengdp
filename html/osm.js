@@ -9,7 +9,7 @@ Ext.onReady(function() {
     {
       layers: 'osm-google-hybrid',
       format: 'image/png',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       isBaseLayer: false,
