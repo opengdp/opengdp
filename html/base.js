@@ -5,14 +5,9 @@ Ext.onReady(function() {
 
   var base_layers = [];
 
-  osm_google_tc = new OpenLayers.Layer.WMS(
+  osm_google_tc = new OpenLayers.Layer.OSM(
     "Open Street Map",
-    "http://cube.telascience.org/tilecache/tilecache.py",
-    {
-      layers: 'osm-google',
-      format: 'image/png',
-      transparency: 'TRUE',
-    },
+    "http://tile.openstreetmap.org/${z}/${x}/${y}.png",
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
@@ -28,7 +23,7 @@ Ext.onReady(function() {
     {
       layers: 'NewWorld_google',
       format: 'image/jpeg',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       displayInLayerSwitcher: true,
@@ -45,7 +40,7 @@ Ext.onReady(function() {
     {
       layers: 'OnEarth_PAN_321_20030801',
       format: 'image/png',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       displayInLayerSwitcher: true,
@@ -63,7 +58,7 @@ Ext.onReady(function() {
     {
       layers: 'NAIP_ALL',
       format: 'image/png',
-      transparency: 'TRUE',
+      transparency: 'TRUE'
     },
     {
       displayInLayerSwitcher: true,
