@@ -171,6 +171,7 @@ function writemap_NewWorld {
     STATUS ON
     DUMP TRUE
     PROJECTION
+     'init=epsg:4326'
      'proj=longlat'
      'ellps=WGS84'
      'datum=WGS84'
@@ -260,6 +261,7 @@ MAP
   EXTENT -180.0  -90.0 180.0  90.0
   
   PROJECTION
+    'init=epsg:4326'
     'proj=longlat'
     'ellps=WGS84'
     'datum=WGS84'
