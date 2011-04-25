@@ -1,7 +1,7 @@
 
 SUBDIRS = \
-	generic\
-	examples
-
+	naip\
+	haiti
 
 ## File created by the gnome-build tools
+

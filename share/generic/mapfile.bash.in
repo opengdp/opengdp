@@ -46,7 +46,7 @@ function writemap_nominmax {
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
-    PROCESSING "RESAMPLE=AVERAGE"
+    onePROCESSING "RESAMPLE=AVERAGE"
   END
 EOF
 

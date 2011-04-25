@@ -8,8 +8,10 @@ generic_DATA = \
     misc.bash \
     ms_overview.bash \
     pan.bash \
-    tc.bash
-
+    tc.bash \
+    LANDSAT_ETM+_USGS.bash \
+    LANDSAT_TM_USGS.bash
+    
 CLEANFILES = $(generic_DATA)
 
 genericdir = $(pkgdatadir)/generic
@@ -24,7 +26,9 @@ EXTRA_DIST = \
     misc.bash.in \
     ms_overview.bash.in \
     pan.bash.in \
-    tc.bash.in
+    tc.bash.in \
+    LANDSAT_ETM+_USGS.bash.in \
+    LANDSAT_TM_USGS.bash.in
 
 
 do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
@@ -61,6 +65,12 @@ pan.bash: pan.bash.in Makefile
 tc.bash: tc.bash.in Makefile
 	$(do_subst) < $(srcdir)/tc.bash.in > tc.bash
 	
+LANDSAT_ETM+_USGS.bash: LANDSAT_ETM+_USGS.bash.in Makefile
+	$(do_subst) < $(srcdir)/LANDSAT_ETM+_USGS.bash.in > LANDSAT_ETM+_USGS.bash
+	
+LANDSAT_TM_USGS.bash: LANDSAT_TM_USGS.bash.in Makefile
+	$(do_subst) < $(srcdir)/LANDSAT_TM_USGS.bash.in > LANDSAT_TM_USGS.bash
+
 ## File created by the gnome-build tools
 
 

@@ -13,11 +13,6 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
-
-
-
-
-
 AM_PROG_LIBTOOL
 
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
@@ -70,6 +65,9 @@ AM_CONDITIONAL(HAVE_GDAL, test "x$GDAL_CONFIG" != "x")
 AC_OUTPUT([
 Makefile
 share/Makefile
+share/examples/Makefile
+share/examples/haiti/Makefile
+share/examples/naip/Makefile
 share/generic/Makefile
 src/Makefile
 

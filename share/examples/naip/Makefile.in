@@ -34,7 +34,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = share/generic
+subdir = share/examples/naip
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -73,8 +73,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(genericdir)"
-DATA = $(generic_DATA)
+am__installdirs = "$(DESTDIR)$(naipdir)"
+DATA = $(naip_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -194,37 +194,105 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-generic_DATA = \
-    generic.bash \
-    addo.bash \
-    file.bash \
-    geoext.bash \
-    image.bash \
-    mapfile.bash \
-    misc.bash \
-    ms_overview.bash \
-    pan.bash \
-    tc.bash \
-    LANDSAT_ETM+_USGS.bash \
-    LANDSAT_TM_USGS.bash
+naip_DATA = \
+    BL_AL_200906_alabama_naip_al_1m.bash \
+    BL_OR_200508_oregon_naip_or_1m.bash \
+    arizona_naip_2007.bash \
+    iowa_2009_naip.bash \
+    nh_2009.bash \
+    or_naip_2009.bash \
+    BL_CT_2008_connecticut_naip_ct_1m.bash \
+    BL_RI_200807_rhode_island_naip_ri_1m.bash \
+    ca_naip_2009.bash \
+    ky_naip_2008.bash \
+    nm_2009.bash \
+    penn_naip_2010.bash \
+    BL_LA_200905_louisiana_naip_la_1m.bash \
+    BL_VA_200906_virginia_naip_va_1m.bash \
+    co_naip_2009.bash \
+    md_2009.bash \
+    north_dakota_2009.bash \
+    sc_naip_2009.bash \
+    BL_MA_200807_massachusetts_naip_ma_1m.bash \
+    BL_VT_200908_vermont_naip_vt_1m.bash \
+    de-2009.bash \
+    mi_naip_2010.bash \
+    nv_naip_2006.bash \
+    south_dakota_2008.bash \
+    BL_ME_200908_maine_naip_me_1m.bash \
+    ID-2009.bash \
+    fl_naip_2010.bash \
+    mn_2010.bash \
+    nv_naip_2010.bash \
+    tn_naip_2010.bash \
+    BL_MS_200906_mississippi_naip_ms_1m.bash \
+    Kansas_2010.bash \
+    ga_naip_2010.bash \
+    montana_naip_2009.bash \
+    ny_naip_2009.bash \
+    tx_2010.bash \
+    BL_NC_200906_north_carolina_naip_nc_1m.bash \
+    Missouri-2009.bash \
+    il_naip_2010.bash \
+    naip2009ccm_wa.bash \
+    oh_naip_2010.bash \
+    BL_NJ_2006_new_jersey_naip_nj_1m.bash \
+    ak_naip_2009.bash \
+    in_2010.bash \
+    nebr_naip_2010.bash \
+    ok_2010.bash
 
-CLEANFILES = $(generic_DATA)
-genericdir = $(pkgdatadir)/generic
+CLEANFILES = $(naip_DATA)
+naipdir = $(pkgdatadir)/examples/naip
 EXTRA_DIST = \
-    addo.bash.in \
-    file.bash.in \
-    generic.bash.in \
-    geoext.bash.in \
-    image.bash.in \
-    mapfile.bash.in \
-    misc.bash.in \
-    ms_overview.bash.in \
-    pan.bash.in \
-    tc.bash.in \
-    LANDSAT_ETM+_USGS.bash.in \
-    LANDSAT_TM_USGS.bash.in
+    BL_AL_200906_alabama_naip_al_1m.bash.in \
+    BL_OR_200508_oregon_naip_or_1m.bash.in \
+    arizona_naip_2007.bash.in \
+    iowa_2009_naip.bash.in \
+    nh_2009.bash.in \
+    or_naip_2009.bash.in \
+    BL_CT_2008_connecticut_naip_ct_1m.bash.in \
+    BL_RI_200807_rhode_island_naip_ri_1m.bash.in \
+    ca_naip_2009.bash.in \
+    ky_naip_2008.bash.in \
+    nm_2009.bash.in \
+    penn_naip_2010.bash.in \
+    BL_LA_200905_louisiana_naip_la_1m.bash.in \
+    BL_VA_200906_virginia_naip_va_1m.bash.in \
+    co_naip_2009.bash.in \
+    md_2009.bash.in \
+    north_dakota_2009.bash.in \
+    sc_naip_2009.bash.in \
+    BL_MA_200807_massachusetts_naip_ma_1m.bash.in \
+    BL_VT_200908_vermont_naip_vt_1m.bash.in \
+    de-2009.bash.in \
+    mi_naip_2010.bash.in \
+    nv_naip_2006.bash.in \
+    south_dakota_2008.bash.in \
+    BL_ME_200908_maine_naip_me_1m.bash.in \
+    ID-2009.bash.in \
+    fl_naip_2010.bash.in \
+    mn_2010.bash.in \
+    nv_naip_2010.bash.in \
+    tn_naip_2010.bash.in \
+    BL_MS_200906_mississippi_naip_ms_1m.bash.in \
+    Kansas_2010.bash.in \
+    ga_naip_2010.bash.in \
+    montana_naip_2009.bash.in \
+    ny_naip_2009.bash.in \
+    tx_2010.bash.in \
+    BL_NC_200906_north_carolina_naip_nc_1m.bash.in \
+    Missouri-2009.bash.in \
+    il_naip_2010.bash.in \
+    naip2009ccm_wa.bash.in \
+    oh_naip_2010.bash.in \
+    BL_NJ_2006_new_jersey_naip_nj_1m.bash.in \
+    ak_naip_2009.bash.in \
+    in_2010.bash.in \
+    nebr_naip_2010.bash.in \
+    ok_2010.bash.in
 
-do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
 							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
 							 -e 's,[@]www[@],$(www),g'
 
@@ -240,9 +308,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu share/generic/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu share/examples/naip/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu share/generic/Makefile
+	  $(AUTOMAKE) --gnu share/examples/naip/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -267,26 +335,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-genericDATA: $(generic_DATA)
+install-naipDATA: $(naip_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(genericdir)" || $(MKDIR_P) "$(DESTDIR)$(genericdir)"
-	@list='$(generic_DATA)'; test -n "$(genericdir)" || list=; \
+	test -z "$(naipdir)" || $(MKDIR_P) "$(DESTDIR)$(naipdir)"
+	@list='$(naip_DATA)'; test -n "$(naipdir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(genericdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(genericdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(naipdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(naipdir)" || exit $$?; \
 	done
 
-uninstall-genericDATA:
+uninstall-naipDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(generic_DATA)'; test -n "$(genericdir)" || list=; \
+	@list='$(naip_DATA)'; test -n "$(naipdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(genericdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(genericdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(naipdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(naipdir)" && rm -f $$files
 tags: TAGS
 TAGS:
 
@@ -328,7 +396,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(genericdir)"; do \
+	for dir in "$(DESTDIR)$(naipdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -377,7 +445,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-genericDATA
+install-data-am: install-naipDATA
 
 install-dvi: install-dvi-am
 
@@ -421,7 +489,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-genericDATA
+uninstall-am: uninstall-naipDATA
 
 .MAKE: install-am install-strip
 
@@ -429,50 +497,152 @@ uninstall-am: uninstall-genericDATA
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-genericDATA install-html \
-	install-html-am install-info install-info-am install-man \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-naipDATA \
 	install-pdf install-pdf-am install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-genericDATA
+	uninstall uninstall-am uninstall-naipDATA
 
 
-generic.bash: generic.bash.in Makefile
-	$(do_subst) < $(srcdir)/generic.bash.in > generic.bash
+BL_AL_200906_alabama_naip_al_1m.bash: BL_AL_200906_alabama_naip_al_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_AL_200906_alabama_naip_al_1m.bash.in > BL_AL_200906_alabama_naip_al_1m.bash
 
-addo.bash: addo.bash.in Makefile
-	$(do_subst) < $(srcdir)/addo.bash.in > addo.bash
+BL_CT_2008_connecticut_naip_ct_1m.bash: BL_CT_2008_connecticut_naip_ct_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_CT_2008_connecticut_naip_ct_1m.bash.in > BL_CT_2008_connecticut_naip_ct_1m.bash
 
-file.bash: file.bash.in Makefile
-	$(do_subst) < $(srcdir)/file.bash.in > file.bash
+BL_LA_200905_louisiana_naip_la_1m.bash: BL_LA_200905_louisiana_naip_la_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_LA_200905_louisiana_naip_la_1m.bash.in > BL_LA_200905_louisiana_naip_la_1m.bash
 
-geoext.bash: geoext.bash.in Makefile
-	$(do_subst) < $(srcdir)/geoext.bash.in > geoext.bash
+BL_MA_200807_massachusetts_naip_ma_1m.bash: BL_MA_200807_massachusetts_naip_ma_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_MA_200807_massachusetts_naip_ma_1m.bash.in > BL_MA_200807_massachusetts_naip_ma_1m.bash
 
-image.bash: image.bash.in Makefile
-	$(do_subst) < $(srcdir)/image.bash.in > image.bash
+BL_ME_200908_maine_naip_me_1m.bash: BL_ME_200908_maine_naip_me_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_ME_200908_maine_naip_me_1m.bash.in > BL_ME_200908_maine_naip_me_1m.bash
 
-mapfile.bash: mapfile.bash.in Makefile
-	$(do_subst) < $(srcdir)/mapfile.bash.in > mapfile.bash
+BL_MS_200906_mississippi_naip_ms_1m.bash: BL_MS_200906_mississippi_naip_ms_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_MS_200906_mississippi_naip_ms_1m.bash.in > BL_MS_200906_mississippi_naip_ms_1m.bash
 
-misc.bash: misc.bash.in Makefile
-	$(do_subst) < $(srcdir)/misc.bash.in > misc.bash
+BL_NC_200906_north_carolina_naip_nc_1m.bash: BL_NC_200906_north_carolina_naip_nc_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_NC_200906_north_carolina_naip_nc_1m.bash.in > BL_NC_200906_north_carolina_naip_nc_1m.bash
 
-ms_overview.bash: ms_overview.bash.in Makefile
-	$(do_subst) < $(srcdir)/ms_overview.bash.in > ms_overview.bash
+BL_NJ_2006_new_jersey_naip_nj_1m.bash: BL_NJ_2006_new_jersey_naip_nj_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_NJ_2006_new_jersey_naip_nj_1m.bash.in > BL_NJ_2006_new_jersey_naip_nj_1m.bash
 
-pan.bash: pan.bash.in Makefile
-	$(do_subst) < $(srcdir)/pan.bash.in > pan.bash
+BL_OR_200508_oregon_naip_or_1m.bash: BL_OR_200508_oregon_naip_or_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_OR_200508_oregon_naip_or_1m.bash.in > BL_OR_200508_oregon_naip_or_1m.bash
 
-tc.bash: tc.bash.in Makefile
-	$(do_subst) < $(srcdir)/tc.bash.in > tc.bash
+BL_RI_200807_rhode_island_naip_ri_1m.bash: BL_RI_200807_rhode_island_naip_ri_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_RI_200807_rhode_island_naip_ri_1m.bash.in > BL_RI_200807_rhode_island_naip_ri_1m.bash
 
-LANDSAT_ETM+_USGS.bash: LANDSAT_ETM+_USGS.bash.in Makefile
-	$(do_subst) < $(srcdir)/LANDSAT_ETM+_USGS.bash.in > LANDSAT_ETM+_USGS.bash
+BL_VA_200906_virginia_naip_va_1m.bash: BL_VA_200906_virginia_naip_va_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_VA_200906_virginia_naip_va_1m.bash.in > BL_VA_200906_virginia_naip_va_1m.bash
 
-LANDSAT_TM_USGS.bash: LANDSAT_TM_USGS.bash.in Makefile
-	$(do_subst) < $(srcdir)/LANDSAT_TM_USGS.bash.in > LANDSAT_TM_USGS.bash
+BL_VT_200908_vermont_naip_vt_1m.bash: BL_VT_200908_vermont_naip_vt_1m.bash.in Makefile
+	$(do_subst) < $(srcdir)/BL_VT_200908_vermont_naip_vt_1m.bash.in > BL_VT_200908_vermont_naip_vt_1m.bash
+
+ID-2009.bash: ID-2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/ID-2009.bash.in > ID-2009.bash
+
+Kansas_2010.bash: Kansas_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/Kansas_2010.bash.in > Kansas_2010.bash
+
+Missouri-2009.bash: Missouri-2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/Missouri-2009.bash.in > Missouri-2009.bash
+
+ak_naip_2009.bash: ak_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/ak_naip_2009.bash.in > ak_naip_2009.bash
+
+arizona_naip_2007.bash: arizona_naip_2007.bash.in Makefile
+	$(do_subst) < $(srcdir)/arizona_naip_2007.bash.in > arizona_naip_2007.bash
+
+ca_naip_2009.bash: ca_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/ca_naip_2009.bash.in > ca_naip_2009.bash
+
+co_naip_2009.bash: co_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/co_naip_2009.bash.in > co_naip_2009.bash
+
+de-2009.bash: de-2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/de-2009.bash.in > de-2009.bash
+
+fl_naip_2010.bash: fl_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/fl_naip_2010.bash.in > fl_naip_2010.bash
+
+ga_naip_2010.bash: ga_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/ga_naip_2010.bash.in > ga_naip_2010.bash
+
+il_naip_2010.bash: il_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/il_naip_2010.bash.in > il_naip_2010.bash
+
+in_2010.bash: in_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/in_2010.bash.in > in_2010.bash
+
+iowa_2009_naip.bash: iowa_2009_naip.bash.in Makefile
+	$(do_subst) < $(srcdir)/iowa_2009_naip.bash.in > iowa_2009_naip.bash
+
+ky_naip_2008.bash: ky_naip_2008.bash.in Makefile
+	$(do_subst) < $(srcdir)/ky_naip_2008.bash.in > ky_naip_2008.bash
+
+md_2009.bash: md_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/md_2009.bash.in > md_2009.bash
+
+mi_naip_2010.bash: mi_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/mi_naip_2010.bash.in > mi_naip_2010.bash
+
+mn_2010.bash: mn_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/mn_2010.bash.in > mn_2010.bash
+
+montana_naip_2009.bash: montana_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/montana_naip_2009.bash.in > montana_naip_2009.bash
+
+naip2009ccm_wa.bash: naip2009ccm_wa.bash.in Makefile
+	$(do_subst) < $(srcdir)/naip2009ccm_wa.bash.in > naip2009ccm_wa.bash
+
+nebr_naip_2010.bash: nebr_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/nebr_naip_2010.bash.in > nebr_naip_2010.bash
+
+nh_2009.bash: nh_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/nh_2009.bash.in > nh_2009.bash
+
+nm_2009.bash: nm_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/nm_2009.bash.in > nm_2009.bash
+
+north_dakota_2009.bash: north_dakota_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/north_dakota_2009.bash.in > north_dakota_2009.bash
+
+nv_naip_2006.bash: nv_naip_2006.bash.in Makefile
+	$(do_subst) < $(srcdir)/nv_naip_2006.bash.in > nv_naip_2006.bash
+
+nv_naip_2010.bash: nv_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/nv_naip_2010.bash.in > nv_naip_2010.bash
+
+ny_naip_2009.bash: ny_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/ny_naip_2009.bash.in > ny_naip_2009.bash
+
+oh_naip_2010.bash: oh_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/oh_naip_2010.bash.in > oh_naip_2010.bash
+
+ok_2010.bash: ok_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/ok_2010.bash.in > ok_2010.bash
+
+or_naip_2009.bash: or_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/or_naip_2009.bash.in > or_naip_2009.bash
+
+penn_naip_2010.bash: penn_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/penn_naip_2010.bash.in > penn_naip_2010.bash
+
+sc_naip_2009.bash: sc_naip_2009.bash.in Makefile
+	$(do_subst) < $(srcdir)/sc_naip_2009.bash.in > sc_naip_2009.bash
+
+south_dakota_2008.bash: south_dakota_2008.bash.in Makefile
+	$(do_subst) < $(srcdir)/south_dakota_2008.bash.in > south_dakota_2008.bash
+
+tn_naip_2010.bash: tn_naip_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/tn_naip_2010.bash.in > tn_naip_2010.bash
+
+tx_2010.bash: tx_2010.bash.in Makefile
+	$(do_subst) < $(srcdir)/tx_2010.bash.in > tx_2010.bash
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

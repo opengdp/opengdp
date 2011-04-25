@@ -1,7 +1,6 @@
 
 SUBDIRS = \
-	generic\
-	examples
-
+	naip
 
 ## File created by the gnome-build tools
+

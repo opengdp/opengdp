@@ -22,15 +22,15 @@
 
 
 
-source @genericdir@/misc.bash
-source @genericdir@/addo.bash
-source @genericdir@/image.bash
-source @genericdir@/file.bash
-source @genericdir@/mapfile.bash
-source @genericdir@/ms_overview.bash
-source @genericdir@/geoext.bash
-source @genericdir@/tc.bash
-source @genericdir@/pan.bash
+source @GENERICDIR@/misc.bash
+source @GENERICDIR@/addo.bash
+source @GENERICDIR@/image.bash
+source @GENERICDIR@/file.bash
+source @GENERICDIR@/mapfile.bash
+source @GENERICDIR@/ms_overview.bash
+source @GENERICDIR@/geoext.bash
+source @GENERICDIR@/tc.bash
+source @GENERICDIR@/pan.bash
 
 
 ###############################################################################

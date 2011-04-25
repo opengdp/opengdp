@@ -1,7 +1,6 @@
 
 SUBDIRS = \
-	generic\
-	modules
+	generic
 
 
 ## File created by the gnome-build tools

@@ -5379,11 +5379,6 @@ $as_echo "#define STDC_HEADERS 1" >>confdefs.h
 fi
 
 
-
-
-
-
-
 case `pwd` in
   *\ * | *\	*)
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libtool does not cope well with whitespace in \`pwd\`" >&5
@@ -12253,7 +12248,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile share/Makefile share/generic/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile share/Makefile share/examples/Makefile share/examples/haiti/Makefile share/examples/naip/Makefile share/generic/Makefile src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -13246,6 +13241,9 @@ do
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "share/Makefile") CONFIG_FILES="$CONFIG_FILES share/Makefile" ;;
+    "share/examples/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/Makefile" ;;
+    "share/examples/haiti/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/haiti/Makefile" ;;
+    "share/examples/naip/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/naip/Makefile" ;;
     "share/generic/Makefile") CONFIG_FILES="$CONFIG_FILES share/generic/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
 
