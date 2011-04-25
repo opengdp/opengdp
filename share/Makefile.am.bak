@@ -1,0 +1,7 @@
+
+SUBDIRS = \
+	generic\
+	modules
+
+
+## File created by the gnome-build tools

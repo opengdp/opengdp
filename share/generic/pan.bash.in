@@ -1,0 +1,147 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+
+
+function pansharp {
+
+    local msimg="$1"
+    local rband="$2"
+    local gband="$3"
+    local bband="$4"
+    local panimg="$5"
+    local tmpdir="$6"
+    local outfile="$7"
+
+    local msimgfile="${msimg##*/}"
+    local msimgbase="${msimgfile%.*}"
+    local msimgext="${msimgfile##*.}"
+    local msimgextlower="$(tr [A-Z] [a-z] <<< "$msimgext")"
+    
+    local msimgdir="${msimg%/*}"
+    if [[ "$msimgdir" = "$msimgfile" ]]
+    then
+        local msimgdir=""
+    else
+        local msimgdir="${msimgdir}/"
+    fi
+    
+    local panimgfile="${panimg##*/}"
+    local panimgbase="${panimgfile%.*}"
+    local panimgext="${panimgfile##*.}"
+    local panimgextlower="$(tr [A-Z] [a-z] <<< "$panimgext")"
+    
+    local panimgdir="${panimg%/*}"
+    if [[ "$panimgdir" = "$panimgfile" ]]
+    then
+        local panimgdir=""
+    else
+        local panimgdir="${panimgdir}/"
+    fi
+    
+    local ms_xo
+    local ms_xd
+    local ms_xr
+    local ms_yo
+    local ms_yr
+    local ms_yd
+
+    local pan_xo
+    local pan_xd
+    local pan_xr
+    local pan_yo
+    local pan_yr
+    local pan_yd
+    
+    ##### get pan info ##### 
+
+    read pan_xsize pan_ysize < <(get_size "${tmpdir}/${panimg}")
+    read pan_xo pan_xd pan_xr pan_yo pan_yr pan_yd < <(get_transform "${tmpdir}/${panimg}")
+
+    ##### pan calc the corner opisite of the origin #####
+
+    local pan_xfar=$(bc <<<"scale = 16; $pan_xo + $pan_xd * $pan_xsize")
+    local pan_yfar=$(bc <<<"scale = 16; $pan_yo + $pan_yd * $pan_ysize")
+
+    ##### get ms info ##### 
+
+    read ms_xsize ms_ysize < <(get_size "${tmpdir}/${msimg}")
+    read ms_xo ms_xd ms_xr ms_yo ms_yr ms_yd < <(get_transform "${tmpdir}/${msimg}")
+   
+    ##### calc the multiplyer for the ms image size #####
+
+    local xmult=$(bc <<<"scale = 16; $ms_xd / $pan_xd")
+    local ymult=$(bc <<<"scale = 16; $ms_yd / $pan_yd")
+
+    ##### calc the new pixel size for the ms image #####
+
+    local ms_new_xsize=$(bc <<<"scale = 16; $ms_xsize * $xmult")
+    local ms_new_ysize=$(bc <<<"scale = 16; $ms_ysize * $ymult")
+
+    ##### resample the ms image vrt so its the same pixel size as the pan band #####
+
+    gdal_translate -outsize $ms_new_xsize $ms_new_ysize \
+                   -of VRT \
+                   "${tmpdir}/${msimg}" \
+                   "${tmpdir}/resample_${msimgdir}${msimgbase}.vrt" > /dev/null || return
+
+    ##### get new infor for the resampled ms vrt #####
+    
+    read ms_xsize ms_ysize < <(get_size "${tmpdir}/resample_${msimgdir}${msimgbase}.vrt")
+    read ms_xo ms_xd ms_xr ms_yo ms_yr ms_yd < <(get_transform "${tmpdir}/resample_${msimgdir}${msimgbase}.vrt")
+
+    ##### ms calc the corner opisite of the origin #####
+
+    local ms_xfar=$(bc <<<"scale = 16; $ms_xo + $ms_xd * $ms_xsize")
+    local ms_yfar=$(bc <<<"scale = 16; $ms_yo + $ms_yd * $ms_ysize")
+
+    ##### find the common extent of the ms and pan images #####
+
+    local c_xo=$(max $ms_xo $pan_xo)
+    local c_yo=$(min $ms_yo $pan_yo)
+    local c_xfar=$(min $ms_xfar $pan_xfar)
+    local c_yfar=$(max $ms_yfar $pan_yfar)
+
+    ##### create a vrt pan image of the common extent #####
+
+    gdal_translate -projwin $c_xo $c_yo $c_xfar $c_yfar \
+                   -of VRT \
+                   "${tmpdir}/${panimg}" \
+                   "${tmpdir}/${panimgdir}_prepan_${panimgbase}.vrt" || return
+
+    ##### create a vrt ms image of the common extent #####
+
+    gdal_translate -projwin $c_xo $c_yo $c_xfar $c_yfar \
+                   -of VRT \
+                   -b $rband -b 2 -b 1 \
+                   "${tmpdir}/resample_${msimgdir}${msimgbase}.vrt" \
+                   "${tmpdir}/${msimgdir}_prepan_${msimgbase}.vrt" || return
+
+    ##### PANSHARPEN THE IMAGE #####
+
+    PanSharpeningExample_byte "${tmpdir}/${panimgdir}_prepan_${panimgbase}.vrt" \
+                         "${tmpdir}/${msimgdir}_prepan_${msimgbase}.vrt" \
+                         "${tmpdir}/${outfile}"   || return
+            
+
+}
+
