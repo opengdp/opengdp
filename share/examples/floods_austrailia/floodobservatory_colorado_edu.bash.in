@@ -1,0 +1,222 @@
+#!/bin/bash
+
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+dsname="floodobservatory_colorado_edu"
+
+
+tmp="/mnt/ram2/"
+
+
+fetchpattern="*2011*.[MIDtp][ADar]*"
+
+##### setup proccess management #####
+
+((limit=4))
+
+source "@GENERICDIR@/dwh-generic.bash"
+source "./dwh-proj_def.bash"
+
+#################################################################################################
+# function to proccess a file
+#################################################################################################
+
+function dofile {
+    myline=$1
+
+    if echo "$myline" | grep -e "^get" > /dev/null
+    then    
+        local sourcedir=${indir//\/\///}
+        local sourcedir=${sourcedir//\/\///}
+
+        local file="${myline##*/}"
+        local base="${file%.*}"
+        local ext="${file#*.}"
+        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+        #local ext="${ext,,*}"
+        
+        if echo "$myline" | grep -e "$sourcedir" > /dev/null
+        then
+            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
+        else
+            local dir=""
+        fi
+         
+        local ts=$(${datefunc} <<< "$myline")
+        
+        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+        #        "$myline" \
+        #        "$sourcedir "\
+        #        "$file" \
+        #        "$base" \
+        #        "$ext" \
+        #        "$dir" \
+        #        "$ts"
+        #echo >&3
+        #return
+
+        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+        
+        
+        if [[ "$DWH_REBUILD" == "rebuild" ]]
+        then
+            local origdir="${indir/%\//}.old"
+        else
+            lftp -e "set cmd:set-term-status 0 ; $(echo "$myline" | sed "s:get -O [-/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" > /dev/null 2> /dev/null
+            local origdir="$tmpdir"
+        fi
+
+        if ! [ -d "$outdir/${ts}" ]
+        then
+            mkdir -p "$outdir/${ts}"
+        fi
+        
+        if [[ "$DWH_REBUILD" != "rebuild" ]]
+        then
+            mv "${origdir}/${file}" "${indir}/${dir}/"
+            inputdir="${indir}/"
+        else
+            inputdir="${origdir}/"
+        fi
+        
+        if [ -f ${inputdir}/${base}.tab ] && [ -f ${inputdir}/${base}.ID ] && [ -f ${inputdir}/${base}.DAT ] && [ -f ${inputdir}/${base}.MAP ]  
+        then
+            
+            ogr2ogr -t_srs EPSG:4326 -f "MapInfo File" "$outdir/${ts}/${base}.tab" "${inputdir}/${base}.tab"
+        fi
+
+        rm -rf "${tmpdir}"
+
+    fi
+    echo >&3
+}
+
+
+###############################################################################
+# function to get the extent of the ds
+###############################################################################
+
+function getextent {
+    ts="$1"
+    
+    local w
+    local s
+    local e
+    local n
+
+    local ww
+    local ss
+    local ee
+    local nn
+
+    while read w s e n
+    do
+
+        if ! [ -n "$ww" ] || float_cmp "$w < $ww"
+        then
+            ww="$w"
+        fi
+
+        if ! [ -n "$ss" ] || float_cmp "$s < $ss"
+        then
+            ss="$s"
+        fi
+
+        if ! [ -n "$ee" ] || float_cmp "$e > $ee"
+        then
+            ee="$e"
+        fi
+
+        if ! [ -n "$nn" ] || float_cmp "$nn > $nn"
+        then
+            nn="$n"
+        fi
+        
+    done < <(ogrinfo -so -al "${outdir}/${ts}" | grep "Extent:" | sed -e 's/) - (/ /' -e 's/Extent: (//' -e 's/,//g' -e 's/)//' )
+
+    echo "$ww $ss $ee $nn" 1>&2
+    echo "$ww $ss $ee $nn"
+}
+
+
+###############################################################################
+# function to write out a map file without a overview layer
+###############################################################################
+
+function writemap_noover {
+    local ts="$1"
+    local extent="$2"
+    
+    cat > "${outdir}/${dsname}${ts}.map" << EOF
+        
+  LAYER
+    NAME '${dsname}_${ts}'
+    STATUS ON
+    TYPE POLYGON
+    CONNECTIONTYPE OGR
+    CONNECTION "/bigdata/201101_Floods_Australia/done/${dsname}/${ts}/"
+
+    METADATA
+      'wms_title'        '${dsname}_${ts}'
+      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_extent'       '$extent'
+    END
+
+    # This enables use of colors and styles from the source file.
+    STYLEITEM "AUTO"
+
+    # Define an empty class that will be filled at runtime from the color and
+    # styles read on each shape in the source file.
+    CLASS
+    #  COLOR 0 0 255
+    END
+
+  END  # layer
+
+EOF
+
+}
+
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+     
+     sed 's:.*\(20[0-9]\{6\}\).*:\1:'
+  
+}
+
+doovr="no"
+
+
+for z in Australia1 Australia2 Australia3 Australia4 Australia5 Australia6
+do
+ 
+    baseurl="http://floodobservatory.colorado.edu/GISdata/$z"
+    
+    main "$@"
+done
+
+
