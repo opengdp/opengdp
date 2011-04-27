@@ -9,16 +9,21 @@ AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 
 AC_ISC_POSIX
+AC_PROG_CXX
 AC_PROG_CC
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
 AM_PROG_LIBTOOL
 
+dnl bash
+
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
 if test $HAVE_BASH = "false"; then
   AC_MSG_FAILURE([bash not found])
 fi
+
+dnl tar
 
 AC_CHECK_PROGS([TAR], [tar gtar], [:])
 if test "$TAR" = :; then
@@ -26,16 +31,23 @@ AC_MSG_ERROR([tar not found])
 fi
 AC_MSG_RESULT([tar $TAR])
 
+dnl unzip
+
 AC_CHECK_PROGS([UNZIP], [unzip], [:])
 if test "$" = :; then
   AC_MSG_ERROR([unzip not found])
 fi
 AC_MSG_RESULT([unzip $UNZIP])
 
+dnl grep
 
 AC_PROG_GREP
 
+dnl sed
+
 AC_PROG_SED
+
+dnl gdal
 
 AC_ARG_WITH(gdal-config,
 [  --with-gdal-config=GDAL_CONFIG    use gdal-config specified ],
@@ -50,8 +62,6 @@ AC_ARG_WITH(gdal-config,
 if test "x$GDAL_CONFIG" != "x"; then
   GDAL_CFLAGS=`$GDAL_CONFIG --cflags`
   GDAL_LIBS=`$GDAL_CONFIG --libs`
-  GDAL_VERSION=`$GDAL_CONFIG --version`
-  AC_MSG_RESULT([$GDAL_CONFIG reports version $GDAL_VERSION])
   AC_SUBST(GDAL_CFLAGS)
   AC_SUBST(GDAL_LIBS)
   found_gdal="yes"
@@ -60,12 +70,48 @@ else
 fi
 AM_CONDITIONAL(HAVE_GDAL, test "x$GDAL_CONFIG" != "x")
 
+dnl OTB
+
+AC_ARG_WITH(otb-lib,
+  [AS_HELP_STRING([--with-otb-lib=/some/path],
+    [path to the OTBConfig.cmake file])],
+  if test -n "$withval"
+  then
+    otblibpath="$withval"
+  else
+    [AC_MSG_FAILURE([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])]
+   fi,
+  otblibpath=`grep -v -e "^#" /etc/ld.so.conf`
+)
+
+otbconfig=`find $otblibpath -name OTBConfig.cmake 2> /dev/null | head -n 1 `
+otblibdep=`find $otblibpath -name OTBLibraryDepends.cmake 2> /dev/null | head -n 1 `
+otbbase="${otbconfig%/*}"
+otbbase="${otbbase%/*}"
+otbbase="${otbbase%/*}"
+if test -n "$otbconfig"
+then
+  OTBINC=`(echo -n ";" ; grep "SET(OTB_INCLUDE_DIRS" "$otbconfig" | cut -d '"' -f 2) | sed 's/;/ -I/g' | sed "s,..OTB_INSTALL_PREFIX.,$otbbase,g" `
+  OTBLIB=`(echo -n ";" ; grep "SET(OTB_LIBRARY_DIRS" "$otbconfig" | cut -d '"' -f 2) | sed 's/;/ -L/g' | sed "s,..OTB_INSTALL_PREFIX.,$otbbase,g" `
+  
+  while read line
+  do
+    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed 's/general;//g' | sed 's/;$//' | sed 's/-l//g' | sed 's/;/ -l/g' | sed 's,-l/,-l:/,g'` "
+  done < "$otblibdep"
+
+  AC_SUBST(OTBINC)
+  AC_SUBST(OTBLIB)
+else
+  AC_MSG_FAILURE([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
+fi
+
 
 
 AC_OUTPUT([
 Makefile
 share/Makefile
 share/examples/Makefile
+share/examples/floods_austrailia/Makefile
 share/examples/haiti/Makefile
 share/examples/naip/Makefile
 share/generic/Makefile

@@ -11,12 +11,8 @@ AM_CFLAGS =\
 	 -Wall\
 	 -g
 
-bin_PROGRAMS = dwh
+bin_PROGRAMS = \
+	otbPanSharp
 
-dwh_SOURCES = \
-	main.c
-
-dwh_LDFLAGS = 
-
-dwh_LDADD = 
+otbPanSharp_SOURCES = 
 

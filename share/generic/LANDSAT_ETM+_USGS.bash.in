@@ -81,10 +81,23 @@ function dofile {
         then
             mkdir -p "$outdir/${ts}"
         fi
+        
+        ##### set default bands? #####
+        
+        if ! [ -n "$msbands" ]
+        then
+            local msbands=( 3 2 1 )
+        fi
+        
+        unzip "${origdir}/${file}" "*_B0${msbands[0]}.[tT][iI][Ff]" -d "$tmpdir"
+        unzip "${origdir}/${file}" "*_B0${msbands[1]}.[tT][iI][Ff]" -d "$tmpdir"
+        unzip "${origdir}/${file}" "*_B0${msbands[2]}.[tT][iI][Ff]" -d "$tmpdir"
 
-        unzip "${origdir}/${file}" "*_B0[1238].[tT][iI][Ff]" -d "$tmpdir"
-
-        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}.vrt" ${tmpdir}/*_B03.[tT][iI][Ff] ${tmpdir}/*_B02.[tT][iI][Ff] ${tmpdir}/*_B01.[tT][iI][Ff]
+        gdalbuildvrt -srcnodata 0 -separate \
+                     "${tmpdir}/${base}.vrt" \
+                     ${tmpdir}/*_B0${msbands[0]}.[tT][iI][Ff] \
+                     ${tmpdir}/*_B0${msbands[1]}.[tT][iI][Ff] \
+                     ${tmpdir}/*_B0${msbands[2]}.[tT][iI][Ff]
         
         CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 1 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B01_filled.tif"
         CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 2 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B02_filled.tif"
@@ -96,6 +109,8 @@ function dofile {
         gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}_filled.vrt" "${tmpdir}/${base}_B01_filled.tif" "${tmpdir}/${base}_B02_filled.tif" "${tmpdir}/${base}_B03_filled.tif"
         
         ##### get the pix size of the pan image #####
+        ##### this don't seem to work the gaps in the pan bad arent filled #####
+        ##### mayby with cloud masking and multiple images it will be worth doing #####
         
 #        local pan_xsize
 #        local pan_ysize
@@ -106,9 +121,10 @@ function dofile {
 #                       "${tmpdir}/${base}_filled.vrt" \
 #                       "${tmpdir}/${base}_resize.vrt"
                        
-#        PanSharpeningExample_byte "${tmpdir}/${base}_B08_filled.tif" \
-#                                  "${tmpdir}/${base}_resize.vrt" \
-#                                  "${tmpdir}/${base}_pan.tif"
+#        otbPanSharp "byte" \
+#                    "${tmpdir}/${base}_B08_filled.tif" \
+#                    "${tmpdir}/${base}_resize.vrt" \
+#                    "${tmpdir}/${base}_pan.tif"
 
 #        doimg "${base}_pan.tif" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_pan.tif")"
         doimg "${base}_filled.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_filled.vrt")"

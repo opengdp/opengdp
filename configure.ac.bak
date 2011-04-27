@@ -66,6 +66,7 @@ AC_OUTPUT([
 Makefile
 share/Makefile
 share/examples/Makefile
+share/examples/haiti/Makefile
 share/examples/naip/Makefile
 share/generic/Makefile
 src/Makefile
