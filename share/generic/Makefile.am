@@ -14,7 +14,6 @@ generic_DATA = \
     ASTER_USGS.bash \
     rapidfire_modis.bash \
     EO1_ALI_PAN_USGS.bash \
-    EO1_ALI_PAN_USGS.bash \
     google_superoverlay_kml.bash
         
 CLEANFILES = $(generic_DATA)
