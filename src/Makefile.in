@@ -34,7 +34,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = otbPanSharp$(EXEEXT)
+bin_PROGRAMS = otbPanSharp$(EXEEXT) otbCloudMask$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,12 +47,18 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_otbPanSharp_OBJECTS = otbPanSharp-otbPanSharp.$(OBJEXT)
-otbPanSharp_OBJECTS = $(am_otbPanSharp_OBJECTS)
-otbPanSharp_DEPENDENCIES =
+am_otbCloudMask_OBJECTS = otbCloudMask-otbCloudMask.$(OBJEXT)
+otbCloudMask_OBJECTS = $(am_otbCloudMask_OBJECTS)
+otbCloudMask_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
+otbCloudMask_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(otbCloudMask_LDFLAGS) $(LDFLAGS) -o $@
+am_otbPanSharp_OBJECTS = otbPanSharp-otbPanSharp.$(OBJEXT)
+otbPanSharp_OBJECTS = $(am_otbPanSharp_OBJECTS)
+otbPanSharp_DEPENDENCIES =
 otbPanSharp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(otbPanSharp_LDFLAGS) $(LDFLAGS) -o $@
@@ -82,8 +88,8 @@ am__v_CXXLD_0 = @echo "  CXXLD " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(otbPanSharp_SOURCES)
-DIST_SOURCES = $(otbPanSharp_SOURCES)
+SOURCES = $(otbCloudMask_SOURCES) $(otbPanSharp_SOURCES)
+DIST_SOURCES = $(otbCloudMask_SOURCES) $(otbPanSharp_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -232,6 +238,12 @@ otbPanSharp_SOURCES = \
 otbPanSharp_CPPFLAGS = @OTBINC@
 otbPanSharp_LDFLAGS = @OTBLIB@ 
 otbPanSharp_LDADD = 
+otbCloudMask_SOURCES = \
+	otbCloudMask.cpp
+
+otbCloudMask_CPPFLAGS = @OTBINC@
+otbCloudMask_LDFLAGS = @OTBLIB@ 
+otbCloudMask_LDADD = 
 all: all-am
 
 .SUFFIXES:
@@ -309,6 +321,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+otbCloudMask$(EXEEXT): $(otbCloudMask_OBJECTS) $(otbCloudMask_DEPENDENCIES) 
+	@rm -f otbCloudMask$(EXEEXT)
+	$(AM_V_CXXLD)$(otbCloudMask_LINK) $(otbCloudMask_OBJECTS) $(otbCloudMask_LDADD) $(LIBS)
 otbPanSharp$(EXEEXT): $(otbPanSharp_OBJECTS) $(otbPanSharp_DEPENDENCIES) 
 	@rm -f otbPanSharp$(EXEEXT)
 	$(AM_V_CXXLD)$(otbPanSharp_LINK) $(otbPanSharp_OBJECTS) $(otbPanSharp_LDADD) $(LIBS)
@@ -319,6 +334,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/otbCloudMask-otbCloudMask.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/otbPanSharp-otbPanSharp.Po@am__quote@
 
 .cpp.o:
@@ -344,6 +360,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+otbCloudMask-otbCloudMask.o: otbCloudMask.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCloudMask_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbCloudMask-otbCloudMask.o -MD -MP -MF $(DEPDIR)/otbCloudMask-otbCloudMask.Tpo -c -o otbCloudMask-otbCloudMask.o `test -f 'otbCloudMask.cpp' || echo '$(srcdir)/'`otbCloudMask.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/otbCloudMask-otbCloudMask.Tpo $(DEPDIR)/otbCloudMask-otbCloudMask.Po
+@am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='otbCloudMask.cpp' object='otbCloudMask-otbCloudMask.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCloudMask_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o otbCloudMask-otbCloudMask.o `test -f 'otbCloudMask.cpp' || echo '$(srcdir)/'`otbCloudMask.cpp
+
+otbCloudMask-otbCloudMask.obj: otbCloudMask.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCloudMask_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbCloudMask-otbCloudMask.obj -MD -MP -MF $(DEPDIR)/otbCloudMask-otbCloudMask.Tpo -c -o otbCloudMask-otbCloudMask.obj `if test -f 'otbCloudMask.cpp'; then $(CYGPATH_W) 'otbCloudMask.cpp'; else $(CYGPATH_W) '$(srcdir)/otbCloudMask.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/otbCloudMask-otbCloudMask.Tpo $(DEPDIR)/otbCloudMask-otbCloudMask.Po
+@am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='otbCloudMask.cpp' object='otbCloudMask-otbCloudMask.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCloudMask_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o otbCloudMask-otbCloudMask.obj `if test -f 'otbCloudMask.cpp'; then $(CYGPATH_W) 'otbCloudMask.cpp'; else $(CYGPATH_W) '$(srcdir)/otbCloudMask.cpp'; fi`
 
 otbPanSharp-otbPanSharp.o: otbPanSharp.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbPanSharp_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbPanSharp-otbPanSharp.o -MD -MP -MF $(DEPDIR)/otbPanSharp-otbPanSharp.Tpo -c -o otbPanSharp-otbPanSharp.o `test -f 'otbPanSharp.cpp' || echo '$(srcdir)/'`otbPanSharp.cpp

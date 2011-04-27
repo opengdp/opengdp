@@ -1,0 +1,390 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+##############################################################################
+# getlist function
+##############################################################################
+
+function getlist {
+    local mirrorfile="$1"
+    local patern="$2"
+    
+    for url in "${baseurl[@]}"
+    do
+        local file="${url##*/}"
+        
+        if ! [ -n "$indir/$file" ]
+        then
+            echo "$url"
+        fi
+    done > "$mirrorfile"
+    
+##############################################################################
+# replacement mainloop function
+##############################################################################
+
+function mainloop {
+    local mirrorfile="$1"
+    local dofunc="$2"
+    
+    ((doing=0))
+    
+    ##### open a fd to a named pipe #####
+
+    mkfifo pipe; exec 3<>pipe
+    
+    ##### setup for the est completion time #####
+    
+    lines=$(cat "${mirrorfile}" | wc -l  | cut -d " " -f 1 )
+    ((donelines=0))
+    started=$(date +%s)
+    
+    ##### loop over the list #####
+
+    while read line ;
+    do
+        
+       
+        ##### under the limit just start a job #####
+
+        if [ $doing -lt $limit ]
+        then
+        	dofile "$line"  &
+         	((doing++))
+         	
+        ##### over the limit wait for a job to finish before starting #####
+        
+        else
+            read <&3
+            ((doing--))
+            
+                ((donelines++))
+        
+            comp_meter $started $lines $donelines
+            
+            dofile "$line"  &
+         	((doing++))
+        fi
+
+    done < "${mirrorfile}"
+
+    wait
+
+    echo
+
+}
+
+##############################################################################
+# function to fetch images
+##############################################################################
+
+
+function do_kml_grd_ovl {
+    local base="$1"
+    local baseurl="$2"
+    local tmpdir="$3"
+    local bases=""
+    local files=""
+    local vrts=""
+    local count=0
+
+    while read line
+    do
+        ((count++))
+        ##### get the image path #####
+
+        local img=$(echo "$line"  | tr "&" "\n" |\
+                     grep '<GroundOverlay>' -A12 |\
+                     grep href | sed -r 's|.*<href>(.*)</href>.*|\1|' )
+
+        ##### get the corner quords #####
+        
+        read n s e w < <(echo "$line" | tr "&" "\n" | grep '<GroundOverlay>' -A12 | grep north -A3 | sed 's:<[/a-z]*>::g' | tr "\n" " " )
+
+        local imgext="${imgt##*.}"
+        local b="${img%.*}"
+        local c="${b#*/}"
+        local d="${c#*/}"
+        local imgbase=${d//\//.}
+        local imgfile="${imgbase}.${imgext}"
+        bases="$bases $imgbase"
+        vrts="$vrts ${tmpdir}/${base}${imgbase}.vrt"
+        files="$files ${tmpdir}/${base}${imgfile}"
+        
+
+        local imgdir=""
+        
+        ##### get the image in a subshell so we can cd with no ill effects #####
+        (   
+            cd "${tmpdir}"
+            wget "${baseurl}${img}" -O "${base}${imgfile}" 2> /dev/null
+
+
+            ##### create a vrt with the proj #####
+        
+            gdal_translate -a_srs EPSG:4326 \
+                           -a_ullr $w $n $e $s \
+                           -b 1 -b 2 -b 3 \
+                           -of VRT -mask none \
+                           "${tmpdir}/${base}${imgfile}" \
+                           "${tmpdir}/${base}${imgbase}.vrt" 
+        ) > /dev/null 2> /dev/null &
+
+    done < <(echo "$4" |\
+              grep '  <Document>' -A23 |\
+              tr "\n" "&" |\
+              sed 's/--/\n/g'
+              echo
+            )
+    
+    wait
+        
+    local vrt
+    local junk
+    read vrt junk < <(md5sum - <<<"${base}${bases// /_}.vrt")
+
+    if gdalbuildvrt "${tmpdir}/$vrt" $vrts > /dev/null
+    then
+        echo "${tmpdir}/$vrt"
+    fi
+        
+}
+
+##############################################################################
+# recurse function to fetch and parse kmls
+##############################################################################
+
+function do_kml_netlink {
+    local base="$1"
+    local baseurl="$2"
+    local lastdir="$3"
+    local lasttmpdir="$4"
+    local lastkml="$5"
+    local subkml=""
+    local ret=0
+    local vrts=""    
+    
+    local count=$(echo "$6" |\
+                     grep '  <NetworkLink>' -A17 |\
+                     grep -A2 Link |\
+                     grep href |\
+                     sed -r 's|.*<href>(.*)</href>.*|\1|' |\
+                     wc -l )
+
+    ##### if its only images fetch the images as a vrt #####
+
+    if [[ "$count" == "0" ]]
+    then
+        local img=$(do_kml_grd_ovl "$1" "$2$3" "$lasttmpdir" "$6")
+        echo "$img"
+        return 1
+
+    ##### there is networklinks recurse them #####
+
+    else
+        
+        ##### make a temp dir in the callers tempdir #####
+
+        local newtmpdir=$(mktemp -d -p "$lasttmpdir" "${dsname}XXXXXXXXXX")
+
+        ##### go though the network links #####
+                
+        for kmlfile in $(echo "$6" |\
+                     grep '  <NetworkLink>' -A17 |\
+                     grep -A2 Link |\
+                     grep href |\
+                     sed -r 's|.*<href>(.*)</href>.*|\1|' )
+        do
+            
+            local kmldir="${kmlfile%/*}"
+
+            if echo "$kmlfile" | grep "http" > /dev/null
+            then
+                subkml=$(wget "${kmlfile}" -O /dev/stdout 2> /dev/null)
+            else
+                subkml=$(wget "${baseurl}${lastdir}${kmlfile}" -O /dev/stdout 2> /dev/null)
+            fi
+            
+            
+            if [[ "$kmldir" = "$kmlfile" ]] || echo "$kmlfile" | grep "http" > /dev/null
+            then
+                local kmldir="${lastdir}"
+            else
+                local kmldir="${lastdir}${kmldir}/"
+            fi
+            
+            ##### recurs on each network link and save the results #####
+            local lastimg
+
+            lastimg=$(do_kml_netlink "$base" "${baseurl}" "${kmldir}" "$newtmpdir" "$kmlfile" "$subkml")
+            ret="$?"
+
+            if [ -n "$lastimg" ]
+            then
+                vrts="$vrts $lastimg"
+            fi
+        done
+        
+        ##### incr the return value #####
+
+        (( ret++ ))
+
+        ##### if we have more than 4 levels of images fetched do them #####
+
+        if (( ret > 4 ))
+        then
+
+            if [ -n "$vrts" ]
+            then 
+                ##### proccess the 16kx16k image in the background so we can continue to fetch #####
+
+                ##### note this does not work ##### 
+                #(
+
+                    gdalbuildvrt "${newtmpdir}/${base}${kmlfile}.vrt" $vrts
+
+                    gdal_translate "${newtmpdir}/${base}${kmlfile}.vrt" "${newtmpdir}/${base}${kmlfile}.tif"
+                
+                    doimg "${base}${kmlfile}.tif" "$newtmpdir" "$ts" \
+                          "$(gdalinfo "${newtmpdir}/${base}${kmlfile}.tif")" \
+                          "no"
+                #) >/dev/null & 
+
+            fi
+            
+            ##### since were further up the tree than 5 levels wait for children then its safe to rm the temp dir #####
+            #echo $ret 1>&2
+            #if (( ret > 5 ))
+            #then
+            #    wait
+                rm -r ${newtmpdir}
+            #fi
+        
+        ##### not more than 4 levels, pass the list to the caller #####
+
+        else 
+            if [ -n "$vrts" ]
+            then
+                echo "$vrts"
+            fi
+        fi
+
+    fi
+    
+    return $ret
+}
+
+    
+###############################################################################
+# function to proccess a file
+###############################################################################
+
+function dofile {
+    myline=$1
+
+    if echo "$myline" | grep -e ".*" > /dev/null
+    then    
+        local sourcedir=${indir//\/\///}
+        local sourcedir=${sourcedir//\/\///}
+        
+        local file="${myline##*/}"
+
+        file=$(sed 's/.* -o //' <<< "$file")
+
+        local base="${file%.*}"
+        local ext="${file##*.}"
+        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+        #local ext="${ext,,*}"
+        
+        local dir=""
+        
+        local ts=$(${datefunc} <<< "$myline")
+        
+        if [ -n "$DEBUG_dofile" ]
+        then
+            printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+                    "$myline" \
+                    "$sourcedir "\
+                    "$file" \
+                    "$base" \
+                    "$ext" \
+                    "$dir" \
+                    "$ts"
+            echo >&3
+            return
+        fi
+
+        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+        
+        
+        if [[ "$DWH_REBUILD" == "rebuild" ]]
+        then
+            local origdir="${indir/%\//}.old/${dir}"
+        else
+            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
+            local origdir="$tmpdir"
+        fi
+        
+
+        if ! [ -d "$outdir/${ts}" ]
+        then
+            mkdir -p "$outdir/${ts}"
+        fi
+        
+        local bn=$(echo "$base" | sed 's/\(.*\)[0-9]\{4\}-.*/\1/')
+        local bu="${myline%/*}/"
+
+        (
+            cd "${tmpdir}"
+            wget "${line}" 2> /dev/null
+        )
+        
+        subkml=$(cat "${tmpdir}/${file}")
+        
+        do_kml_netlink "$bn" "$bu" "" "$tmp" "" "$subkml"
+
+        status=$?
+
+        if (($? == 0)) && [[ "$DWH_REBUILD" != "rebuild" ]]
+        then
+            mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
+        fi
+
+        rm -rf "${tmpdir}"
+    
+    fi    
+
+    echo >&3
+    
+    return $status
+    
+}
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+     
+     sed 's:.*\([0-9]\{4\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\).*:\1\2\3:'
+     
+}

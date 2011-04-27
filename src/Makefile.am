@@ -15,7 +15,8 @@ AM_CFLAGS =\
 	 -g
 
 bin_PROGRAMS = \
-	otbPanSharp
+	otbPanSharp \
+	otbCloudMask
 
 otbPanSharp_SOURCES = \
 	otbPanSharp.cpp
@@ -24,4 +25,12 @@ otbPanSharp_CPPFLAGS = @OTBINC@
 otbPanSharp_LDFLAGS = @OTBLIB@ 
 
 otbPanSharp_LDADD =
+
+otbCloudMask_SOURCES = \
+	otbCloudMask.cpp
+
+otbCloudMask_CPPFLAGS = @OTBINC@
+otbCloudMask_LDFLAGS = @OTBLIB@ 
+
+otbCloudMask_LDADD =
 
