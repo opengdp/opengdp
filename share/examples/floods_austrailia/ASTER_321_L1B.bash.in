@@ -28,7 +28,7 @@ tmp="/mnt/ram2/"
 
 ((limit=8))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "@GENERICDIR@/ASTER_USGS.bash"
 source "./dwh-proj_def.bash"
 
@@ -37,8 +37,6 @@ msbands=( imageData3N imageData2 imageData1 )
 doovr="no"
 
 fetchpattern="AST_L1B_*zip"
-
-datefunc="ASTER_dodate"
 
 
 main "$@"

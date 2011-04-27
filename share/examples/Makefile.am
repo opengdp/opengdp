@@ -2,7 +2,8 @@
 SUBDIRS = \
 	naip\
 	haiti \
-	floods_austrailia
+	floods_austrailia \
+	jp_earthquake
 
 ## File created by the gnome-build tools
 

@@ -31,7 +31,7 @@ tmp="/bigdata/tmp/"
 
 ((limit=4))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "@GENERICDIR@/rapidfire_modis.bash"
 source "./dwh-proj_def.bash"
 

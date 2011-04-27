@@ -13,8 +13,10 @@ generic_DATA = \
     LANDSAT_TM_USGS.bash \
     ASTER_USGS.bash \
     rapidfire_modis.bash \
-    EO1_ALI_PAN_USGS.bash
-    
+    EO1_ALI_PAN_USGS.bash \
+    EO1_ALI_PAN_USGS.bash \
+    google_superoverlay_kml.bash
+        
 CLEANFILES = $(generic_DATA)
 
 genericdir = $(pkgdatadir)/generic
@@ -34,8 +36,8 @@ EXTRA_DIST = \
     LANDSAT_TM_USGS.bash.in \
     ASTER_USGS.bash.in \
     rapidfire_modis.bash.in \
-    EO1_ALI_PAN_USGS.bash.in
-
+    EO1_ALI_PAN_USGS.bash.in \
+    google_superoverlay_kml.bash
 
 
 do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
@@ -86,7 +88,10 @@ rapidfire_modis.bash: rapidfire_modis.bash.in Makefile
 
 EO1_ALI_PAN_USGS.bash: EO1_ALI_PAN_USGS.bash.in Makefile
 	$(do_subst) < $(srcdir)/EO1_ALI_PAN_USGS.bash.in > EO1_ALI_PAN_USGS.bash
-	
+
+google_superoverlay_kml.bash: google_superoverlay_kml.bash.in Makefile
+	$(do_subst) < $(srcdir)/google_superoverlay_kml.bash.in > google_superoverlay_kml.bash
+
 ## File created by the gnome-build tools
 
 

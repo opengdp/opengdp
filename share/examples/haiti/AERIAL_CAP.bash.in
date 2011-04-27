@@ -31,7 +31,7 @@ fetchpattern="AE*_*_*OL??_*.zip"
 
 ((limit=12))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "./dwh-proj_def.bash"
 
 

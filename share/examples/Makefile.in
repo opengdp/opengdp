@@ -220,7 +220,8 @@ top_srcdir = @top_srcdir@
 SUBDIRS = \
 	naip\
 	haiti \
-	floods_austrailia
+	floods_austrailia \
+	jp_earthquake
 
 all: all-recursive
 

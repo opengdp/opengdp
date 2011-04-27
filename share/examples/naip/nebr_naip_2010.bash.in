@@ -32,7 +32,7 @@ tmp="/mnt/ram2/"
 
 ((limit=6))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "./dwh-proj_def.bash"
 
 extglob="*.jpg"

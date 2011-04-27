@@ -113,6 +113,7 @@ share/Makefile
 share/examples/Makefile
 share/examples/floods_austrailia/Makefile
 share/examples/haiti/Makefile
+share/examples/jp_earthquake/Makefile
 share/examples/naip/Makefile
 share/generic/Makefile
 src/Makefile

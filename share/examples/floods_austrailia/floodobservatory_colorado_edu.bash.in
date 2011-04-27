@@ -34,7 +34,7 @@ fetchpattern="*2011*.[MIDtp][ADar]*"
 
 ((limit=4))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "./dwh-proj_def.bash"
 
 #################################################################################################

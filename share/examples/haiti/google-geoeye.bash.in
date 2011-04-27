@@ -42,7 +42,7 @@ function geoeye_dodate {
     
 }
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "./dwh-proj_def.bash"
 
 

@@ -32,7 +32,7 @@ tmp="/bigdata/tmp/"
 
 ((limit=8))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/generic.bash"
 source "./dwh-proj_def.bash"
 
 #extglob="*.sid"

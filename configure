@@ -15850,7 +15850,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile share/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/naip/Makefile share/generic/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile share/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -16950,6 +16950,7 @@ do
     "share/examples/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/Makefile" ;;
     "share/examples/floods_austrailia/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/floods_austrailia/Makefile" ;;
     "share/examples/haiti/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/haiti/Makefile" ;;
+    "share/examples/jp_earthquake/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/jp_earthquake/Makefile" ;;
     "share/examples/naip/Makefile") CONFIG_FILES="$CONFIG_FILES share/examples/naip/Makefile" ;;
     "share/generic/Makefile") CONFIG_FILES="$CONFIG_FILES share/generic/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
