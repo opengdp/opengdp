@@ -215,7 +215,8 @@ generic_DATA = \
     LANDSAT_ETM+_USGS.bash \
     LANDSAT_TM_USGS.bash \
     ASTER_321_USGS.bash \
-    rapidfire_modis.bash
+    rapidfire_modis.bash \
+    EO1_ALI_PAN_USGS.bash
 
 CLEANFILES = $(generic_DATA)
 genericdir = $(pkgdatadir)/generic
@@ -233,7 +234,8 @@ EXTRA_DIST = \
     LANDSAT_ETM+_USGS.bash.in \
     LANDSAT_TM_USGS.bash.in \
     ASTER_321_USGS.bash.in \
-    rapidfire_modis.bash.in
+    rapidfire_modis.bash.in \
+    EO1_ALI_PAN_USGS.bash.in
 
 do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
 							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
@@ -490,6 +492,9 @@ ASTER_321_USGS.bash: ASTER_321_USGS.bash.in Makefile
 
 rapidfire_modis.bash: rapidfire_modis.bash.in Makefile
 	$(do_subst) < $(srcdir)/rapidfire_modis.bash.in > rapidfire_modis.bash
+
+EO1_ALI_PAN_USGS.bash: EO1_ALI_PAN_USGS.bash.in Makefile
+	$(do_subst) < $(srcdir)/EO1_ALI_PAN_USGS.bash.in > EO1_ALI_PAN_USGS.bash
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

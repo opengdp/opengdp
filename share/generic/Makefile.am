@@ -11,8 +11,9 @@ generic_DATA = \
     tc.bash \
     LANDSAT_ETM+_USGS.bash \
     LANDSAT_TM_USGS.bash \
-    ASTER_321_USGS.bash \
-    rapidfire_modis.bash
+    ASTER_USGS.bash \
+    rapidfire_modis.bash \
+    EO1_ALI_PAN_USGS.bash
     
 CLEANFILES = $(generic_DATA)
 
@@ -31,8 +32,10 @@ EXTRA_DIST = \
     tc.bash.in \
     LANDSAT_ETM+_USGS.bash.in \
     LANDSAT_TM_USGS.bash.in \
-    ASTER_321_USGS.bash.in \
-    rapidfire_modis.bash.in
+    ASTER_USGS.bash.in \
+    rapidfire_modis.bash.in \
+    EO1_ALI_PAN_USGS.bash.in
+
 
 
 do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
@@ -75,11 +78,14 @@ LANDSAT_ETM+_USGS.bash: LANDSAT_ETM+_USGS.bash.in Makefile
 LANDSAT_TM_USGS.bash: LANDSAT_TM_USGS.bash.in Makefile
 	$(do_subst) < $(srcdir)/LANDSAT_TM_USGS.bash.in > LANDSAT_TM_USGS.bash
 
-ASTER_321_USGS.bash: ASTER_321_USGS.bash.in Makefile
-	$(do_subst) < $(srcdir)/ASTER_321_USGS.bash.in > ASTER_321_USGS.bash
+ASTER_USGS.bash: ASTER_USGS.bash.in Makefile
+	$(do_subst) < $(srcdir)/ASTER_USGS.bash.in > ASTER_USGS.bash
 
 rapidfire_modis.bash: rapidfire_modis.bash.in Makefile
 	$(do_subst) < $(srcdir)/rapidfire_modis.bash.in > rapidfire_modis.bash
+
+EO1_ALI_PAN_USGS.bash: EO1_ALI_PAN_USGS.bash.in Makefile
+	$(do_subst) < $(srcdir)/EO1_ALI_PAN_USGS.bash.in > EO1_ALI_PAN_USGS.bash
 	
 ## File created by the gnome-build tools
 

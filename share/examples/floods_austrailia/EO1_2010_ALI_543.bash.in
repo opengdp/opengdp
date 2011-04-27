@@ -30,7 +30,10 @@ tmp="/mnt/ram2/"
 ((limit=3))
 
 source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/EO1_ALI_PAN_USGS.bash"
 source "./dwh-proj_def.bash"
+
+msbands=( 5 4 3 )
 
 tmp="/mnt/ram2/"
 
@@ -39,122 +42,6 @@ tmp="/mnt/ram2/"
 doovr="no"
 
 fetchpattern="EO1A*.tgz"
-
-datefunc="EO1_dodate"
-
-
-###############################################################################
-# function to get a ts from a lftp command
-###############################################################################
-
-function EO1_dodate {
-     
-     while read line
-     do      
-        ts="$(echo "$line" | sed 's:.*/EO1.......\(....\)\(...\).*:\1 \2:')"
-        date -d "jan 1 $ts days - 1 day" "+%Y%m%d"
-     done
-}
-
-
-#################################################################################################
-# function to proccess a file
-#################################################################################################
-
-function dofile {
-    myline=$1
-
-    if echo "$myline" | grep -e "^get" > /dev/null
-    then    
-        local sourcedir=${indir//\/\///}
-        local sourcedir=${sourcedir//\/\///}
-
-        local file="${myline##*/}"
-        local base="${file%.*}"
-        local ext="${file#*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        #local ext="${ext,,*}"
-        
-        if echo "$myline" | grep -e "$sourcedir" > /dev/null
-        then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
-        else
-            local dir=""
-        fi
-         
-        local ts=$(${datefunc} <<< "$myline")
-        
-        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-        #        "$myline" \
-        #        "$sourcedir "\
-        #        "$file" \
-        #        "$base" \
-        #        "$ext" \
-        #        "$dir" \
-        #        "$ts"
-        #echo >&3
-        #return
-
-        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
-        
-        
-        if [[ "$DWH_REBUILD" == "rebuild" ]]
-        then
-            local origdir="${indir/%\//}.old"
-        else
-            lftp -e "set cmd:set-term-status 0 ; $(echo "$myline" | sed "s:get -O [-/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" > /dev/null 2> /dev/null
-            local origdir="$tmpdir"
-        fi
-
-        if ! [ -d "$outdir/${ts}" ]
-        then
-            mkdir -p "$outdir/${ts}"
-        fi
-
-        ##### unzip the image bands #####
-
-        tar -xzf "${origdir}/${file}" -C "$tmpdir" "*_B0[1345]*.TIF"
-
-        ##### make a vrt for the image bands #####
-
-        gdalbuildvrt -resolution highest -srcnodata 0 -separate "${tmpdir}/${base}.vrt" ${tmpdir}/${base}/*_B05*.TIF ${tmpdir}/${base}/*_B04*.TIF ${tmpdir}/${base}/*_B03*.TIF
-        
-        ##### get the xy size of the pan band in pixels #####
-    
-        local x
-        local y
-
-        read x y < <(gdalinfo ${tmpdir}/${base}/*_B01*.TIF | grep -e "Size is"  | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/' )
-
-        ##### resample the image vrt so its the same pixel size as the pan band #####
-
-        gdal_translate -outsize $x $y -of VRT "${tmpdir}/${base}.vrt" "${tmpdir}/resamp_${base}.vrt" > /dev/null
-        
-        ##### pansharpen #####
-
-        PanSharpeningExample ${tmpdir}/${base}/*_B01*.TIF "${tmpdir}/resamp_${base}.vrt" "${tmpdir}/${base}.tif"  > /dev/null
-        
-        ##### rescale the image #####
-
-        gdal_translate -ot byte -scale 0 8192 -of VRT "${tmpdir}/${base}.tif" "${tmpdir}/${base}_scaled.vrt"
-
-        ##### pass the image to the generic code #####
-
-        doimg "${base}_scaled.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_scaled.vrt")" "no"
-
-        ##### move the original zip to the indir #####
-
-        if [[ "$DWH_REBUILD" != "rebuild" ]]
-        then
-            mv "${origdir}/${file}" "${indir}/${dir}/"
-        fi
-                
-        rm -rf "${tmpdir}"
-
-    fi
-    echo >&3
-}
-
 
 main "$@"
 

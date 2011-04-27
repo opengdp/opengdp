@@ -1,0 +1,71 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+function getlist {
+    local mirrorfile="$1"
+    local patern="$2"
+    
+    (
+
+    ##### loop over the subdatasets we want #####
+
+    for sd in $subdatasets
+    do
+        i=$startdate
+
+        ##### loop while 
+        
+        while d=$(wget "${baseurl}/?subset=${sd}$( [ -n "$startdate" ] && echo ".${year}$(printf "%03d\n" $i )" )" -O /dev/stdout 2> /dev/null |\
+                  sed 's|.*Date: \([0-9]\{4\}\)/\([0-9]\{3\}\).*|\1\2|' |\
+                  grep -e "^[0-9]\{7\}$" )
+        do
+            if [ -n "$startdate" ]
+            then
+                ((i++))
+            fi
+
+            ##### if we aLREADY HAVE THE FILE, SKIP IT #####
+
+            if ! [ -f "${indir}/${sd}.${d}.${sat}${bandext}.250m.tif" ]
+            then
+                echo "get -O ${indir} http://rapidfire.sci.gsfc.nasa.gov/subsets/?subset=${sd}.${d}.${sat}${bandext}.250m.tif -o ${sd}.${d}.${sat}.250m.tif"
+            fi
+        done
+    done
+
+    ) > "$mirrorfile"
+}
+
+
+offsite="OFFSITE 255 255 255"
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+     
+     while read line
+     do      
+        ts="$(echo "$line" | sed 's:.*\([0-9]\{4\}\)\([0-9]\{3\}\).*:\1 \2:')"
+        date -d "jan 1 $ts days - 1 day" "+%Y%m%d"
+     done
+}

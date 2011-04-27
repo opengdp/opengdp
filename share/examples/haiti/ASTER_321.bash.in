@@ -29,96 +29,15 @@ tmp="/mnt/ram2/"
 ((limit=8))
 
 source "@GENERICDIR@/dwh-generic.bash"
+source "@GENERICDIR@/ASTER_USGS.bash"
 source "./dwh-proj_def.bash"
+
+msbands=( b03N b02 b01 )
 
 
 doovr="no"
 
 fetchpattern="AST_L1BE*tif.zip"
-
-datefunc="ASTER_dodate"
-
-###############################################################################
-# function to get a ts from a lftp command
-###############################################################################
-
-function ASTER_dodate {
-    sed 's:.*/AST_L1BE_[0-9]*_\([0-9]\{4\}\)\([0-9]\{4\}\)[0-9]\{6\}_.*:\2\1:'
-}
-
-#################################################################################################
-# function to proccess a file
-#################################################################################################
-
-function dofile {
-    myline=$1
-
-    if echo "$myline" | grep -e "^get" > /dev/null
-    then    
-        local sourcedir=${indir//\/\///}
-        local sourcedir=${sourcedir//\/\///}
-
-        local file="${myline##*/}"
-        local base="${file%.*}"
-        local ext="${file#*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        #local ext="${ext,,*}"
-        
-        if echo "$myline" | grep -e "$sourcedir" > /dev/null
-        then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
-        else
-            local dir=""
-        fi
-         
-        local ts=$(${datefunc} <<< "$myline")
-        
-        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-        #        "$myline" \
-        #        "$sourcedir "\
-        #        "$file" \
-        #        "$base" \
-        #        "$ext" \
-        #        "$dir" \
-        #        "$ts"
-        #echo >&3
-        #return
-
-        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
-        
-        
-        if [[ "$DWH_REBUILD" == "rebuild" ]]
-        then
-            local origdir="${indir/%\//}.old"
-        else
-            lftp -e "set cmd:set-term-status 0 ; $(echo "$myline" | sed "s:get -O [-/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" > /dev/null 2> /dev/null
-            local origdir="$tmpdir"
-        fi
-
-        if ! [ -d "$outdir/${ts}" ]
-        then
-            mkdir -p "$outdir/${ts}"
-        fi
-
-	    unzip "${origdir}/${file}" "*_b*.tif" -d "$tmpdir"
-
-        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}.vrt" ${tmpdir}/*_b3N.tif ${tmpdir}/*_b2.tif ${tmpdir}/*_b1.tif
-        doimg "${base}.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}.vrt")"
-        
-        #gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}.vrt" ${tmpdir}/*_b14.tif ${tmpdir}/*_b13.tif ${tmpdir}/*_b12.tif
-        #gdal_translate -ot byte -scale 0 1600 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_2.vrt"
-        #doimg "${base}_2.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_2.vrt")"
-
-        if [[ "$DWH_REBUILD" != "rebuild" ]]
-        then
-            mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
-        fi
-                
-        rm -rf "${tmpdir}"
-
-    fi
-    echo >&3
-}
 
 
 main "$@"
