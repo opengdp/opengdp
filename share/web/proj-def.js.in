@@ -1,0 +1,16 @@
+title = "jp_earthquake";
+
+document.title = title;
+center={};
+zoom=0;
+
+Ext.onReady(function() {
+
+    center = new OpenLayers.LonLat(142.10672, 37.71272);
+    zoom=7;
+
+});
+
+
+
+

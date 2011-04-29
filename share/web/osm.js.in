@@ -1,0 +1,47 @@
+Ext.onReady(function() {
+
+  var osm_tc_layers = [];
+
+
+  osm_google_hybrid_tc = new OpenLayers.Layer.WMS(
+    "osm-google-hybrid",
+    "http://cube.telascience.org/tilecache/tilecache.py",
+    {
+      layers: 'osm-google-hybrid',
+      format: 'image/png',
+      transparency: 'TRUE',
+    },
+    {
+      isBaseLayer: false,
+      visibility: false
+    }
+  );
+
+  osm_tc_layers.push(  osm_google_hybrid_tc );
+  
+  map.addLayers(osm_tc_layers);
+
+
+  
+  osm_tc_store = new GeoExt.data.LayerStore(
+    {
+      initDir: 0,
+      layers: osm_tc_layers
+    }
+  );
+
+  osm_tc_list = new GeoExt.tree.OverlayLayerContainer(
+    {
+      text: 'Open Street Map',
+      layerStore: osm_tc_store,
+      leaf: false,
+      nodeType: "gx_overlaylayercontainer",
+      expanded: false,
+      applyLoader: false
+    }
+  );
+
+  layerRoot.appendChild(osm_tc_list);
+
+});
+
