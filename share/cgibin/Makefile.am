@@ -12,5 +12,5 @@ EXTRA_DIST = \
 do_subst = cat
 							 
 default.cgi: default.cgi.in Makefile
-	$(do_subst) < $(srcdir)/default.cgi.in > default.cgi.bash
+	$(do_subst) < $(srcdir)/default.cgi.in > default.cgi
 

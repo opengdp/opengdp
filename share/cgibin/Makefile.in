@@ -422,7 +422,7 @@ uninstall-am: uninstall-cgibinDATA
 
 
 default.cgi: default.cgi.in Makefile
-	$(do_subst) < $(srcdir)/default.cgi.in > default.cgi.bash
+	$(do_subst) < $(srcdir)/default.cgi.in > default.cgi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

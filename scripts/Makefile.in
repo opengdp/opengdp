@@ -421,9 +421,9 @@ uninstall-am: uninstall-scriptsDATA
 	uninstall uninstall-am uninstall-scriptsDATA
 
 
-dwh-mkproject.sh: dwh-mkproject.in Makefile
-	$(do_subst) < $(srcdir)/dwh-mkproject.in > dwh-mkproject.sh
-	chmod +x dwh-mkproject.sh
+dwh-mkproject.bash: dwh-mkproject.bash.in Makefile
+	$(do_subst) < $(srcdir)/dwh-mkproject.bash.in > dwh-mkproject.bash
+	chmod +x dwh-mkproject.bash
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
