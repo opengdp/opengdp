@@ -438,24 +438,24 @@ echo "------------------------------------------------------------------------"
 ###############################################################################
 
 function do_subst {
-    sed -e "s,[@]fullproject[@],$fullproject,g" \
-        -e "s,[@]project[@],$project,g" \
-        -e "s,[@]path[@],$path,g" \
-        -e "s,[@]basedir[@],$basedir,g" \
-        -e "s,[@]scriptdir[@],$scriptdir,g" \
-        -e "s,[@]mapfile[@],$mapfile,g" \
-        -e "s,[@]mapserverpath[@],$mapserverpath,g" \
-        -e "s,[@]tmp[@],$tmpdir,g" \
-        -e "s,[@]cgibindir[@],$cgibindir,g" \
-        -e "s,[@]cgibin[@],$cgibin,g" \
-        -e "s,[@]htmldir[@],$htmldir,g" \
-        -e "s,[@]htmlbase[@],$htmlbase,g" \
-        -e "s,[@]urlbase[@],$urlbase,g" \
-        -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
-        -e "s,[@]urlcgibin[@],$urlcgibin,g" \
-        -e "s,[@]urlhtmldir[@],$urlhtmldir,g" \
-        -e "s,[@]mapcenter[@],$mapcenter,g" \
-        -e "s,[@]mapzoom[@],$mapzoom,g"
+    sed -e "s|[@]fullproject[@]|$fullproject|g" \
+        -e "s|[@]project[@]|$project|g" \
+        -e "s|[@]path[@]|$path|g" \
+        -e "s|[@]basedir[@]|$basedir|g" \
+        -e "s|[@]scriptdir[@]|$scriptdir|g" \
+        -e "s|[@]mapfile[@]|$mapfile|g" \
+        -e "s|[@]mapserverpath[@]|$mapserverpath|g" \
+        -e "s|[@]tmp[@]|$tmpdir|g" \
+        -e "s|[@]cgibindir[@]|$cgibindir|g" \
+        -e "s|[@]cgibin[@]|$cgibin|g" \
+        -e "s|[@]htmldir[@]|$htmldir|g" \
+        -e "s|[@]htmlbase[@]|$htmlbase|g" \
+        -e "s|[@]urlbase[@]|$urlbase|g" \
+        -e "s|[@]urlcgibindir[@]|$urlcgibindir|g" \
+        -e "s|[@]urlcgibin[@]|$urlcgibin|g" \
+        -e "s|[@]urlhtmldir[@]|$urlhtmldir|g" \
+        -e "s|[@]mapcenter[@]|$mapcenter|g" \
+        -e "s|[@]mapzoom[@]|$mapzoom|g"
 }
 
 
