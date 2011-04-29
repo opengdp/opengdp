@@ -39,7 +39,7 @@ doovr="no"
 fetchpattern="AST_L1BE*tif.zip"
 
 
-
+main "$@"
 
 
 
