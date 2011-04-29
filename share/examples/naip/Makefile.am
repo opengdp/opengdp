@@ -98,9 +98,7 @@ EXTRA_DIST = \
     nebr_naip_2010.bash.in \
     ok_2010.bash.in
     
-do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
-							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
-							 -e 's,[@]www[@],$(www),g'
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g'
 
 BL_AL_200906_alabama_naip_al_1m.bash: BL_AL_200906_alabama_naip_al_1m.bash.in Makefile
 	$(do_subst) < $(srcdir)/BL_AL_200906_alabama_naip_al_1m.bash.in > BL_AL_200906_alabama_naip_al_1m.bash

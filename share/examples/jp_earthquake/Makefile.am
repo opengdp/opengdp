@@ -44,9 +44,7 @@ EXTRA_DIST = \
     jsitopo.bash.in \
     panformosat.bash.in
 
-do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
-							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
-							 -e 's,[@]www[@],$(www),g'
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g'
 
 ASTER_231_L1B.bash: ASTER_231_L1B.bash.in Makefile
 	$(do_subst) < $(srcdir)/ASTER_231_L1B.bash.in > ASTER_231_L1B.bash

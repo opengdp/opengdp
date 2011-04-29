@@ -53,9 +53,7 @@ EXTRA_DIST = \
     google-Ikonos.bash.in \
     google-geoeye.bash.in
 
-do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
-							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
-							 -e 's,[@]www[@],$(www),g'
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g'
 
 AERIAL_CAP.bash: AERIAL_CAP.bash.in Makefile
 	$(do_subst) < $(srcdir)/AERIAL_CAP.bash.in > AERIAL_CAP.bash

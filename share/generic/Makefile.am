@@ -39,10 +39,8 @@ EXTRA_DIST = \
     google_superoverlay_kml.bash
 
 
-do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
-							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
-							 -e 's,[@]www[@],$(www),g'
-							 
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g'
+
 generic.bash: generic.bash.in Makefile
 	$(do_subst) < $(srcdir)/generic.bash.in > generic.bash
 	

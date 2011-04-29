@@ -38,9 +38,7 @@ EXTRA_DIST = \
     geoeye.bash.in \
     iss.bash.in
 
-do_subst = sed -e 's,[@]genericdir[@],$(pkgdatadir)/generic,g' \
-							 -e 's,[@]wwwdisk[@],$(wwwdisk),g' \
-							 -e 's,[@]www[@],$(www),g'
+do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g'
 
 ASTER_321.bash: ASTER_321.bash.in Makefile
 	$(do_subst) < $(srcdir)/ASTER_321.bash.in > ASTER_321.bash
