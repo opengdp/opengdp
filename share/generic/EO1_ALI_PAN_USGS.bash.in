@@ -104,7 +104,7 @@ function dofile {
 
         ##### make a vrt for the image bands #####
 
-        gdalbuildvrt -resolution highest -srcnodata 0 -separate \
+        gdalbuildvrt -resolution highest -srcnodata 32767 -separate \
                      "${tmpdir}/${base}.vrt" \
                      ${tmpdir}/${base}/*_B0${msbands[0]}.[tT][iI][Ff] \
                      ${tmpdir}/${base}/*_B0${msbands[1]}.[tT][iI][Ff] \

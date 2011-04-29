@@ -38,6 +38,7 @@
 #include "otbVectorRescaleIntensityImageFilter.h"
 #include "otbMultiChannelExtractROI.h"
 
+//otbCloudMask RRGlobal_r09c21.2011098.terra.250m.jpg RRGlobal_r09c21.2011098.terra.250m_mask.tif 3 214 214 214 1 .8 1
 
 void usage(char *app) {
 

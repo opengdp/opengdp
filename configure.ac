@@ -23,6 +23,15 @@ if test $HAVE_BASH = "false"; then
   AC_MSG_FAILURE([bash not found])
 fi
 
+
+dnl Check for dialog
+AC_CHECK_PROGS([DIALOG], [dialog], [:])
+if test "$DIALOG" = :; then
+AC_MSG_ERROR([dialog not found])
+fi
+AC_MSG_RESULT([dialog $DIALOG])
+
+
 dnl tar
 
 AC_CHECK_PROGS([TAR], [tar gtar], [:])
@@ -109,6 +118,7 @@ fi
 
 AC_OUTPUT([
 Makefile
+scripts/Makefile
 share/Makefile
 share/examples/Makefile
 share/examples/floods_austrailia/Makefile
