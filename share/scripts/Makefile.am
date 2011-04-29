@@ -3,7 +3,7 @@ scripts_DATA = \
 
 CLEANFILES = $(scripts_DATA)
 
-scriptsdir = $(pkgdatadir)/generic
+scriptsdir = $(pkgdatadir)/scripts
 
 EXTRA_DIST = \
         dwh-proj_def.bash.in
