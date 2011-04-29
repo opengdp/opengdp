@@ -120,6 +120,7 @@ AC_OUTPUT([
 Makefile
 scripts/Makefile
 share/Makefile
+share/cgibin/Makefile
 share/examples/Makefile
 share/examples/floods_austrailia/Makefile
 share/examples/haiti/Makefile

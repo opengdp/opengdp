@@ -223,7 +223,8 @@ SUBDIRS = \
 	examples \
 	map \
 	web \
-	scripts
+	scripts \
+	cgibin
 
 all: all-recursive
 

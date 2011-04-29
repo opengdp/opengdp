@@ -3,7 +3,8 @@ SUBDIRS = \
 	generic\
 	examples \
 	map \
-	web
+	web \
+	scripts
 
 
 ## File created by the gnome-build tools

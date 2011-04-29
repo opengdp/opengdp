@@ -4,7 +4,8 @@ SUBDIRS = \
 	examples \
 	map \
 	web \
-	scripts
+	scripts \
+	cgibin
 
 
 ## File created by the gnome-build tools
