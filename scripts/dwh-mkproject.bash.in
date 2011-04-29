@@ -27,22 +27,59 @@ fi
 
 ##### source the cached config if there is one #####
 
-if ! [ -d "~/.dwh" ]
+if ! [ -d ~/.dwh ]
 then
-    mkdir "~/.dwh"
+    mkdir ~/.dwh
 fi
 
-if [ -f "~/.dwh/mkproject.cache" ]
+if [ -f ~/.dwh/mkproject.cache ]
 then
-    source "~/.dwh/mkproject.cache"
+    source ~/.dwh/mkproject.cache
 fi
 
 ##### set some default values #####
 
+if ! [ -n "$c_path" ]
+then
+       c_path="/data"
+fi
+
+if ! [ -n "$c_tmpdir" ]
+then
+       c_tmpdir="/tmp"
+fi
+
+if ! [ -n "$c_mapserverpath" ]
+then
+       c_mapserverpath="/usr/local/src/mapserver/mapserver"
+fi
+
+if ! [ -n "$c_cgibindir" ]
+then
+       c_cgibindir="/var/www/cgi-bin"
+fi
+
+if ! [ -n "$c_htmldir" ]
+then
+       c_htmldir="/var/www/html"
+fi
+
 if ! [ -n "$c_urlbase" ]
 then
-    c_urlbase="http://$(hostname)"
+       c_urlbase="http://$(hostname)"
 fi
+
+if ! [ -n "$c_mapcenter" ]
+then
+       c_mapcenter="0, 0"
+fi
+
+if ! [ -n "$c_mapzoom" ]
+then
+       c_mapzoom="10"
+fi
+
+
 
 #####
 function inputbox {
@@ -217,8 +254,29 @@ do
         fi
         continue;
     fi
-     
-    break;
+    
+    if ! [ -w "$cgibindir" ]
+    then
+        if yesnobox "WARNING ${cgibindir} is not writable use sudo? yes/no : "
+        then
+            uid=$(id -u)
+            gid=$(id -g)
+            reset
+            if sudo bash -c "$(printf 'touch %q' "$cgibindir/${cgibin}") && $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/${cgibin}") && $(printf 'chmod %q %q' "755" "$cgibindir/${cgibin}")"
+            then
+                break;
+            fi
+            error="touch failed\n"
+        fi
+        continue;
+    fi
+    
+    if touch "$cgibindir/${cgibin}"
+    then
+        break
+    fi
+    
+    error="touch failed\n"
 done
 
 ##### html  dir #####
@@ -318,11 +376,11 @@ do
     unset mc
     while ! [ -n "$mc" ]
     do
-        mc=$(inputbox "${error}enter the center coordinates of the map in lon lat format: " "$c_mapcenter")
+        mc=$(inputbox "${error}enter the center coordinates of the map in lon, lat format: " "$c_mapcenter")
     done
     
     
-    mapcenter="$x, $y"
+    mapcenter="$mc"
     break
 done
 
@@ -373,7 +431,7 @@ echo "------------------------------------------------------------------------"
 					 
 ##### fix the , in mapcenter #####
 
-mapcenter="$(echo $mapcenter | sed 's/,/\\,/')"
+#mapcenter="$(echo $mapcenter | sed 's/,/\\,/')"
 
 ###############################################################################
 # function to sub the vars in a file
@@ -408,10 +466,7 @@ then
     mkdir "$scriptdir"
 fi
 
-    do_subst < "@PKGDATADIR@/scripts/dwh-proj_def.bash" > "$scriptdir/dwh-proj_def.bash"
-
-done
-
+do_subst < "@PKGDATADIR@/scripts/dwh-proj_def.bash" > "$scriptdir/dwh-proj_def.bash"
 
 
 ##### map #####
@@ -426,6 +481,7 @@ then
     
     grep "${mapfile}.${ts}.bak" -e INCLUDE |\
      while read line
+     do
         linenum=$(cat "$mapfile" |\
                    grep -n -e "^[ ]*END[ ]*$" |\
                    tail -n 1 |\
@@ -439,21 +495,16 @@ ${line}
 w
 EOF
     done
+    
 else
     do_subst < "@PKGDATADIR@/map/default.map" > "$mapfile"
 fi
 
 ##### cgi #####
 
-tmp=$(mktemp -t "${dwh}XXXXXXXXXX")
-do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$tmp"
+do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$cgibindir/${cgibin}"
 
-sudo bash -c "$(printf 'mv %q %q' "$tmp" "$cgibindir/${cgibin}") && $(printf 'chmod a+rx %q' "$cgibindir/${cgibin}")"
-
-rm -f "$tmp"
-
-
-##### html and js #####
+##### html #####
 
 if [ -f  "$htmlbase/index.html" ]
 then
@@ -461,11 +512,12 @@ then
     
     mv  "$htmlbase/index.html" "$htmlbase/index.html.${ts}.bak"
     
-    do_subst < "@PKGDATADIR@/html/index.html" > "$htmlbase/index.html"
+    do_subst < "@PKGDATADIR@/web/index.html" > "$htmlbase/index.html"
 
     grep "$htmlbase/index.html.${ts}.bak" -e '<script type="text/javascript" src=".*.js"></script>' |\
      while read line
-        if ! grep "@PKGDATADIR@/html/index.html" -e "$line"
+     do
+        if ! grep "@PKGDATADIR@/web/index.html" -e "$line"
         then
             linenum=$(cat "${htmlbase}/index.html" |\
                        grep -n -e "finish.js" |\
@@ -482,7 +534,27 @@ EOF
         fi
     done
 else
-    do_subst < "@PKGDATADIR@/html/index.html" > "$htmlbase/index.html"
+    do_subst < "@PKGDATADIR@/web/index.html" > "$htmlbase/index.html"
 fi
-    
+
+##### js #####
+
+for f in @PKGDATADIR@/web/*.js
+do
+    ff="${f##*/}"
+    do_subst < "$f" > "$htmlbase/$ff"
+done
+
+###### write the cache #####
+
+cat > ~/.dwh/mkproject.cache << EOF
+c_path="$path"
+c_tmpdir="$tmpdir"
+c_mapserverpath="$mapserverpath"
+c_cgibindir="$cgibindir"
+c_htmldir="$htmldir"
+c_urlbase="$urlbase"
+c_mapcenter="$mapcenter"
+c_mapzoom="$mapzoom"
+EOF
 

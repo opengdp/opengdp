@@ -224,7 +224,7 @@ jp_DATA = \
     panformosat.bash
 
 CLEANFILES = $(jp_DATA)
-jpdir = $(pkgdatadir)/jp_earthquake
+jpdir = $(pkgdatadir)/examples/jp_earthquake
 EXTRA_DIST = \
     ASTER_231_L1B.bash.in \
     ASTER_231_L1BE.bash.in \
