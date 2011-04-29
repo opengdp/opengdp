@@ -558,3 +558,8 @@ c_mapcenter="$mapcenter"
 c_mapzoom="$mapzoom"
 EOF
 
+if which mc && \
+    yesnobox "Do you wish to use mc to copy any of the example scripts to your project? : "
+then
+    mc -u "@PKGDATADIR@/examples" "$scriptdir"
+fi
