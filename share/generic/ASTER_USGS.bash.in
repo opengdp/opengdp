@@ -85,7 +85,7 @@ function dofile {
         
         if ! [ -n "$msbands" ]
         then
-            local msbands=( b3N b02 b01 )
+            local msbands=( b03N b02 b01 )
         fi
         
         unzip "${origdir}/${file}" "*${msbands[0]}.[tT][iI][Ff]" -d "$tmpdir"
@@ -94,9 +94,9 @@ function dofile {
         
         gdalbuildvrt -srcnodata 0 -separate \
                      "${tmpdir}/${base}.vrt" \
-                     ${tmpdir}/*[bB]${msbands[0]}.[tT][iI][Ff] \
-                     ${tmpdir}/*[bB]${msbands[1]}.[tT][iI][Ff] \
-                     ${tmpdir}/*[bB]${msbands[2]}.[tT][iI][Ff]
+                     ${tmpdir}/*${msbands[0]}.[tT][iI][Ff] \
+                     ${tmpdir}/*${msbands[1]}.[tT][iI][Ff] \
+                     ${tmpdir}/*${msbands[2]}.[tT][iI][Ff]
         
         doimg "${base}.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}.vrt")"
         
