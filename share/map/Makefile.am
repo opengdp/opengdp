@@ -3,7 +3,7 @@ map_DATA = \
 
 CLEANFILES = $(map_DATA)
 
-mapdir = $(pkgdatadir)/generic
+mapdir = $(pkgdatadir)/map
 
 EXTRA_DIST = \
     default.map.in

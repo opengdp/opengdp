@@ -2,7 +2,9 @@
 ## Created by Anjuta
 
 SUBDIRS = src \
-	share
+	share\
+	scripts\
+	map
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

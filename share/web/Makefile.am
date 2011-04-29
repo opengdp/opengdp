@@ -4,7 +4,7 @@ web_DATA = \
     index.html \
     osm.js \
     proj-def.js \
-    setup.js \
+    setup.js
     
 CLEANFILES = $(web_DATA)
 
@@ -16,7 +16,7 @@ EXTRA_DIST = \
     index.html.in \
     osm.js.in \
     proj-def.js.in \
-    setup.js.in \
+    setup.js.in
 
 do_subst = cat
 

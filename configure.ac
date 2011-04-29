@@ -126,6 +126,9 @@ share/examples/haiti/Makefile
 share/examples/jp_earthquake/Makefile
 share/examples/naip/Makefile
 share/generic/Makefile
+share/map/Makefile
+share/scripts/Makefile
+share/web/Makefile
 src/Makefile
 
 ])
