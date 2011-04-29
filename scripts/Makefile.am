@@ -1,12 +1,12 @@
-scripts_DATA = \
+bin_SCRIPTS = \
 	dwh-mkproject.bash
     
-CLEANFILES = $(scripts_DATA)
+CLEANFILES = $(bin_SCRIPTS)
 
 EXTRA_DIST = \
 	dwh-mkproject.bash.in
 	
-scriptsdir = $(bindir)
+
 
 
 do_subst = sed -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g'

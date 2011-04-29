@@ -21,7 +21,7 @@ jp_DATA = \
 
 CLEANFILES = $(jp_DATA)
 
-jpdir = $(pkgdatadir)/generic
+jpdir = $(pkgdatadir)/jp_earthquake
 
 EXTRA_DIST = \
     ASTER_231_L1B.bash.in \
