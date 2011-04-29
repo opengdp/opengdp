@@ -1,0 +1,488 @@
+#!/bin/bash
+# Copyright (c) 2010, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+if ! which dialog
+then
+    echo "this script requires the dialog utility"
+    exit 1
+fi
+
+##### source the cached config if there is one #####
+
+if ! [ -d "~/.dwh" ]
+then
+    mkdir "~/.dwh"
+fi
+
+if [ -f "~/.dwh/mkproject.cache" ]
+then
+    source "~/.dwh/mkproject.cache"
+fi
+
+##### set some default values #####
+
+if ! [ -n "$c_urlbase" ]
+then
+    c_urlbase="http://$(hostname)"
+fi
+
+#####
+function inputbox {
+    echo $(dialog --clear --inputbox "$1" 12 80 "$2" 2>&1 >/dev/tty)
+}
+
+function yesnobox {
+    
+    dialog --clear --yesno "$1" 12 80  2>&1 >/dev/tty
+}
+
+##### name of project #####
+
+unset fullproject
+
+while ! [ -n "$fullproject" ]
+do
+    fullproject="$(inputbox "enter the full project name: " "$c_fullproject")"
+done
+
+
+##### name of project #####
+
+unset project
+
+while ! [ -n "$project" ]
+do
+    project="$(inputbox "enter the project name: " "$c_project")"
+done
+
+project=$(echo "$project" | sed -r 's/[ \t]+/_/g')
+
+    
+##### project creation path #####
+
+error=""
+
+while true
+do
+    unset path
+    while ! [ -n "$path" ]
+    do
+        path="$(inputbox "${error}enter the path to create the project in : " "$c_path")"
+    done
+
+    if ! [ -d "$path" ]
+    then
+        error="ERROR: $path is not a dir\n"
+        continue;
+    fi
+    
+    if [ -e "${path}/${project}" ] && ! [ -d "${path}/${project}/" ]
+    then
+        error="ERROR: $path exists and is not a dir\n"
+        continue;
+    fi
+    
+    if [ -d "${path}/${project}/" ]
+    then
+        if yesnobox "WARNING: ${path}/${project} already exists use anyway? yes/no : "
+        then
+            break;
+        fi
+        continue;
+    fi
+    
+    if ! [ -w "$path" ]
+    then
+        if yesnobox "WARNING ${path} is not writable use sudo? yes/no : "
+        then
+            uid=$(id -u)
+            gid=$(id -g)
+            reset
+            if sudo bash -c "$(printf 'mkdir %q' "${path}/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "${path}/${project}") "
+            then
+                break;
+            fi
+            error="mkdir failed\n"
+        fi
+        continue;
+    fi
+    
+    if mkdir "${path}/${project}"
+    then
+        break
+    fi
+    
+    error="mkdir failed\n"
+    
+done
+
+##### mapfile #####
+
+unset mapfile
+
+while ! [ -n "$mapfile" ]
+do
+    mapfile=$(inputbox "enter the name of the mapfile: " "$project.map")
+done
+
+##### temp dir #####
+
+error=""
+
+while true
+do
+    unset tmpdir
+    while ! [ -n "$tmpdir" ]
+    do
+        tmpdir=$(inputbox "${error}enter the path to the temp dir: " "$c_tmpdir")
+    done
+    
+    if ! [ -d "$tmpdir" ]
+    then
+        error="ERROR: $tmpdir is not a dir\n"
+        continue;
+    fi
+    
+    if ! [ -w "$tmpdir" ]
+    then
+        error="ERROR: $tmpdir is not writeable\n"
+        continue;
+    fi
+
+    break;
+done
+
+##### mapserver path #####
+
+unset mapserverpath
+
+while ! [ -n "$mapserverpath" ]
+do
+    mapserverpath=$(inputbox "enter the path to the mapserver binaries: " "$c_mapserverpath")
+done
+
+##### cgibin  dir #####
+
+unset error
+while true
+do
+    unset cgibindir
+    while ! [ -n "$cgibindir" ]
+    do
+        cgibindir=$(inputbox "${error}enter the path to the cgi-bin dir: " "$c_cgibindir")
+    done
+    
+        if ! [ -d "$cgibindir" ]
+    then
+        error="ERROR: $cgibindir is not a dir\n"
+        continue;
+    fi
+    
+    break
+done
+
+##### cgi bin script #####
+
+while true
+do
+    unset cgibin
+    while ! [ -n "$cgibin" ]
+    do
+        cgibin=$(inputbox "enter the name of the cgi-bin script: " "${project}")
+    done
+    
+    if [ -e "$cgibindir/${cgibin}" ]
+    then
+        if yesnobox "WARNING: "$cgibindir/${cgibin}" already exists use anyway? yes/no : "
+        then
+            break;
+        fi
+        continue;
+    fi
+     
+    break;
+done
+
+##### html  dir #####
+
+unset error
+
+while true
+do
+    unset htmldir
+    while ! [ -n "$htmldir" ]
+    do
+        htmldir=$(inputbox "${error}enter the path to the html dir to create the project in: " "$c_htmldir")
+    done
+    
+
+    if ! [ -d "$htmldir" ]
+    then
+        error="ERROR: $htmldir is not a dir\n"
+        continue;
+    fi
+    
+    if [ -e "$htmldir/${project}" ] && ! [ -d "$htmldir/${project}/" ]
+    then
+        error="ERROR: $htmldir exists and is not a dir\n"
+        continue;
+    fi
+    
+    if [ -d "$htmldir/${project}/" ]
+    then
+        if yesnobox "WARNING: $htmldir/${project} already exists use anyway? yes/no : "
+        then
+            break;
+        fi
+        continue;
+    fi
+    
+    if ! [ -w "$htmldir" ]
+    then
+        if yesnobox "WARNING $htmldir is not writable use sudo? yes/no : "
+        then
+            uid=$(id -u)
+            gid=$(id -g)
+            reset
+            if sudo bash -c "$(printf 'mkdir %q' "$htmldir/${project}") && $(printf 'chown %q %q' ${uid}:${gid} "$htmldir/${project}")"
+            then
+                break;
+            fi
+            error="mkdir failed\n"
+        fi
+        continue;
+    fi
+    
+    if mkdir "$htmldir/${project}"
+    then
+        break
+    fi
+    
+    error="mkdir failed\n"
+done
+
+
+##### url base #####
+
+unset urlbase
+
+while ! [ -n "$urlbase" ]
+do
+    urlbase=$(inputbox "enter the base url for the web server: " "$c_urlbase")
+done
+
+##### url cgi-bin dir #####
+
+unset urlcgibindir
+
+while ! [ -n "$urlcgibindir" ]
+do
+    urlcgibindir=$(inputbox "enter the cgi bin dir url: " "$urlbase/cgi-bin")
+done
+
+##### url html dir #####
+
+unset urlhtmldir
+
+
+while ! [ -n "$urlhtmldir" ]
+do
+    urlhtmldir=$(inputbox "enter the html dir url" "$urlbase/html/$project")
+done
+
+##### map center #####
+
+unset mapcenter
+unset error
+
+while true
+do
+    unset mc
+    while ! [ -n "$mc" ]
+    do
+        mc=$(inputbox "${error}enter the center coordinates of the map in lon lat format: " "$c_mapcenter")
+    done
+    
+    
+    mapcenter="$x, $y"
+    break
+done
+
+##### mapzoom #####
+
+unset mapzoom
+
+while ! [ -n "$mapzoom" ]
+do
+    mapzoom=$(inputbox "enter the default map zoom level: " "$c_mapzoom")
+done
+        
+##### some compound vars #####
+
+basedir="${path}/${project}"
+scriptdir="${path}/${project}/scripts/"
+mapfile="$basedir/$mapfile"
+urlcgibin="$urlcgibindir/$cgibin"
+htmlbase="$htmldir/$project"
+
+##### print the stuff #####
+
+dialog --clear --msgbox "$(
+echo "------------------------------------------------------------------------"
+echo "fullproject:      $fullproject"
+echo "project:          $project"
+echo "path:             $path"
+echo "basedir:          $basedir"
+echo "scriptdir:        $scriptdir"
+echo "edcftp:           $edcftp"
+echo "mapfile:          $mapfile"
+echo "mapserverpath:    $mapserverpath"
+echo "tmpdir:           $tmpdir"
+echo "limit:            $limit"
+echo "cgibindir:        $cgibindir"
+echo "cgibin:           $cgibin"
+echo "htmldir:          $htmldir"
+echo "htmlbase:         $htmlbase"
+echo "urlbase:          $urlbase"
+echo "urlcgibindir:     $urlcgibindir"
+echo "urlcgibin:        $urlcgibin"
+echo "urlhtmldir:       $urlhtmldir"
+echo "mapcenter:        $mapcenter"
+echo "mapzoom:          $mapzoom"
+echo "------------------------------------------------------------------------"
+)" 30 100
+
+					 
+##### fix the , in mapcenter #####
+
+mapcenter="$(echo $mapcenter | sed 's/,/\\,/')"
+
+###############################################################################
+# function to sub the vars in a file
+###############################################################################
+
+function do_subst {
+    sed -e "s,[@]fullproject[@],$fullproject,g" \
+        -e "s,[@]project[@],$project,g" \
+        -e "s,[@]path[@],$path,g" \
+        -e "s,[@]basedir[@],$basedir,g" \
+        -e "s,[@]scriptdir[@],$scriptdir,g" \
+        -e "s,[@]mapfile[@],$mapfile,g" \
+        -e "s,[@]mapserverpath[@],$mapserverpath,g" \
+        -e "s,[@]tmp[@],$tmpdir,g" \
+        -e "s,[@]cgibindir[@],$cgibindir,g" \
+        -e "s,[@]cgibin[@],$cgibin,g" \
+        -e "s,[@]htmldir[@],$htmldir,g" \
+        -e "s,[@]htmlbase[@],$htmlbase,g" \
+        -e "s,[@]urlbase[@],$urlbase,g" \
+        -e "s,[@]urlcgibindir[@],$urlcgibindir,g" \
+        -e "s,[@]urlcgibin[@],$urlcgibin,g" \
+        -e "s,[@]urlhtmldir[@],$urlhtmldir,g" \
+        -e "s,[@]mapcenter[@],$mapcenter,g" \
+        -e "s,[@]mapzoom[@],$mapzoom,g"
+}
+
+
+##### scripts #####
+
+if [ ! -d "$scriptdir" ]
+then
+    mkdir "$scriptdir"
+fi
+
+    do_subst < "@PKGDATADIR@/scripts/dwh-proj_def.bash" > "$scriptdir/dwh-proj_def.bash"
+
+done
+
+
+
+##### map #####
+
+if [ -f  "$mapfile" ]
+then
+    ts=$(date +%s)
+    
+    mv  "$mapfile" "${mapfile}.${ts}.bak"
+    
+    do_subst < "@PKGDATADIR@/map/default.map" > "$mapfile"
+    
+    grep "${mapfile}.${ts}.bak" -e INCLUDE |\
+     while read line
+        linenum=$(cat "$mapfile" |\
+                   grep -n -e "^[ ]*END[ ]*$" |\
+                   tail -n 1 |\
+                   cut -d ":" -f 1
+                 )
+
+        ed -s "$mapfile" << EOF
+${linenum}-1a
+${line}
+.
+w
+EOF
+    done
+else
+    do_subst < "@PKGDATADIR@/map/default.map" > "$mapfile"
+fi
+
+##### cgi #####
+
+tmp=$(mktemp -t "${dwh}XXXXXXXXXX")
+do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$tmp"
+
+sudo bash -c "$(printf 'mv %q %q' "$tmp" "$cgibindir/${cgibin}") && $(printf 'chmod a+rx %q' "$cgibindir/${cgibin}")"
+
+rm -f "$tmp"
+
+
+##### html and js #####
+
+if [ -f  "$htmlbase/index.html" ]
+then
+    ts=$(date +%s)
+    
+    mv  "$htmlbase/index.html" "$htmlbase/index.html.${ts}.bak"
+    
+    do_subst < "@PKGDATADIR@/html/index.html" > "$htmlbase/index.html"
+
+    grep "$htmlbase/index.html.${ts}.bak" -e '<script type="text/javascript" src=".*.js"></script>' |\
+     while read line
+        if ! grep "@PKGDATADIR@/html/index.html" -e "$line"
+        then
+            linenum=$(cat "${htmlbase}/index.html" |\
+                       grep -n -e "finish.js" |\
+                       tail -n 1 |\
+                       cut -d ":" -f 1
+                     )
+
+            ed -s "${htmlbase}/index.html" << EOF
+${linenum}-1a
+        <script type="text/javascript"
+.
+w
+EOF
+        fi
+    done
+else
+    do_subst < "@PKGDATADIR@/html/index.html" > "$htmlbase/index.html"
+fi
+    
+
