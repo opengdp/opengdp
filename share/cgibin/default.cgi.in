@@ -20,11 +20,11 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-mapserverpath="/usr/local/src/mapserver/mapserver/"
+mapserverpath="@mapserverpath@"
 
 export GDAL_DISABLE_READDIR_ON_OPEN=YES
 
-export MS_MAPFILE="/bigdata/jp_earthquake/jp_earthquake.map"
+export MS_MAPFILE="@mapfile@"
 LIBKML_WRAPDATELINE=yes
 LIBKML_RESOLVE_STYLE=yes
 export LIBKML_WRAPDATELINE
