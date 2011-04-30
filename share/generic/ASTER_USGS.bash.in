@@ -24,12 +24,12 @@
 ###############################################################################
 
 function dodate {
-    sed 's:.*/AST_L1AE_[0-9]*_\([0-9]\{4\}\)\([0-9]\{4\}\)[0-9]\{6\}_.*:\2\1:'
+    sed 's:.*/[_A-Z1-2]*[0-9]*_\([0-9]\{4\}\)\([0-9]\{4\}\).*:\2\1:'
 }
 
-#################################################################################################
+###############################################################################
 # function to proccess a file
-#################################################################################################
+###############################################################################
 
 function dofile {
     myline=$1
@@ -88,17 +88,17 @@ function dofile {
             local msbands=( b03N b02 b01 )
         fi
         
-        unzip "${origdir}/${file}" "*${msbands[0]}.[tT][iI][Ff]" -d "$tmpdir"
-        unzip "${origdir}/${file}" "*${msbands[1]}.[tT][iI][Ff]" -d "$tmpdir"
-        unzip "${origdir}/${file}" "*${msbands[2]}.[tT][iI][Ff]" -d "$tmpdir"
+        unzip "${origdir}/${file}" "*${msbands[0]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${file}" "*${msbands[1]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${file}" "*${msbands[2]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
         
         gdalbuildvrt -srcnodata 0 -separate \
                      "${tmpdir}/${base}.vrt" \
                      ${tmpdir}/*${msbands[0]}.[tT][iI][Ff] \
                      ${tmpdir}/*${msbands[1]}.[tT][iI][Ff] \
-                     ${tmpdir}/*${msbands[2]}.[tT][iI][Ff]
+                     ${tmpdir}/*${msbands[2]}.[tT][iI][Ff] > /dev/null
         
-        doimg "${base}.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}.vrt")"
+        doimg "${base}.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}.vrt")" > /dev/null
         
 
         if [[ "$DWH_REBUILD" != "rebuild" ]]
