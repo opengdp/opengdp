@@ -180,11 +180,11 @@ function dozip {
             unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" "${imgdir}${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
 
         else
-            local imgfile="${f##*\\}"
+            local imgfile="${f##*/}"
             local imgbase="${imgfile%.*}"
             local imgext="${imgfile##*.}"
 
-            local imgdir="${f%\\*}"
+            local imgdir="${f%/*}"
             if [[ "$imgdir" = "$imgfile" ]]
             then
                 local imgdir=""

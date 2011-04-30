@@ -15886,10 +15886,28 @@ then
   OTBINC=`(echo -n ";" ; grep "SET(OTB_INCLUDE_DIRS" "$otbconfig" | cut -d '"' -f 2) | sed 's/;/ -I/g' | sed "s,..OTB_INSTALL_PREFIX.,$otbbase,g" `
   OTBLIB=`(echo -n ";" ; grep "SET(OTB_LIBRARY_DIRS" "$otbconfig" | cut -d '"' -f 2) | sed 's/;/ -L/g' | sed "s,..OTB_INSTALL_PREFIX.,$otbbase,g" `
 
-  while read line
+  prefrm=`grep "SET" "$otblibdep" | cut -d '"' -f 4 | tr ";" "\n" | sed 's/^-l//' | grep -v -e "^$" `
+  while read lib
   do
-    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed -e 's/general;//g' -e 's/;$//' -e 's/-l//g' -e 's/;/ -l/g' -e 's,-l/-_./a-zA-Z0-9*lib,-l,g' -e 's/.so.0-9*//g'  ` "
-  done < "$otblibdep"
+    if test "$lib" = "general"
+    then
+        continue;
+    fi
+
+    dir="${lib%/*}"
+    so="${lib##*/}"
+    soa="${so%%.*}"
+    sob=`echo $soa | sed 's/^lib//'`
+    if test "$dir" = "$so"
+    then
+        OTBLIB="$OTBLIB -l$so"
+    else
+        OTBLIB="$OTBLIB -L$dir -l$sob"
+    fi
+  done << EOF
+$prefrm
+EOF
+
 
 
 
