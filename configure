@@ -15888,7 +15888,7 @@ then
 
   while read line
   do
-    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed 's/general;//g' | sed 's/;$//' | sed 's/-l//g' | sed 's/;/ -l/g' | sed 's,-l/,-l:/,g'` "
+    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed -e 's/general;//g' -e 's/;$//' -e 's/-l//g' -e 's/;/ -l/g' -e 's,-l/-_./a-zA-Z0-9*lib,-l,g' -e 's/.so.0-9*//g' ` "
   done < "$otblibdep"
 
 
