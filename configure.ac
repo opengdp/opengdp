@@ -105,7 +105,7 @@ then
   
   while read line
   do
-    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed -e 's/general;//g' -e 's/;$//' -e 's/-l//g' -e 's/;/ -l/g' -e 's,-l/[-_./a-zA-Z0-9]*lib,-l,g' -e 's/.so[.0-9]*//g' ` "
+    OTBLIB="$OTBLIB ` (echo -n ";" ; echo "$line" | grep "SET" | cut -d '"' -f 4 ) | sed -e 's/general;//g' -e 's/;$//' -e 's/-l//g' -e 's/;/ -l/g' -e 's,-l/[-_./a-zA-Z0-9]*lib,-l,g' -e 's/.so[.0-9]*//g'  ` "
   done < "$otblibdep"
 
   AC_SUBST(OTBINC)
