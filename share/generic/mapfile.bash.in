@@ -46,7 +46,7 @@ function writemap_nominmax {
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
-    onePROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 EOF
 
@@ -233,7 +233,7 @@ EOF
 function addinclude_NewWorld {
     ts="$1"
 
-    if ! grep "$NewWorld_mapfile" -e "${outdir}/${dsname}${ts}.map" > /dev/null
+    if [ -f "$NewWorld_mapfile" ] &&  ! grep "$NewWorld_mapfile" -e "${outdir}/${dsname}${ts}.map" > /dev/null
     then
         echo "  INCLUDE '${outdir}/NewWorld_${dsname}${ts}.map'" >> "$NewWorld_mapfile"
     fi

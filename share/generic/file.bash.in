@@ -341,6 +341,7 @@ function dofile {
         then
             local origdir="${indir/%\//}.old/${dir}"
         else
+            
             lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
             local origdir="$tmpdir"
         fi
@@ -377,8 +378,6 @@ function dofile {
                 dokmz "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
 
-#fixme this does not take into account world files that may be there too
-            
             *)
                 if gdalinfo "${origdir}/${file}" > /dev/null
                 then
@@ -388,7 +387,18 @@ function dofile {
                     
                     if [[ "$DWH_REBUILD" == "rebuild" ]]
                     then
+                    
+                        ##### link to the main image file #####
+                        
                         ln -s "${origdir}/${file}" "${tmpdir}/${file}"
+                        
+                        ##### if the data has world files and such link them too #####
+                        
+                        local e
+                        for e in ${extra_cp_to_source_ext[@]}
+                        do
+                            ln -s "${origdir}/${base2}${e}" "${indir}/${dir}/${base2}${e}"
+                        done
                     fi
 
                     doimg "${file}" \

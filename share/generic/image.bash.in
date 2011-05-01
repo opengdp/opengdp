@@ -337,7 +337,7 @@ function doimg {
         gdal_translate -a_srs "$s_srs" \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
-                       "${tmpdir}/${imgdir}${imgbase}_srs.vrt"
+                       "${tmpdir}/${imgdir}${imgbase}_srs.vrt" > /dev/null || return
 
         img="${imgdir}${imgbase}_srs.vrt"
         imgfile="${img##*/}"
