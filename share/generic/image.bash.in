@@ -329,7 +329,7 @@ function doimg {
     
     ##### do we need to add a srs to the image #####
     
-    if [ -n "$s_srs" ]
+    if  [ -n "$s_srs" ] && if [ -n "$isoverview" ]
     then
         ##### create a vrt with the proj #####
         
