@@ -404,7 +404,19 @@ function dofile {
 
         if (($? == 0)) && [[ "$DWH_REBUILD" != "rebuild" ]]
         then
+        
+            ##### mv the main image file to the source dir #####
+            
             mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
+            
+            ##### if the data has world files and such mv them too #####
+            
+            local e
+            for e in ${extra_cp_to_source_ext[@]}
+            do
+                mv "${tmpdir}/${base2}${e}" "${indir}/${dir}/${base2}${e}"
+            done
+            
         fi
 
         rm -rf "${tmpdir}"
