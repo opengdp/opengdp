@@ -310,7 +310,7 @@ function dofile {
         
         #local ext="${ext,,*}"
         
-        if echo "$myline" | grep -e "$sourcedir/" > /dev/null
+        if [ "$ignoredir" != "yes" ] && "echo "$myline" | grep -e "$sourcedir/" > /dev/null
         then
             local dir="$(echo "$myline" | sed "s|.*$sourcedir/\(.*\) [A-Za-z]*:/.*|\1|")/"
 
