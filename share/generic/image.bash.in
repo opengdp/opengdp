@@ -130,7 +130,6 @@ function dosubimg {
         ##### since it has a alpha band already skip the nearblack #####
         
         else
-            echo "needs warped has alpha"
         
             ##### needs warped #####
         
