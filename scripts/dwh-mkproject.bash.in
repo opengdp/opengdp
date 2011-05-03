@@ -503,6 +503,7 @@ fi
 ##### cgi #####
 
 do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$cgibindir/${cgibin}"
+chmod +x "$cgibindir/${cgibin}"
 
 ##### html #####
 
