@@ -21,127 +21,6 @@
 
 
 ###############################################################################
-# function to process a tar file
-###############################################################################
-
-function dotar {
-    local zipfile="$1"
-    local tmpdir="$2"
-    local ts="$3"
-    local origdir="$4"
-    local f
-    
-    for f in $(tar -tf "${origdir}/${zipfile}" --wildcards "$extglob")
-    do
-        local imgfile="${f##*/}"
-        local imgbase="${imgfile%.*}"
-        local imgext="${imgfile##*.}"
-        
-        local imgdir="${f%/*}"
-        if [[ "$imgdir" = "$imgfile" ]]
-        then
-            local imgdir=""
-        else
-            local imgdir="${imgdir}/"
-        fi
-
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
-        
-        ##### try to unzip a world file if its there #####
-        
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
-        
-        ##### try to unzip a aux file if its there #####
-        
-        tar -xf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
-        
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
-    done
-    
-}
-
-###############################################################################
-# function to process a tar.gz file
-###############################################################################
-
-function dotargz {
-    local zipfile="$1"
-    local tmpdir="$2"
-    local ts="$3"
-    local origdir="$4"
-    local f
-
-    for f in $(tar -tzf "${origdir}/${zipfile}" --wildcards "$extglob")
-    do
-        local imgfile="${f##*/}"
-        local imgbase="${imgfile%.*}"
-        local imgext="${imgfile##*.}"
-        
-        local imgdir="${f%/*}"
-        if [[ "$imgdir" = "$imgfile" ]]
-        then
-            local imgdir=""
-        else
-            local imgdir="${imgdir}/"
-        fi
-
-        
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
-        
-        ##### try to unzip a world file if its there #####
-        
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
-        
-        ##### try to unzip a aux file if its there #####
-        
-        tar -xzf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
-        
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
-        
-    done
-}
-
-###############################################################################
-# function to process a tar.gz file
-###############################################################################
-
-function dotarbz2 {
-    local zipfile="$1"
-    local tmpdir="$2"
-    local ts="$3"
-    local origdir="$4"
-    local f
-
-    for f in $(tar -tjf "${origdir}/${zipfile}" --wildcards "$extglob")
-    do
-        local imgfile="${f##*/}"
-        local imgbase="${imgfile%.*}"
-        local imgext="${imgfile##*.}"
-        
-        local imgdir="${f%/*}"
-        if [[ "$imgdir" = "$imgfile" ]]
-        then
-            local imgdir=""
-        else
-            local imgdir="${imgdir}/"
-        fi
-
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "$f" > /dev/null 2> /dev/null || return
-        
-        ##### try to unzip a world file if its there #####
-        
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.??w" > /dev/null 2> /dev/null
-        
-        ##### try to unzip a aux file if its there #####
-        
-        tar -xjf "${origdir}/${zipfile}" -C "$tmpdir" "${imgdir}${imgbase}*.aux" > /dev/null 2> /dev/null
-        
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
-        
-    done
-}
-
-###############################################################################
 # function to process a zip file
 ###############################################################################
 
@@ -150,68 +29,230 @@ function dozip {
     local tmpdir="$2"
     local ts="$3"
     local origdir="$4"
+    
+    zipinfo="$(zipinfo -1 "${origdir}/${zipfile}")"
+    
+    ##### if exglob is set get a list of those files #####
+    
+    if [ -n "$extglob" ]
+    then
+        local images="$(zipinfo -1 "${origdir}/${zipfile}" "$extglob")"
+    
+    ##### tif #####
+    
+    elif grep -i -e "[.]tif$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]tif$" <<<"$zipinfo")"
+
+    ##### sid #####
+    
+    elif grep -i -e "[.]sid$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]sid$" <<<"$zipinfo")"
+    
+    ##### jpeg2000 #####
+    
+    elif grep -i -e "[.]jp2$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]jp2$" <<<"$zipinfo")"
+    
+    ##### png #####
+    
+    elif grep -i -e "[.]png$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]png$" <<<"$zipinfo")"
+    
+    ##### jpg #####
+    
+    elif grep -i -e "[.]jpg$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]jpg$" <<<"$zipinfo")"  
+    
+    ##### gif #####
+    
+    elif grep -i -e "[.]gif$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]gif$" <<<"$zipinfo")"
+    
+    ##### no match, bail #####
+    
+    else
+        return
+    fi
+    
+    ##### loop over the matching files #####
+    
     local f
-    
-    
-    for f in $(zipinfo -1 "${origdir}/${zipfile}" "$extglob")
+    for f in $images
     do
-        if ! grep '\\' <<< "$f" > /dev/null
-        then
-            local imgfile="${f##*/}"
-            local imgbase="${imgfile%.*}"
-            local imgext="${imgfile##*.}"
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
 
-            local imgdir="${f%/*}"
-            if [[ "$imgdir" = "$imgfile" ]]
-            then
-                local imgdir=""
-            else
-                local imgdir="${imgdir}/"
-            fi
-    
-            unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" > /dev/null 2> /dev/null || return
-            
-            ##### try to unzip a world file if its there #####
-            
-            unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
-            
-            ##### try to unzip a aux file if its there #####
-            
-            unzip "${origdir}/${zipfile}" "${imgdir}${imgbase}*.aux" "${imgdir}${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
-
-        else
-            local imgfile="${f##*/}"
-            local imgbase="${imgfile%.*}"
-            local imgext="${imgfile##*.}"
-
-            local imgdir="${f%/*}"
-            if [[ "$imgdir" = "$imgfile" ]]
-            then
-                local imgdir=""
-            else
-                local imgdir="${imgdir}\\"
-            fi
-
-            unzip "${origdir}/${zipfile}" "*${imgfile}" -d "$tmpdir" > /dev/null 2> /dev/null || return
-            
-            ##### try to unzip a world file if its there #####
-            
-            unzip "${origdir}/${zipfile}" "*${imgbase}*.??w" -d "$tmpdir" > /dev/null 2> /dev/null
-            
-            ##### try to unzip a aux file if its there #####
-            
-            unzip "${origdir}/${zipfile}" "*${imgbase}*.aux" "*${imgbase}*.aux.xml" -d "$tmpdir" > /dev/null 2> /dev/null
-
-            f="${f/\\//}"
-
-        fi
-
+        local imgdir="${f%/*}"
         
-        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            if ! grep '\\' <<< "$f" > /dev/null
+            then
+                local imgdir="${imgdir}/"
+            
+            ##### if the dir has a backslash use a wildcard for the dir #####
+            
+            else
+                local imgdir=".*"
+            fi
+        fi
+        
+        ##### test for world and aux files #####
+        
+        local world="$(grep -i -e "${imgdir}${imgbase}[.]??w" <<<"$zipinfo" | head -n 1)"
+        local aux="$(grep -i -e "${imgdir}${imgbase}[.]aux$" <<<"$zipinfo" | head -n 1)"
+        local auxxml="$(grep -i -e "${imgdir}${imgbase}[.]aux.xml$" <<<"$zipinfo" | head -n 1)"
+    
+        ##### extract the files #####
+
+        unzip "${origdir}/${zipfile}" \
+              "$f" "$world" "$aux" "$auxxml" \
+              -d "$tmpdir" > /dev/null 2> /dev/null || return
+        
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 
         
     done
 
+}
+
+###############################################################################
+# function to process a tar.gz file
+###############################################################################
+
+function dotar {
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    
+    local zipbase="${zipfile%.*}"
+    local base2="${base%.*}"
+    local ext="${zipfile##*.}"
+    local ext2="${zipbase##*.}"
+    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+
+    if [[ "$ext2" == "tar" ]]
+    then
+        ext="${ext2}.${ext}"
+        base="$base2"
+    fi
+    
+    ##### find the 
+    case "$ext" in
+        
+        *tar)
+            local switch=""
+            ;;
+                
+        *tar.gz)
+            local switch=""
+            ;;
+        
+        *tgz)
+            local switch=""
+            ;;
+            
+        *tar.bz2)
+            local switch=""
+            ;;
+    esac
+    
+    zipinfo="$(tar -t${switch}f "${origdir}/${zipfile}")"
+    
+    ##### if exglob is set get a list of those files #####
+    
+    local regex="${extglob//\*/.*}"
+    local regex="${regex//?/.}"
+    
+    if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "$regex" <<<"$zipinfo")"
+    
+    ##### tif #####
+    
+    elif grep -i -e "[.]tif$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]tif$" <<<"$zipinfo")"
+
+    ##### sid #####
+    
+    elif grep -i -e "[.]sid$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]sid$" <<<"$zipinfo")"
+    
+    ##### jpeg2000 #####
+    
+    elif grep -i -e "[.]jp2$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]jp2$" <<<"$zipinfo")"
+    
+    ##### png #####
+    
+    elif grep -i -e "[.]png$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]png$" <<<"$zipinfo")"
+    
+    ##### jpg #####
+    
+    elif grep -i -e "[.]jpg$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]jpg$" <<<"$zipinfo")"
+    
+    ##### gif #####
+    
+    elif grep -i -e "[.]gif$" <<<"$zipinfo" > /dev/null
+    then
+        local images="$(grep -i -e "[.]gif$" <<<"$zipinfo")"
+    
+    ##### no match, bail #####
+    
+    else
+        return
+    fi
+
+    ##### loop over the matching files #####
+    
+    local f
+    for f in $images
+    do
+        local imgfile="${f##*/}"
+        local imgbase="${imgfile%.*}"
+        local imgext="${imgfile##*.}"
+        
+        local imgdir="${f%/*}"
+        if [[ "$imgdir" = "$imgfile" ]]
+        then
+            local imgdir=""
+        else
+            local imgdir="${imgdir}/"
+        fi
+
+        ##### test for world and aux files #####
+
+        local world="$(grep -i -e "${imgdir}${imgbase}[.]??w" <<<"$zipinfo" | head -n 1)"
+        local aux="$(grep -i -e "${imgdir}${imgbase}[.]aux$" <<<"$zipinfo" | head -n 1)"
+        local auxxml="$(grep -i -e "${imgdir}${imgbase}[.]aux.xml$" <<<"$zipinfo" | head -n 1)"
+        
+        ##### extract the files #####
+        
+        tar -x${switch}f "${origdir}/${zipfile}" \
+            -C "$tmpdir" \
+            "$f" "$world" "$aux" "$auxxml" > /dev/null 2> /dev/null || return
+        
+        doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
+        
+    done
 }
 
 ###############################################################################
@@ -359,15 +400,15 @@ function dofile {
                 ;;
                 
             *tar.gz)
-                dotargz "${file}" "$tmpdir" "$ts" "$origdir"
+                dotar "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *tgz)
-                dotargz "${file}" "$tmpdir" "$ts" "$origdir"
+                dotar "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *tar.bz2)
-                dotarbz2 "${file}" "$tmpdir" "$ts" "$origdir"
+                dotar "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *zip)
