@@ -111,11 +111,31 @@ function dozip {
         local world="$(grep -i -e "${imgdir}${imgbase}[.]??w" <<<"$zipinfo" | head -n 1)"
         local aux="$(grep -i -e "${imgdir}${imgbase}[.]aux$" <<<"$zipinfo" | head -n 1)"
         local auxxml="$(grep -i -e "${imgdir}${imgbase}[.]aux.xml$" <<<"$zipinfo" | head -n 1)"
-    
+        
+        ##### use an array for non empty args, zip takes  #####
+        ##### non empty args as a pattern and exits false #####
+        
+        local i=0
+        local zipargs
+        
+        zipargs[i++]="$f"
+        if [ -n "$world" ]
+        then
+            zipargs[i++]="$world"
+        fi
+        if [ -n "$aux" ]
+        then
+            zipargs[i++]="$aux"
+        fi
+        if [ -n "$auxxml" ]
+        then
+            zipargs[i++]="$auxxml"
+        fi
+        
         ##### extract the files #####
 
         unzip "${origdir}/${zipfile}" \
-              "$f" "$world" "$aux" "$auxxml" \
+              ${zipargs[@]} \
               -d "$tmpdir" > /dev/null 2> /dev/null || return
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
