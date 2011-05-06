@@ -610,10 +610,6 @@ function main {
     
     if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
     
-    ##### unzip untar... pattern default #####
-    
-    if ! [ -n "$extglob" ] ; then extglob="*.tif" ; fi
-    
     ##### unzip kmz pattern default #####
     
     if ! [ -n "$baseglob" ] ; then baseglob="tile-*" ; fi
