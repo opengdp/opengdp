@@ -107,7 +107,7 @@ function dozip {
         fi
         
         ##### test for world and aux files #####
-        
+
         local world="$(grep -i -e "${imgdir}${imgbase}[.]..w" <<<"$zipinfo" | head -n 1)"
         local aux="$(grep -i -e "${imgdir}${imgbase}[.]aux$" <<<"$zipinfo" | head -n 1)"
         local auxxml="$(grep -i -e "${imgdir}${imgbase}[.]aux.xml$" <<<"$zipinfo" | head -n 1)"
@@ -260,7 +260,7 @@ function dotar {
 
         ##### test for world and aux files #####
 
-        local world="$(grep -i -e "${imgdir}${imgbase}[.]??w" <<<"$zipinfo" | head -n 1)"
+        local world="$(grep -i -e "${imgdir}${imgbase}[.]..w" <<<"$zipinfo" | head -n 1)"
         local aux="$(grep -i -e "${imgdir}${imgbase}[.]aux$" <<<"$zipinfo" | head -n 1)"
         local auxxml="$(grep -i -e "${imgdir}${imgbase}[.]aux.xml$" <<<"$zipinfo" | head -n 1)"
         
