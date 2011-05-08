@@ -111,30 +111,36 @@ function getlist {
     elif grep -i -e "[.]zip$" <<<"$mirrorscript" > /dev/null
     then
         local files="$(grep -i -e "[.]zip$" <<<"$mirrorscript")"
+        local isarchive="yes"
         
     ##### tar.gz #####
     
     elif grep -i -e "[.]tar.gz$" <<<"$mirrorscript" > /dev/null
     then
         local files="$(grep -i -e "[.]tar.gz$" <<<"$mirrorscript")"
+        local isarchive="yes"
+        
         
     ##### tgz #####
     
     elif grep -i -e "[.]tgz$" <<<"$mirrorscript" > /dev/null
     then
         local files="$(grep -i -e "[.]tgz$" <<<"$mirrorscript")"
+        local isarchive="yes"
         
     ##### tar.bz2 #####
     
     elif grep -i -e "[.]tar.bz2$" <<<"$mirrorscript" > /dev/null
     then
         local files="$(grep -i -e "[.]tar.bz2$" <<<"$mirrorscript")"
+        local isarchive="yes"
         
     ##### tar #####
     
     elif grep -i -e "[.]tar$" <<<"$mirrorscript" > /dev/null
     then
         local files="$(grep -i -e "[.]tar$" <<<"$mirrorscript")"
+        local isarchive="yes"
         
     ##### jpeg2000 #####
     
@@ -181,27 +187,7 @@ function getlist {
         local base="${file%.*}"
         local base2="${base%.*}"
         local ext="${file##*.}"
-        local ext2="${base##*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
-    
-        local sdir="${line%/*}"
-        if [[ "$sdir" = "$file" ]]
-        then
-            local sdir=""
-        else
-            local sdir="${sdir}/"
-        fi
-    
-        if [[ "$ext2" == "tar" ]]
-        then
-            ext="${ext2}.${ext}"
-            base="$base2"
-        fi
-    
-        if [[ "$ext" = "tar" ]] || [[ "$ext" = "tar.gz" ]] || 
-           [[ "$ext" = "tar.bz2" ]] || [[ "$ext" = "tgz" ]] ||
-           [[ "$ext" = "zip" ]]
+        if ! [[ "$isarchive" = "yes" ]]
         then
             echo "$line"
         else
