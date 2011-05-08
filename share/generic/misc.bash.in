@@ -84,88 +84,154 @@ function dodate {
 
 function getlist {
     local mirrorfile="$1"
-    local patern="$2"
-
-    ##### not as multiple fetch #####
+    local pattern="$2"
     
-    if [ "${#multifetchpattern[@]}" == "0" ]
+    ##### get the list of files on the site #####
+    
+    mirrorscript="$(lftp "$baseurl" -e "mirror --just-print ; exit")"
+    
+    ##### if pattern is set get a list of those files #####
+
+    local regex="${extglob//\*/.*}"
+    local regex="${regex//?/.}"
+    
+    if [ -n "$pattern" ] && grep -i -e "$regex" <<<"$mirrorscript" > /dev/null
     then
-        lftp "$baseurl" -e "mirror --script=${mirrorfile} -I "$patern"; exit"
+        local files="$(grep -i -e "$regex" <<<"$mirrorscript")"
+    
+    ##### tif #####
+    
+    elif grep -i -e "[.]tif$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]tif$" <<<"$mirrorscript")"
 
-    ##### a multiple fetch #####
-
+    ##### zip #####
+    
+    elif grep -i -e "[.]zip$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]zip$" <<<"$mirrorscript")"
+        
+    ##### tar.gz #####
+    
+    elif grep -i -e "[.]tar.gz$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]tar.gz$" <<<"$mirrorscript")"
+        
+    ##### tgz #####
+    
+    elif grep -i -e "[.]tgz$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]tgz$" <<<"$mirrorscript")"
+        
+    ##### tar.bz2 #####
+    
+    elif grep -i -e "[.]tar.bz2$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]tar.bz2$" <<<"$mirrorscript")"
+        
+    ##### tar #####
+    
+    elif grep -i -e "[.]tar$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]tar$" <<<"$mirrorscript")"
+        
+    ##### jpeg2000 #####
+    
+    elif grep -i -e "[.]jp2$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]jp2$" <<<"$mirrorscript")"
+    
+    ##### png #####
+    
+    elif grep -i -e "[.]png$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]png$" <<<"$mirrorscript")"
+    
+    ##### jpg #####
+    
+    elif grep -i -e "[.]jpg$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]jpg$" <<<"$mirrorscript")"
+    
+    ##### gif #####
+    
+    elif grep -i -e "[.]gif$" <<<"$mirrorscript" > /dev/null
+    then
+        local files="$(grep -i -e "[.]gif$" <<<"$mirrorscript")"
+    
+    ##### no match, bail #####
+    
     else
-        
-        ##### go though the paterns #####
-
-        patern=""
-        local nump=0
-        for p in "${multifetchpattern[@]}"
-        do
-            ((nump++))
-            
-            ##### create a group of -I switches for lftps mirror #####
-
-            patern="$patern -I $p"
-        done
-        
-        ##### keep track of the last patern so we can make sure #####
-        ##### its the last file fetched. this file will be the  #####
-        ##### one gdal operattes on. we need the jpeg not the   #####
-        ##### world or aux                                      #####
-
-        local lastp="$p"
-        echo lastp = "$lastp"
-
-        ##### get the list of files to fetch #####
-
-        lftp "$baseurl" -e "mirror --script=${mirrorfile} $patern; exit"
-        
-        ##### put all the mkdir commands at the top of the file #####
-
-        grep "${mirrorfile}" -e "^mkdir" > "${mirrorfile}.new"
-        
-        ##### parse the get commands to make each group a single line #####
-        
-        local done=no
-        while true
-        do
-            local lastline=""
-            
-            ##### loop number of patern times and read #####
-
-            for ((i = 0 ; i < nump ; i++))
-            do
-                if ! read line 
-                then
-                    done=yes
-                    break
-                fi
-
-                if ! [[ "$line" == $lastp ]]
-                then
-                    echo -n "${line};"
-                else
-                    lastline="$line"
-                fi
-            done
-
-            if [ -n "$lastline" ]
-            then
-                echo "${lastline}"
-            fi
-        
-            if [[ "$done" == "yes" ]]
-            then
-                break
-            fi
-
-        done < <( grep "${mirrorfile}" -e "^get" ) >> "${mirrorfile}.new"
-
-        mv "${mirrorfile}" "${mirrorfile}.old"
-        mv "${mirrorfile}.new" "${mirrorfile}"
+        return
     fi
+    
+    ##### add the mkdir commands to the mirrorfile first #####
+    
+    grep -e "^mkdir" <<<"$mirrorscript" > "$mirrorfile"
+    
+    ##### loop over the list of files to fetch #####
+    
+    local line
+    while read line 
+    do
+    
+        local file="${line##*/}"
 
+        local base="${file%.*}"
+        local base2="${base%.*}"
+        local ext="${file##*.}"
+        local ext2="${base##*.}"
+        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+        local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+    
+        local sdir="${line%/*}"
+        if [[ "$sdir" = "$file" ]]
+        then
+            local sdir=""
+        else
+            local sdir="${sdir}/"
+        fi
+    
+        if [[ "$ext2" == "tar" ]]
+        then
+            ext="${ext2}.${ext}"
+            base="$base2"
+        fi
+    
+        if [[ "$ext" = "tar" ]] || [[ "$ext" = "tar.gz" ]] || 
+           [[ "$ext" = "tar.bz2" ]] || [[ "$ext" = "tgz" ]] ||
+           [[ "$ext" = "zip" ]]
+        then
+            echo "$line"
+        else
+            
+            ##### test for world and aux files #####
+
+            local world="$(grep -i -e "${sdir}${base}[.]..w$" <<<"$mirrorscript" | head -n 1)"
+            local aux="$(grep -i -e "${sdir}${base}[.]aux$" <<<"$mirrorscript" | head -n 1)"
+            local auxxml="$(grep -i -e "${sdir}${base}[.]aux.xml$" <<<"$mirrorscript" | head -n 1)"
+        
+            if [ -n "$world" ]
+            then
+                echo -n "$world ; "
+            fi
+            
+            if [ -n "$aux" ]
+            then
+                echo -n "$aux ; "
+            fi
+            
+            if [ -n "$auxxml" ]
+            then
+                echo -n "$auxxml ; "
+            fi
+            
+            echo "$line"
+        fi >> "$mirrorfile"
+        
+    done <<<"$files"
+            
+    
 }
 
 
