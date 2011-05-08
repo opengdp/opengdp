@@ -34,9 +34,13 @@ function dozip {
     
     ##### if exglob is set get a list of those files #####
     
-    if [ -n "$extglob" ]
+    local regex="${extglob//./[.]}"
+    local regex="${regex//\*/.*}"
+    local regex="${regex//?/.}"
+    
+    if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null
     then
-        local images="$(zipinfo -1 "${origdir}/${zipfile}" "$extglob")"
+        local images="$(grep -i -e "$regex" <<<"$zipinfo")"
     
     ##### tif #####
     
@@ -192,7 +196,8 @@ function dotar {
     
     ##### if exglob is set get a list of those files #####
     
-    local regex="${extglob//\*/.*}"
+    local regex="${extglob//./[.]}"
+    local regex="${regex//\*/.*}"
     local regex="${regex//?/.}"
     
     if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null

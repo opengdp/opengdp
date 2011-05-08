@@ -92,7 +92,8 @@ function getlist {
     
     ##### if pattern is set get a list of those files #####
 
-    local regex="${extglob//\*/.*}"
+    local regex="${pattern//./[.]}"
+    local regex="${regex//\*/.*}"
     local regex="${regex//?/.}"
     
     if [ -n "$pattern" ] && grep -i -e "$regex" <<<"$mirrorscript" > /dev/null
