@@ -94,11 +94,16 @@ function getlist {
 
     local regex="${pattern//./[.]}"
     local regex="${regex//\*/.*}"
-    local regex="${regex//?/.}"
+    local regex="${regex//\?/.}"
     
-    if [ -n "$pattern" ] && grep -i -e "$regex" <<<"$mirrorscript" > /dev/null
+    if [ -n "$pattern" ] 
     then
-        local files="$(grep -i -e "$regex" <<<"$mirrorscript")"
+        if grep -i -e "$regex" <<<"$mirrorscript" > /dev/null
+        then
+            local files="$(grep -i -e "$regex" <<<"$mirrorscript")"
+        else
+            return
+        fi
     
     ##### tif #####
     

@@ -34,9 +34,9 @@ function dozip {
     
     ##### if exglob is set get a list of those files #####
     
-    local regex="${extglob//./[.]}"
+    local regex="${pattern//./[.]}"
     local regex="${regex//\*/.*}"
-    local regex="${regex//?/.}"
+    local regex="${regex//\?/.}"
     
     if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null
     then
