@@ -135,12 +135,23 @@ EOF
     if ! grep "${htmlbase}/index.html" -e "${dsname}.js" > /dev/null && \
        ! grep "${htmlbase}/index.html" -e "${dsname}_tc.js" > /dev/null       
     then
-        linenum=$(cat "${htmlbase}/index.html" |\
-                   grep -n -e "finish.js" |\
-                   tail -n 1 |\
-                   cut -d ":" -f 1
-                 )
+        if grep "${htmlbase}/index.html" -e "osm.js" > /dev/null
+        then
+        
+            local linenum=$(cat "${htmlbase}/index.html" |\
+                             grep -n -e "osm.js" |\
+                             tail -n 1 |\
+                             cut -d ":" -f 1
+                           )
+        else
 
+            local linenum=$(cat "${htmlbase}/index.html" |\
+                             grep -n -e "finish.js" |\
+                             tail -n 1 |\
+                             cut -d ":" -f 1
+                           )
+        fi
+        
         ed -s "${htmlbase}/index.html" << EOF
 ${linenum}-1a
         <script type="text/javascript" src="${dsname}.js"></script>
