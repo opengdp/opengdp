@@ -606,17 +606,21 @@ function main {
     
     if ! [ -n "$resample_alg" ] ; then resample_alg="average" ; fi
 
-    ##### fetch pattern default #####
-    
-    if ! [ -n "$fetchpattern" ] ; then fetchpattern="*" ; fi
-    
     ##### unzip kmz pattern default #####
     
     if ! [ -n "$baseglob" ] ; then baseglob="tile-*" ; fi
     
     ##### proccess limit default #####
     
-    if ! [ -n "$limit" ] ; then limit="4" ; fi
+    if ! [ -n "$limit" ]
+    then
+        if [ -f /proc/cpuinfo ]
+        then
+            limit=$(grep /proc/cpuinfo -e "^processor" | wc -l)
+        else
+            limit="4"
+        fi
+    fi
     
     if ! [ -n "$datefunc" ] ; then datefunc="dodate" ; fi
 
