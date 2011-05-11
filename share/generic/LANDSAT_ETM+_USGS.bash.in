@@ -86,18 +86,18 @@ function dofile {
         
         if ! [ -n "$msbands" ]
         then
-            local msbands=( 3 2 1 )
+            local msbands=( B03 B02 B01 )
         fi
         
-        unzip "${origdir}/${file}" "*_B0${msbands[0]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
-        unzip "${origdir}/${file}" "*_B0${msbands[1]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
-        unzip "${origdir}/${file}" "*_B0${msbands[2]}.[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${file}" "*${msbands[0]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${file}" "*${msbands[1]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
+        unzip "${origdir}/${file}" "*${msbands[2]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
 
         gdalbuildvrt -srcnodata 0 -separate \
                      "${tmpdir}/${base}.vrt" \
-                     ${tmpdir}/*_B0${msbands[0]}.[tT][iI][Ff] \
-                     ${tmpdir}/*_B0${msbands[1]}.[tT][iI][Ff] \
-                     ${tmpdir}/*_B0${msbands[2]}.[tT][iI][Ff] > /dev/null
+                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] \
+                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] \
+                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] > /dev/null
         
         CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 1 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B01_filled.tif" > /dev/null
         CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 2 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B02_filled.tif" > /dev/null
