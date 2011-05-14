@@ -23,21 +23,27 @@ dsname="LANDSAT_TM_USGS_543"
 baseurl="file:///bigdata/201101_Floods_Australia/source/LANDSAT_TM_USGS/"
 tmp="/mnt/ram2/"
 
-##### setup proccess management #####
+#### setup proccess management #####
 
 ((limit=4))
 
-source "@GENERICDIR@/generic.bash"
-source "@GENERICDIR@/LANDSAT_TM_USGS.bash"
+source "/usr/local/share/dwh/generic/generic.bash"
 source "./dwh-proj_def.bash"
 
-msbands=( 5 4 3 )
+msbands=( B05 B04 B03 )
+
 doovr="no"
 
-fetchpattern="*.zip"
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+    sed 's:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
+}
+
 
 main "$@"
-
 
 
 

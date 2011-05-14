@@ -24,19 +24,24 @@ baseurl="http://edcftp.cr.usgs.gov/pub/data/disaster/201103_Earthquake_Tsunami_J
 
 tmp="/mnt/ram2/"
 
-##### setup proccess management #####
+#### setup proccess management #####
 
 ((limit=4))
 
-##### setup proccess management #####
-
-((limit=4))
-
-source "@GENERICDIR@/generic.bash"
-source "@GENERICDIR@/LANDSAT_TM_USGS.bash"
+source "/usr/local/share/dwh/generic/generic.bash"
 source "./dwh-proj_def.bash"
 
+msbands=( B03 B02 B01 )
 
 doovr="no"
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+    sed 's:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
+}
+
 
 main "$@"

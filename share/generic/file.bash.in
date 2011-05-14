@@ -88,6 +88,105 @@ function dozip_multiband {
 }
     
 ###############################################################################
+# function to process a tar in a multiband case
+###############################################################################
+
+function dotar_multiband {
+
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    
+    local file="${zipfile##*/}"
+    local base="${file%.*}"
+    local base2="${base%.*}"
+    local ext="${zipfile##*.}"
+    local ext2="${zipbase##*.}"
+    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
+    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+
+    if [[ "$ext2" == "tar" ]]
+    then
+        ext="${ext2}.${ext}"
+        base="$base2"
+    fi
+        
+    ##### find the 
+    case "$ext" in
+        
+        *tar)
+            local switch=""
+            ;;
+                
+        *tar.gz)
+            local switch=""
+            ;;
+        
+        *tgz)
+            local switch=""
+            ;;
+            
+        *tar.bz2)
+            local switch=""
+            ;;
+    esac
+    
+    zipinfo="$(tar -t${switch}f "${origdir}/${zipfile}")"
+
+    ##### for now we just assume tiff, id like to make this better later #####
+    
+    local i=0
+    local files
+    local msband
+
+    for msband in "${msbands[@]}"
+    do
+        local regex="${msband//./[.]}"
+        local regex="${regex//\*/.*}"
+        local regex="${regex//\?/.}"
+
+        if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+        then
+            files[i++]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
+        else
+            echo "ERROR: no match in zip for \"$msband\""
+            return;
+        fi
+    
+    done
+    
+    ##### find the pan band #####
+    
+    local panfiles
+    if [ -n "$panband" ]
+    then
+        
+        local regex="${panband//./[.]}"
+        local regex="${regex//\*/.*}"
+        local regex="${regex//\?/.}"
+        
+        if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+        then
+            panfiles[0]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
+        else
+            echo "ERROR: no match in zip for \"$panband\""
+            return;
+        fi
+    fi
+        
+    ##### extract the files #####
+        
+    tar -x${switch}f "${origdir}/${zipfile}" \
+        -C "$tmpdir" \
+        ${files[@]} \
+        ${panfiles[@]} > /dev/null 2> /dev/null || return
+                
+    doimg_multiband "$base" "$tmpdir" "$ts" "no" "${panfiles[0]}" ${files[@]}
+    
+}
+    
+###############################################################################
 # function to process a zip file
 ###############################################################################
 
@@ -234,6 +333,14 @@ function dotar {
     local ts="$3"
     local origdir="$4"
     
+    ##### check if it is suposed to be multiband #####
+    
+    if [ -n "$msbands" ]
+    then
+        dotar_multiband "$zipfile" "$tmpdir" "$ts" "$origdir"
+        return
+    fi
+        
     local zipbase="${zipfile%.*}"
     local base2="${base%.*}"
     local ext="${zipfile##*.}"
