@@ -26,102 +26,25 @@ tmp="/mnt/ram2/"
 
 ##### setup proccess management #####
 
-((limit=8))
+((limit=4))
 
-source "@GENERICDIR@/dwh-generic.bash"
+source "/usr/local/share/dwh/generic/generic.bash"
 source "./dwh-proj_def.bash"
 
+msbands=( B03 B02 B01 )
 
+fillnodata="true"
+srcnodata="0"
 
 doovr="no"
-
-datefunc="LANDSAT_ETM_USGS_dodate"
 
 ###############################################################################
 # function to get a ts from a lftp command
 ###############################################################################
 
-function LANDSAT_ETM_USGS_dodate {
+function dodate {
     sed 's:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
-}
-
-#################################################################################################
-# function to proccess a file
-#################################################################################################
-
-function dofile {
-    myline=$1
-
-    if echo "$myline" | grep -e "^get" > /dev/null
-    then    
-        local sourcedir=${indir//\/\///}
-        local sourcedir=${sourcedir//\/\///}
-
-        local file="${myline##*/}"
-        local base="${file%.*}"
-        local ext="${file#*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        #local ext="${ext,,*}"
-        
-        if echo "$myline" | grep -e "$sourcedir" > /dev/null
-        then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
-        else
-            local dir=""
-        fi
-         
-        local ts=$(${datefunc} <<< "$myline")
-        
-        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-        #        "$myline" \
-        #        "$sourcedir "\
-        #        "$file" \
-        #        "$base" \
-        #        "$ext" \
-        #        "$dir" \
-        #        "$ts"
-        #echo >&3
-        #return
-
-        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
-        
-        
-        if [[ "$DWH_REBUILD" == "rebuild" ]]
-        then
-            local origdir="${indir/%\//}.old"
-        else
-            lftp -e "set cmd:set-term-status 0 ; $(echo "$myline" | sed "s:get -O [-/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" > /dev/null 2> /dev/null
-            local origdir="$tmpdir"
-        fi
-
-        if ! [ -d "$outdir/${ts}" ]
-        then
-            mkdir -p "$outdir/${ts}"
-        fi
-
-        unzip "${origdir}/${file}" "*_B0[123].TIF" -d "$tmpdir"
-
-        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}.vrt" ${tmpdir}/*_B03.TIF ${tmpdir}/*_B02.TIF ${tmpdir}/*_B01.TIF
-        
-        gdal_fillnodata.py -md 12 -b 1 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B01_filled.tif"
-        gdal_fillnodata.py -md 12 -b 2 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B02_filled.tif"
-        gdal_fillnodata.py -md 12 -b 3 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B03_filled.tif"
-        
-        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}_filled.vrt" "${tmpdir}/${base}_B01_filled.tif" "${tmpdir}/${base}_B02_filled.tif" "${tmpdir}/${base}_B03_filled.tif"
-        
-         doimg "${base}_filled.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_filled.vrt")"
-
-        if [[ "$DWH_REBUILD" != "rebuild" ]]
-        then
-            mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
-        fi
-                
-        rm -rf "${tmpdir}"
-
-    fi
-    echo >&3
 }
 
 
 main "$@"
-

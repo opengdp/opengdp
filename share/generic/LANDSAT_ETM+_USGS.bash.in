@@ -19,6 +19,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+msbands=( B03 B02 B01 )
+
+fillnodata="true"
+srcnodata="0"
+
 ###############################################################################
 # function to get a ts from a lftp command
 ###############################################################################
@@ -28,114 +33,3 @@ function dodate {
 }
 
 
-#################################################################################################
-# function to proccess a file
-#################################################################################################
-
-function dofile {
-    myline=$1
-
-    if echo "$myline" | grep -e "^get" > /dev/null
-    then    
-        local sourcedir=${indir//\/\///}
-        local sourcedir=${sourcedir//\/\///}
-
-        local file="${myline##*/}"
-        local base="${file%.*}"
-        local ext="${file#*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        #local ext="${ext,,*}"
-        
-        if echo "$myline" | grep -e "$sourcedir" > /dev/null
-        then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir\(.*\) $url.*|\1|")/"
-        else
-            local dir=""
-        fi
-         
-        local ts=$(${datefunc} <<< "$myline")
-        
-        #printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-        #        "$myline" \
-        #        "$sourcedir "\
-        #        "$file" \
-        #        "$base" \
-        #        "$ext" \
-        #        "$dir" \
-        #        "$ts"
-        #echo >&3
-        #return
-
-        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
-        
-        
-        if [[ "$DWH_REBUILD" == "rebuild" ]]
-        then
-            local origdir="${indir/%\//}.old"
-        else
-            lftp -e "set cmd:set-term-status 0 ; $(echo "$myline" | sed "s:get -O [-/_.A-Za-z0-9]*:get -O ${tmpdir}:") ; exit" > /dev/null 2> /dev/null
-            local origdir="$tmpdir"
-        fi
-
-        if ! [ -d "$outdir/${ts}" ]
-        then
-            mkdir -p "$outdir/${ts}"
-        fi
-        
-        ##### set default bands? #####
-        
-        if ! [ -n "$msbands" ]
-        then
-            local msbands=( B03 B02 B01 )
-        fi
-        
-        unzip "${origdir}/${file}" "*${msbands[0]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
-        unzip "${origdir}/${file}" "*${msbands[1]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
-        unzip "${origdir}/${file}" "*${msbands[2]}*[tT][iI][Ff]" -d "$tmpdir" > /dev/null 2> /dev/null
-
-        gdalbuildvrt -srcnodata 0 -separate \
-                     "${tmpdir}/${base}.vrt" \
-                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] \
-                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] \
-                     ${tmpdir}/*${msbands[0]}*[tT][iI][Ff] > /dev/null
-        
-        CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 1 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B01_filled.tif" > /dev/null
-        CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 2 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B02_filled.tif" > /dev/null
-        CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 12 -b 3 "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_B03_filled.tif" > /dev/null
-
-#        CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md 24 -b 1 ${tmpdir}/*_B08.[tT][iI][Ff] "${tmpdir}/${base}_B08_filled.tif"
-
-
-        gdalbuildvrt -srcnodata 0 -separate "${tmpdir}/${base}_filled.vrt" "${tmpdir}/${base}_B01_filled.tif" "${tmpdir}/${base}_B02_filled.tif" "${tmpdir}/${base}_B03_filled.tif" > /dev/null
-        
-        ##### get the pix size of the pan image #####
-        ##### this don't seem to work the gaps in the pan bad arent filled #####
-        ##### mayby with cloud masking and multiple images it will be worth doing #####
-        
-#        local pan_xsize
-#        local pan_ysize
-
-#        read pan_xsize pan_ysize < <(get_size "${tmpdir}/${base}_B08_filled.tif")
-        
-#        gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
-#                       "${tmpdir}/${base}_filled.vrt" \
-#                       "${tmpdir}/${base}_resize.vrt"
-                       
-#        otbPanSharp "byte" \
-#                    "${tmpdir}/${base}_B08_filled.tif" \
-#                    "${tmpdir}/${base}_resize.vrt" \
-#                    "${tmpdir}/${base}_pan.tif"
-
-#        doimg "${base}_pan.tif" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_pan.tif")"
-        doimg "${base}_filled.vrt" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}_filled.vrt")"
-    
-        if [[ "$DWH_REBUILD" != "rebuild" ]]
-        then
-            mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
-        fi
-                
-        rm -rf "${tmpdir}"
-
-    fi
-    echo >&3
-}

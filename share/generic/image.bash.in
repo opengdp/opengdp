@@ -583,3 +583,134 @@ function rebuildtindexs {
         fi
     done
 }
+
+###############################################################################
+# function to do a multiband image
+###############################################################################
+
+function doimg_multiband {
+
+    local base="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local isoriginal="$4"
+    local panfile="$5"
+    local files=("${@:6}")
+    
+    ##### make an array of the files with tmpdir prefixed #####
+    
+    local f
+    local i
+    local bands
+    for f in "${files[@]}"
+    do
+        bands[i++]="${tmpdir}/$f"
+    done
+    
+    ##### do we need a nodata value? #####
+    
+    if [ -n "$srcnodata" ]
+    then
+        local nodata=( -srcnodata "$srcnodata" )
+    fi
+    
+    ##### make a vrt of the ms bands first ######
+    
+    
+    gdalbuildvrt ${nodata[@]} -separate \
+                 "${tmpdir}/${base}.vrt" \
+                 ${bands[@]} > /dev/null || return
+    
+    ##### fillnodata ? #####
+    
+    if istrue "$fillnodata"
+    then
+        
+        ##### assume a max distance of 12 for landsat 7 #####
+        
+        if ! [ -n "$fillnodata_md" ]
+        then
+            local fillnodata_md=12
+        fi
+        
+        ##### loop over the bands and fill them #####
+        
+        local i=0
+        for f in "${files[@]}"
+        do
+            
+            bands[i++]="${tmpdir}/${base}_$(($i + 1))_filled.tif"
+            
+            CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md $fillnodata_md \
+                                                    -b $i \
+                                                    "${tmpdir}/${base}.vrt" \
+                                                    "${tmpdir}/${base}_${i}_filled.tif" > /dev/null || return
+
+        done
+        
+        ##### make a vrt of the filled ms bands #####
+        
+        gdalbuildvrt -srcnodata 0 -separate \
+                     "${tmpdir}/${base}.vrt" \
+                     ${bands[@]} > /dev/null || return
+        
+        ##### need to fill the pan band #####
+        
+    fi
+    
+    ##### do we pansharpen? #####
+    
+    if [ -n "$panfile" ]
+    then
+        
+        ##### get the pix size of the pan image #####
+        ##### this don't seem to work with gaps, the gaps in the pan band arent filled #####
+        ##### mayby with cloud masking and multiple images it will be worth doing #####
+        
+        local pan_xsize
+        local pan_ysize
+
+        read pan_xsize pan_ysize < <(get_size "${tmpdir}/$panfile")
+        
+        gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
+                       "${tmpdir}/${base}.vrt" \
+                       "${tmpdir}/${base}_resize.vrt" > /dev/null || return
+        
+        local type=$(gdalinfo "${tmpdir}/${base}.vrt" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
+        
+        otbPanSharp "$type" \
+                    "${tmpdir}/$panfile" \
+                    "${tmpdir}/${base}_resize.vrt" \
+                    "${tmpdir}/${base}_pan.tif" > /dev/null || return
+        
+        ##### build a vrt just to keep the same filename  for consistency #####
+        
+        gdal_translate -of VRT \
+                       "${tmpdir}/${base}.vrt" \
+                       "${tmpdir}/${base}_pan.tif" > /dev/null || return
+        
+    fi
+    
+    ##### rescale the image #####
+
+    if [ -n "$rescale" ]
+    then
+        ##### rename the source vrt so the output vrt will have the same filename for consistency #####
+        
+        mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
+        
+        gdal_translate -ot byte -scale $rescale -of VRT \
+                       "${tmpdir}/${base}_prescale.vrt" \
+                       "${tmpdir}/${base}.vrt" > /dev/null || return
+    fi
+    
+    
+    doimg "${base}.vrt" \
+          "$tmpdir" \
+          "$ts" \
+          "$(gdalinfo "${tmpdir}/${base}.vrt")" \
+          "no" || return
+    
+}
+
+

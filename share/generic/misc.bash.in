@@ -328,3 +328,37 @@ function get_size {
 
 }
 
+###############################################################################
+# function to test for true
+###############################################################################
+
+function istrue {
+    
+   case "$1" in
+        [nN][oO])
+            false
+            ;;
+        [yY][eE][sS])
+            true
+            ;;
+        [fF][aA][lL][sS][eE])
+            false
+            ;;
+        [tT][rR][uU][eE])
+            true
+            ;;
+        *)
+            ##### if there is a second numeric arg return it by itself,#####
+            ##### otherwise return the default of false #####
+            
+            if [ -n "$2" ]
+            then
+                return $2
+            else
+                false
+            fi
+            ;;
+    esac
+    
+}
+

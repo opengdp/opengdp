@@ -28,12 +28,23 @@ tmp="/mnt/ram2/"
 
 ((limit=4))
 
-source "@GENERICDIR@/generic.bash"
-source "@GENERICDIR@/LANDSAT_ETM+_USGS.bash"
+source "/usr/local/share/dwh/generic/generic.bash"
 source "./dwh-proj_def.bash"
 
+msbands=( B03 B02 B01 )
+
+fillnodata="true"
+srcnodata="0"
 
 doovr="no"
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+    sed 's:.*/LS[0-9]\{8\}\([0-9]\{8\}\).*:\1:'
+}
 
 
 main "$@"
