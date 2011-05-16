@@ -29,7 +29,6 @@ tmp="/mnt/ram2/"
 ((limit=8))
 
 source "@GENERICDIR@/generic.bash"
-source "@GENERICDIR@/ASTER_USGS.bash"
 source "./dwh-proj_def.bash"
 
 msbands=( b03N b02 b01 )
@@ -38,7 +37,25 @@ doovr="no"
 
 fetchpattern="AST_L1BE*tif.zip"
 
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+    sed 's:.*/[_A-Z1-2]*[0-9]*_\([0-9]\{4\}\)\([0-9]\{4\}\).*:\2\1:'
+}
+
 main "$@"
+
+
+
+
+
+
+
+
+
+
 
 
 
