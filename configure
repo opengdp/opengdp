@@ -16519,13 +16519,13 @@ fi
 # Check whether --with-hdf4-libs was given.
 if test "${with_hdf4_libs+set}" = set; then :
   withval=$with_hdf4_libs;
-    HDFLIB="-L${withval} -lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
+    HDFLIB="-L${withval} -ldf -lmfhdf"
+    LDFLAGS="$LDFLAGS -L${withval} -ldf -lmfhdf"
 
 else
 
-    HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lmfhdf -ldf"
+    HDFLIB="-ldf -lmfhdf"
+    LDFLAGS="$LDFLAGS -ldf -lmfhdf"
 
 
 fi
