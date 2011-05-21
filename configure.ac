@@ -301,8 +301,7 @@ AC_ARG_WITH([hdf4-libs],
 AC_CHECK_HEADERS([mfhdf.h],[HAVE_MFHDF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
 AC_CHECK_HEADERS([df.h],[HAVE_DF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
 AC_CHECK_LIB([df],[DFopen],[HAVE_LIBDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-#this check seems to be problematic
-#AC_CHECK_LIB([mfhdf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_LIB([mfhdf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
 
 AC_SUBST(HDFINC)
 AC_SUBST(HDFLIB)
@@ -321,11 +320,11 @@ AC_ARG_WITH([hdfeos-libs],
   [AC_HELP_STRING([--with-hdfeos-libs],[Location of hdfeos library files.])],
   [
     HDFEOSLIB="-L${withval} -lhdfeos"
-    LDFLAGS="$LDFLAGS  $HDFLIB -L${withval} -lhdfeos"
+    LDFLAGS="$LDFLAGS -L${withval} -lhdfeos"
   ],
   [
     HDFEOSLIB="-lhdfeos"
-    LDFLAGS="$LDFLAGS  $HDFLIB -lhdfeos"
+    LDFLAGS="$LDFLAGS -lhdfeos"
   ]
 )
 
