@@ -19,12 +19,10 @@ swath2grid_CFLAGS = \
     -DH4_HAVE_NETCDF -DHAVE_INT8 \
     -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
     -I ../gctpc \
-    @HDFEOSINC@ \
-    @HDFINC@ \
-    @TIFFINC@ \
-    @GEOTIFFINC@
+    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
   
-swath2grid_LDFLAGS = -L../gctpc/ -lgctp @HDFEOSLIB@ @HDFLIB@ -ljpeg -lz -lsz @TIFFLIB@ @GEOTIFFLIB@ 
+swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
+    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
 dumpmeta_SOURCES = \
 	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
@@ -37,12 +35,10 @@ dumpmeta_CFLAGS = \
     -DH4_HAVE_NETCDF -DHAVE_INT8 \
     -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
     -I ../gctpc \
-    @HDFEOSINC@ \
-    @HDFINC@ \
-    @TIFFINC@ \
-    @GEOTIFFINC@
+    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
   
-dumpmeta_LDFLAGS = -L../gctpc/ -lgctp @HDFEOSLIB@ @HDFLIB@ -ljpeg -lz -lsz @TIFFLIB@ @GEOTIFFLIB@ 
+dumpmeta_LDFLAGS = -L../gctpc/ -lgctp \
+    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
 SUBDIRS = \
 	data

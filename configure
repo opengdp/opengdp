@@ -608,6 +608,12 @@ HDFEOSLIB
 HDFEOSINC
 HDFLIB
 HDFINC
+ZLIB
+ZINC
+SZLIB
+SZINC
+JPEGLIB
+JPEGINC
 GEOTIFFLIB
 GEOTIFFINC
 TIFFLIB
@@ -757,6 +763,12 @@ with_tiff_includes
 with_tiff_libs
 with_geotiff_includes
 with_geotiff_libs
+with_jpeg_includes
+with_jpeg_libs
+with_szip_includes
+with_szip_libs
+with_zlib_includes
+with_zlib_libs
 with_hdf4_includes
 with_hdf4_libs
 with_hdfeos_includes
@@ -1419,6 +1431,12 @@ Optional Packages:
   --with-tiff-libs        Location of libtiff library files.
   --with-geotiff-includes Location of libgeotiff include files.
   --with-geotiff-libs     Location of libgeotiff library files.
+  --with-jpeg-includes    Location of jpeg include files.
+  --with-jpeg-libs        Location of jpeg library files.
+  --with-szip-includes    Location of szip include files.
+  --with-szip-libs        Location of szip library files.
+  --with-zlib-includes    Location of zlib include files.
+  --with-zlib-libs        Location of zlib library files.
   --with-hdf4-includes    Location of hdf4 include files.
   --with-hdf4-libs        Location of hdf4 library files.
   --with-hdfeos-includes  Location of hdfeos include files.
@@ -16038,9 +16056,6 @@ fi
 
 ##### tiff #####
 
-OLDCFLAGS="$CFLAGS"
-OLDLDFLAGS="$LDFLAGS"
-
 
 # Check whether --with-tiff-includes was given.
 if test "${with_tiff_includes+set}" = set; then :
@@ -16057,12 +16072,12 @@ fi
 if test "${with_tiff_libs+set}" = set; then :
   withval=$with_tiff_libs;
     TIFFLIB="-L${withval} -ltiff"
-    LDFLAGS="$LDFLAGS -L${withval}"
+    LDFLAGS="$LDFLAGS -L${withval} -ltiff"
 
 else
 
     TIFFLIB="-ltiff"
-    LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -ltiff"
 
 
 fi
@@ -16127,13 +16142,8 @@ fi
 
 
 
-CFLAGS="$OLDCFLAGS"
-LDFLAGS="$OLDLDFLAGS"
 
 ##### geotiff #####
-
-OLDCFLAGS="$CFLAGS"
-OLDLDFLAGS="$LDFLAGS"
 
 
 # Check whether --with-geotiff-includes was given.
@@ -16151,12 +16161,12 @@ fi
 if test "${with_geotiff_libs+set}" = set; then :
   withval=$with_geotiff_libs;
     GEOTIFFLIB="-L${withval} -lgeotiff"
-    LDFLAGS="$LDFLAGS -L${withval}"
+    LDFLAGS="$LDFLAGS -L${withval} -lgeotiff"
 
 else
 
     GEOTIFFLIB="-lgeotiff"
-    LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -lgeotiff"
 
 
 fi
@@ -16222,13 +16232,277 @@ fi
 
 
 
-CFLAGS="$OLDCFLAGS"
-LDFLAGS="$OLDLDFLAGS"
+##### jpeg #####
+
+
+# Check whether --with-jpeg-includes was given.
+if test "${with_jpeg_includes+set}" = set; then :
+  withval=$with_jpeg_includes;
+    JPEGINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-jpeg-libs was given.
+if test "${with_jpeg_libs+set}" = set; then :
+  withval=$with_jpeg_libs;
+    JPEGLIB="-L${withval} -ljpeg"
+    LDFLAGS="$LDFLAGS -L${withval} -ljpeg"
+
+else
+
+    JPEGLIB="-ljpeg"
+    LDFLAGS="$LDFLAGS -ljpeg"
+
+
+fi
+
+
+for ac_header in jpeglib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "jpeglib.h" "ac_cv_header_jpeglib_h" "$ac_includes_default"
+if test "x$ac_cv_header_jpeglib_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_JPEGLIB_H 1
+_ACEOF
+ HAVE_JPEG_H=1
+else
+  as_fn_error "jpeg is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jpeg_set_defaults in -ljpeg" >&5
+$as_echo_n "checking for jpeg_set_defaults in -ljpeg... " >&6; }
+if test "${ac_cv_lib_jpeg_jpeg_set_defaults+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ljpeg  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char jpeg_set_defaults ();
+int
+main ()
+{
+return jpeg_set_defaults ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_jpeg_jpeg_set_defaults=yes
+else
+  ac_cv_lib_jpeg_jpeg_set_defaults=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_jpeg_jpeg_set_defaults" >&5
+$as_echo "$ac_cv_lib_jpeg_jpeg_set_defaults" >&6; }
+if test "x$ac_cv_lib_jpeg_jpeg_set_defaults" = x""yes; then :
+  HAVE_JPEG=1
+else
+  as_fn_error "jpeg is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+
+
+##### szip #####
+
+
+# Check whether --with-szip-includes was given.
+if test "${with_szip_includes+set}" = set; then :
+  withval=$with_szip_includes;
+    JPEGINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-szip-libs was given.
+if test "${with_szip_libs+set}" = set; then :
+  withval=$with_szip_libs;
+    SZLIB="-L${withval} -lsz"
+    LDFLAGS="$LDFLAGS -L${withval} -lsz"
+
+else
+
+    SZLIB="-lsz"
+    LDFLAGS="$LDFLAGS -lsz"
+
+
+fi
+
+
+for ac_header in szlib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "szlib.h" "ac_cv_header_szlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_szlib_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SZLIB_H 1
+_ACEOF
+ HAVE_SZLIB_H=1
+else
+  as_fn_error "szip is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lsz" >&5
+$as_echo_n "checking for SZ_Decompress in -lsz... " >&6; }
+if test "${ac_cv_lib_sz_SZ_Decompress+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SZ_Decompress ();
+int
+main ()
+{
+return SZ_Decompress ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_sz_SZ_Decompress=yes
+else
+  ac_cv_lib_sz_SZ_Decompress=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sz_SZ_Decompress" >&5
+$as_echo "$ac_cv_lib_sz_SZ_Decompress" >&6; }
+if test "x$ac_cv_lib_sz_SZ_Decompress" = x""yes; then :
+  HAVE_SZ=1
+else
+  as_fn_error "szip is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+
+
+##### zlib #####
+
+
+# Check whether --with-zlib-includes was given.
+if test "${with_zlib_includes+set}" = set; then :
+  withval=$with_zlib_includes;
+    ZINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-zlib-libs was given.
+if test "${with_zlib_libs+set}" = set; then :
+  withval=$with_zlib_libs;
+    ZLIB="-L${withval} -lz"
+    LDFLAGS="$LDFLAGS -L${withval} -lz"
+
+else
+
+    ZLIB="-lz"
+    LDFLAGS="$LDFLAGS -lz"
+
+
+fi
+
+
+for ac_header in szlib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "szlib.h" "ac_cv_header_szlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_szlib_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SZLIB_H 1
+_ACEOF
+ HAVE_SZLIB_H=1
+else
+  as_fn_error "zlib is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lz" >&5
+$as_echo_n "checking for SZ_Decompress in -lz... " >&6; }
+if test "${ac_cv_lib_z_SZ_Decompress+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SZ_Decompress ();
+int
+main ()
+{
+return SZ_Decompress ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_z_SZ_Decompress=yes
+else
+  ac_cv_lib_z_SZ_Decompress=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_SZ_Decompress" >&5
+$as_echo "$ac_cv_lib_z_SZ_Decompress" >&6; }
+if test "x$ac_cv_lib_z_SZ_Decompress" = x""yes; then :
+  HAVE_SZ=1
+else
+  as_fn_error "zlib is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+
 
 ##### hdf #####
-
-OLDCFLAGS="$CFLAGS"
-OLDLDFLAGS="$LDFLAGS"
 
 
 # Check whether --with-hdf4-includes was given.
@@ -16246,12 +16520,12 @@ fi
 if test "${with_hdf4_libs+set}" = set; then :
   withval=$with_hdf4_libs;
     HDFLIB="-L${withval} -lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -L${withval}"
+    LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
 
 else
 
     HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lsz -lz -ljpeg"
+    LDFLAGS="$LDFLAGS -lmfhdf -ldf"
 
 
 fi
@@ -16327,7 +16601,6 @@ else
   as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
 fi
 
-LDFLAGS="$LDFLAGS -ldf"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDstart in -lmfhdf" >&5
 $as_echo_n "checking for SDstart in -lmfhdf... " >&6; }
 if test "${ac_cv_lib_mfhdf_SDstart+set}" = set; then :
@@ -16373,20 +16646,15 @@ fi
 
 
 
-CFLAGS="$OLDCFLAGS"
-LDFLAGS="$OLDLDFLAGS"
 
 ##### hdfeos #####
-
-OLDCFLAGS="$CFLAGS"
-OLDLDFLAGS="$LDFLAGS"
 
 
 # Check whether --with-hdfeos-includes was given.
 if test "${with_hdfeos_includes+set}" = set; then :
   withval=$with_hdfeos_includes;
     HDFEOSINC="-I${withval}"
-    CFLAGS="$CFLAGS $HDFINC --include hdf.h -I${withval}"
+    CFLAGS="$CFLAGS --include hdf.h -I${withval}"
 
 
 fi
@@ -16397,12 +16665,12 @@ fi
 if test "${with_hdfeos_libs+set}" = set; then :
   withval=$with_hdfeos_libs;
     HDFEOSLIB="-L${withval} -lhdfeos"
-    LDFLAGS="$LDFLAGS  $HDFLIB -L${withval}"
+    LDFLAGS="$LDFLAGS  $HDFLIB -L${withval} -lhdfeos"
 
 else
 
     HDFEOSLIB="-lhdfeos"
-    LDFLAGS="$LDFLAGS  $HDFLIB"
+    LDFLAGS="$LDFLAGS  $HDFLIB -lhdfeos"
 
 
 fi
@@ -16467,8 +16735,6 @@ fi
 
 
 
-CFLAGS="$OLDCFLAGS"
-LDFLAGS="$OLDLDFLAGS"
 
 
 ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile"
