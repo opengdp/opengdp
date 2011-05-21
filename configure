@@ -16251,7 +16251,7 @@ if test "${with_hdf4_libs+set}" = set; then :
 else
 
     HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lsz -lz"
+    LDFLAGS="$LDFLAGS -lsz -lz -ljpeg"
 
 
 fi

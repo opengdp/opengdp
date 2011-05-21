@@ -221,7 +221,7 @@ AC_ARG_WITH([hdf4-libs],
   ],
   [
     HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lsz -lz"
+    LDFLAGS="$LDFLAGS -lsz -lz -ljpeg"
   ]
 )
 
