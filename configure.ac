@@ -32,7 +32,7 @@ fi
 AC_MSG_RESULT([dialog $DIALOG])
 
 
-dnl tar
+##### tar #####
 
 AC_CHECK_PROGS([TAR], [tar gtar], [:])
 if test "$TAR" = :; then
@@ -40,7 +40,7 @@ AC_MSG_ERROR([tar not found])
 fi
 AC_MSG_RESULT([tar $TAR])
 
-dnl unzip
+##### unzip #####
 
 AC_CHECK_PROGS([UNZIP], [unzip], [:])
 if test "$" = :; then
@@ -48,15 +48,15 @@ if test "$" = :; then
 fi
 AC_MSG_RESULT([unzip $UNZIP])
 
-dnl grep
+##### grep #####
 
 AC_PROG_GREP
 
-dnl sed
+##### sed #####
 
 AC_PROG_SED
 
-dnl gdal
+##### gdal #####
 
 AC_ARG_WITH(gdal-config,
 [  --with-gdal-config=GDAL_CONFIG    use gdal-config specified ],
@@ -79,7 +79,8 @@ else
 fi
 AM_CONDITIONAL(HAVE_GDAL, test "x$GDAL_CONFIG" != "x")
 
-dnl OTB
+##### OTB #####
+
 
 AC_ARG_WITH(otb-lib,
   [AS_HELP_STRING([--with-otb-lib=/some/path],
@@ -132,6 +133,140 @@ else
   AC_MSG_FAILURE([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
 fi
 
+##### tiff #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+AC_ARG_WITH([tiff-includes],
+  [AC_HELP_STRING([--with-tiff-includes],[Location of libtiff include files.])],
+  [
+    TIFFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+  ]
+)
+
+AC_ARG_WITH([tiff-libs],
+  [AC_HELP_STRING([--with-tiff-libs],[Location of libtiff library files.])],
+  [
+    TIFFLIB="-L${withval} -ltiff"
+    LDFLAGS="$LDFLAGS -L${withval}"
+  ],
+  [
+    TIFFLIB="-ltiff"
+    LDFLAGS="$LDFLAGS"
+  ]
+)
+
+AC_CHECK_HEADERS([tiffio.h],[HAVE_TIFFIO_H=1],[AC_MSG_ERROR(libtiff is required to compile dwh.)])
+AC_CHECK_LIB([tiff],[TIFFGetVersion],[HAVE_LIBTIFF=1],[AC_MSG_ERROR(libtiff is required to compile dwh.)])
+
+AC_SUBST(TIFFINC)
+AC_SUBST(TIFFLIB)
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### geotiff #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+AC_ARG_WITH([geotiff-includes],
+  [AC_HELP_STRING([--with-geotiff-includes],[Location of libgeotiff include files.])],
+  [
+    GEOTIFFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+  ]
+)
+
+AC_ARG_WITH([geotiff-libs],
+  [AC_HELP_STRING([--with-geotiff-libs],[Location of libgeotiff library files.])],
+  [
+    GEOTIFFLIB="-L${withval} -lgeotiff"
+    LDFLAGS="$LDFLAGS -L${withval}"
+  ],
+  [
+    GEOTIFFLIB="-lgeotiff"
+    LDFLAGS="$LDFLAGS"
+  ]
+)
+
+AC_CHECK_HEADERS([geotiff.h],[HAVE_GEOTIFFIO_H=1],[AC_MSG_ERROR(libgeotiff is required to compile dwh.)])
+AC_CHECK_LIB([geotiff],[GTIFNew],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(libgeotiff is required to compile dwh.)])
+
+AC_SUBST(GEOTIFFINC)
+AC_SUBST(GEOTIFFLIB)
+
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### hdf #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+AC_ARG_WITH([hdf4-includes],
+  [AC_HELP_STRING([--with-hdf4-includes],[Location of hdf4 include files.])],
+  [
+    HDFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+  ]
+)
+
+AC_ARG_WITH([hdf4-libs],
+  [AC_HELP_STRING([--with-hdf4-libs],[Location of hdf4 library files.])],
+  [
+    HDFLIB="-L${withval} -lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS -L${withval}"
+  ],
+  [
+    HDFLIB="-lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS"
+  ]
+)
+
+AC_CHECK_HEADERS([mfhdf.h],[HAVE_MFHDF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_HEADERS([df.h],[HAVE_DF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_LIB([mfhdf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_LIB([df],[DFopen],[HAVE_LIBDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+
+AC_SUBST(HDFINC)
+AC_SUBST(HDFLIB)
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### hdfeos #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+AC_ARG_WITH([hdfeos-includes],
+  [AC_HELP_STRING([--with-hdfeos-includes],[Location of hdfeos include files.])],
+  [
+    HDFEOSINC="-I${withval}"
+    CFLAGS="$CFLAGS $HDFINC --include hdf.h -I${withval}"
+  ]
+)
+
+AC_ARG_WITH([hdfeos-libs],
+  [AC_HELP_STRING([--with-hdfeos-libs],[Location of hdfeos library files.])],
+  [
+    HDFEOSLIB="-L${withval} -lhdfeos"
+    LDFLAGS="$LDFLAGS  $HDFLIB -L${withval}"
+  ],
+  [
+    HDFEOSLIB="-lhdfeos"
+    LDFLAGS="$LDFLAGS  $HDFLIB"
+  ]
+)
+
+AC_CHECK_HEADERS([HDFEOSVersion.h],[HAVE_HdfEosDef_H=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
+AC_CHECK_LIB([hdfeos],[SWopen],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
+
+AC_SUBST(HDFEOSINC)
+AC_SUBST(HDFEOSLIB)
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
 
 
 AC_OUTPUT([
@@ -149,5 +284,7 @@ share/map/Makefile
 share/scripts/Makefile
 share/web/Makefile
 src/Makefile
-
+MRTSwath/Makefile
+MRTSwath/data/Makefile
+gctpc/Makefile
 ])

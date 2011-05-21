@@ -120,15 +120,15 @@ function dotar_multiband {
             ;;
                 
         *tar.gz)
-            local switch=""
+            local switch="z"
             ;;
         
         *tgz)
-            local switch=""
+            local switch="z"
             ;;
             
         *tar.bz2)
-            local switch=""
+            local switch="j"
             ;;
     esac
     
@@ -362,15 +362,15 @@ function dotar {
             ;;
                 
         *tar.gz)
-            local switch=""
+            local switch="z"
             ;;
         
         *tgz)
-            local switch=""
+            local switch="z"
             ;;
             
         *tar.bz2)
-            local switch=""
+            local switch="j"
             ;;
     esac
     
@@ -516,13 +516,124 @@ function dokmz {
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
                        "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt" || return
-                       
+        
         ##### proccess #####
         
         doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" \
               "$(gdalinfo "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt")" \
               "no" || return
     done
+
+}
+
+###############################################################################
+# function to handle a hdf
+###############################################################################
+
+function dohdf {
+    local lastfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    local files=("${@:5}")
+    
+    ##### seperate out the geolocation file #####
+    
+    local dfiles=()
+    local i=0
+    local file
+    for file in "${files[@]}"
+    do
+        if [[ "$file" == M[OY]D03.* ]]
+        then
+            local geoloc="$file"
+        else
+            dfiles[i++]="$file"
+        fi
+    done
+    
+    ##### get a output prefix #####
+    
+    base="${lastfile#*.}"
+    base="${base%.*}"
+    base="${base%.*}"
+    
+    ##### check if its day or night #####
+    
+    local meta=$(dumpmeta "${tmpdir}/$lastfile" /dev/stdout)
+    local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta")
+    
+    if istrue "$dayonly" && ! grep -q -e "VALUE.*\"Day\"" <<<"$daynight"
+
+    then
+        return;
+    fi
+        
+    ##### make tiffs from the dfiles #####
+    
+    local dfile
+    for dfile in "${dfiles[@]}"
+    do
+        
+        ##### figure out what bands to extract #####
+        
+        local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
+        
+        ##### find the band name #####
+        
+        local band=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
+        
+        swath2grid -if="${tmpdir}/${dfile}" \
+                   -of="${tmpdir}/${base}.tif" \
+                   -gf="${tmpdir}/$geoloc" \
+                   -off=GEOTIFF_FMT \
+                   -oproj=GEO \
+                   -oprm=0.0,0.0,0.0,0.0,0.0 \
+                   -osp=8 \
+                   -sds="$band" > /dev/null || return
+    done
+
+    ##### make an aray of the msband files needed to build the product #####
+    
+    i=0
+    local flisting=$(find "${tmpdir}/" -name "*.tif")
+    local msband
+    local ofiles=()
+    for msband in "${msbands[@]}"
+    do
+        local regex="${msband//./[.]}"
+        local regex="${regex//\*/.*}"
+        local regex="${regex//\?/.}"
+
+        if grep -i -e "$regex" <<<"$flisting" > /dev/null
+        then
+            ofiles[i++]="$(grep -i -e "$regex" <<<"$flisting" | \
+                            sed 's:.*/::' | \
+                            head -n 1)"
+        else
+            echo "ERROR: no match in hdf for \"$msband\""
+            return;
+        fi
+    
+    done
+    
+    ##### translate the nodata values to 0 #####
+    
+    i=0
+    local ofile
+    local vfiles=()
+    for ofile in "${ofiles[@]}"
+    do
+        obase="${ofile%.*}"
+        
+        gdalwarp -srcnodata 65535 -wo INIT_DEST=0 -of VRT \
+                 "${tmpdir}/${ofile}" \
+                 "${tmpdir}/${obase}.vrt" > /dev/null || return
+        
+        vfiles[i++]="${obase}.vrt"
+    done
+    
+    doimg_multiband "$base" "$tmpdir" "$ts" "no" "" ${vfiles[@]}
 
 }
 
@@ -538,9 +649,19 @@ function dofile {
         local sourcedir=${indir//\/\///}
         local sourcedir=${sourcedir//\/\///}
         
-        local file="${myline##*/}"
-
-        file=$(sed 's/.* -o //' <<< "$file")
+        ##### make an array of files #####
+        
+        local i=0
+        local files
+        local line
+        while read line
+        do
+            files[i++]=$(sed 's:.*/::' <<<"$line" | sed 's/.* -o //')
+        done < <( tr ";" "\n" <<<"$myline" )
+        
+        ##### get the last file name #####
+        
+        local file="${files[@]:(-1)}"
         
         local base="${file%.*}"
         local base2="${base%.*}"
@@ -588,6 +709,15 @@ function dofile {
         if [[ "$DWH_REBUILD" == "rebuild" ]]
         then
             local origdir="${indir/%\//}.old/${dir}"
+
+            ##### link to the main files #####
+                        
+            local f
+            for f in "${files[@]}"
+            do
+                ln -s "${origdir}/${f}" "${tmpdir}/${f}"
+            done
+            
         else
             
             lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
@@ -626,29 +756,14 @@ function dofile {
                 dokmz "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
 
+            *hdf)
+                dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
+                ;;
+            
             *)
                 if gdalinfo "${origdir}/${file}" > /dev/null
                 then
                     
-
-                    ##### hack to make rebuild work here #####
-                    
-                    if [[ "$DWH_REBUILD" == "rebuild" ]]
-                    then
-                    
-                        ##### link to the main image file #####
-                        
-                        ln -s "${origdir}/${file}" "${tmpdir}/${file}"
-                        
-                        ##### if the data has world files and such link them too #####
-                        
-                        local e
-                        for e in ${extra_cp_to_source_ext[@]}
-                        do
-                            ln -s "${origdir}/${base2}${e}" "${indir}/${dir}/${base2}${e}"
-                        done
-                    fi
-
                     doimg "${file}" \
                           "$tmpdir" \
                           "$ts" \
@@ -662,19 +777,15 @@ function dofile {
 
         if (($? == 0)) && [[ "$DWH_REBUILD" != "rebuild" ]]
         then
-        
-            ##### mv the main image file to the source dir #####
             
-            mv "${tmpdir}/${file}" "${indir}/${dir}/${file}"
+            ##### mv the files to the source dir #####
             
-            ##### if the data has world files and such mv them too #####
-            
-            local e
-            for e in ${extra_cp_to_source_ext[@]}
+            local f
+            for f in "${files[@]}"
             do
-                mv "${tmpdir}/${base2}${e}" "${indir}/${dir}/${base2}${e}"
+                mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
             done
-            
+
         fi
 
         rm -rf "${tmpdir}"

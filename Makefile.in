@@ -163,8 +163,14 @@ FGREP = @FGREP@
 GDAL_CFLAGS = @GDAL_CFLAGS@
 GDAL_CONFIG = @GDAL_CONFIG@
 GDAL_LIBS = @GDAL_LIBS@
+GEOTIFFINC = @GEOTIFFINC@
+GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
+HDFEOSINC = @HDFEOSINC@
+HDFEOSLIB = @HDFEOSLIB@
+HDFINC = @HDFINC@
+HDFLIB = @HDFLIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -203,6 +209,8 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 TAR = @TAR@
+TIFFINC = @TIFFINC@
+TIFFLIB = @TIFFLIB@
 UNZIP = @UNZIP@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
@@ -259,7 +267,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = src \
 	share\
-	scripts
+	scripts\
+	MRTSwath \
+	gctpc
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

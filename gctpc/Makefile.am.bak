@@ -1,0 +1,10 @@
+
+EXTRA_DIST = \
+        proj.h \
+        cproj.h \
+        README
+
+lib_LIBRARIES = \
+	libgctp.a
+
+libgctp_a_SOURCES = 

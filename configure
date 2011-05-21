@@ -604,6 +604,14 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+HDFEOSLIB
+HDFEOSINC
+HDFLIB
+HDFINC
+GEOTIFFLIB
+GEOTIFFINC
+TIFFLIB
+TIFFINC
 OTBLIB
 OTBINC
 HAVE_GDAL_FALSE
@@ -745,6 +753,14 @@ with_gnu_ld
 enable_libtool_lock
 with_gdal_config
 with_otb_lib
+with_tiff_includes
+with_tiff_libs
+with_geotiff_includes
+with_geotiff_libs
+with_hdf4_includes
+with_hdf4_libs
+with_hdfeos_includes
+with_hdfeos_libs
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1399,6 +1415,14 @@ Optional Packages:
   --with-gdal-config=GDAL_CONFIG    use gdal-config specified
   --with-otb-lib=/some/path
                           path to the OTBConfig.cmake file
+  --with-tiff-includes    Location of libtiff include files.
+  --with-tiff-libs        Location of libtiff library files.
+  --with-geotiff-includes Location of libgeotiff include files.
+  --with-geotiff-libs     Location of libgeotiff library files.
+  --with-hdf4-includes    Location of hdf4 include files.
+  --with-hdf4-libs        Location of hdf4 library files.
+  --with-hdfeos-includes  Location of hdfeos include files.
+  --with-hdfeos-libs      Location of hdfeos library files.
 
 Some influential environment variables:
   CC          C compiler command
@@ -1874,6 +1898,93 @@ fi
   as_fn_set_status $ac_retval
 
 } # ac_fn_cxx_try_link
+
+# ac_fn_c_check_header_mongrel LINENO HEADER VAR INCLUDES
+# -------------------------------------------------------
+# Tests whether HEADER exists, giving a warning if it cannot be compiled using
+# the include files in INCLUDES and setting the cache variable VAR
+# accordingly.
+ac_fn_c_check_header_mongrel ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  if { as_var=$3; eval "test \"\${$as_var+set}\" = set"; }; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if { as_var=$3; eval "test \"\${$as_var+set}\" = set"; }; then :
+  $as_echo_n "(cached) " >&6
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+else
+  # Is the header compilable?
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking $2 usability" >&5
+$as_echo_n "checking $2 usability... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$4
+#include <$2>
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_header_compiler=yes
+else
+  ac_header_compiler=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_header_compiler" >&5
+$as_echo "$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking $2 presence" >&5
+$as_echo_n "checking $2 presence... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <$2>
+_ACEOF
+if ac_fn_c_try_cpp "$LINENO"; then :
+  ac_header_preproc=yes
+else
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_header_preproc" >&5
+$as_echo "$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in #((
+  yes:no: )
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&5
+$as_echo "$as_me: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: $2: proceeding with the compiler's result" >&2;}
+    ;;
+  no:yes:* )
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: present but cannot be compiled" >&5
+$as_echo "$as_me: WARNING: $2: present but cannot be compiled" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     check for missing prerequisite headers?" >&5
+$as_echo "$as_me: WARNING: $2:     check for missing prerequisite headers?" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: see the Autoconf documentation" >&5
+$as_echo "$as_me: WARNING: $2: see the Autoconf documentation" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&5
+$as_echo "$as_me: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: $2: proceeding with the compiler's result" >&2;}
+    ;;
+esac
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if { as_var=$3; eval "test \"\${$as_var+set}\" = set"; }; then :
+  $as_echo_n "(cached) " >&6
+else
+  eval "$3=\$ac_header_compiler"
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+fi
+  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
+
+} # ac_fn_c_check_header_mongrel
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -15547,6 +15658,7 @@ fi
 $as_echo "dialog $DIALOG" >&6; }
 
 
+##### tar #####
 
 for ac_prog in tar gtar
 do
@@ -15597,6 +15709,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: tar $TAR" >&5
 $as_echo "tar $TAR" >&6; }
 
+##### unzip #####
 
 for ac_prog in unzip
 do
@@ -15647,6 +15760,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: unzip $UNZIP" >&5
 $as_echo "unzip $UNZIP" >&6; }
 
+##### grep #####
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
 $as_echo_n "checking for grep that handles long lines and -e... " >&6; }
@@ -15712,6 +15826,7 @@ $as_echo "$ac_cv_path_GREP" >&6; }
 
 
 
+##### sed #####
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a sed that does not truncate output" >&5
 $as_echo_n "checking for a sed that does not truncate output... " >&6; }
@@ -15783,6 +15898,7 @@ $as_echo "$ac_cv_path_SED" >&6; }
   rm -f conftest.sed
 
 
+##### gdal #####
 
 
 # Check whether --with-gdal-config was given.
@@ -15857,6 +15973,8 @@ else
 fi
 
 
+##### OTB #####
+
 
 
 # Check whether --with-otb-lib was given.
@@ -15918,9 +16036,441 @@ as_fn_error "cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path
 See \`config.log' for more details." "$LINENO" 5; }
 fi
 
+##### tiff #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
 
 
-ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile"
+# Check whether --with-tiff-includes was given.
+if test "${with_tiff_includes+set}" = set; then :
+  withval=$with_tiff_includes;
+    TIFFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-tiff-libs was given.
+if test "${with_tiff_libs+set}" = set; then :
+  withval=$with_tiff_libs;
+    TIFFLIB="-L${withval} -ltiff"
+    LDFLAGS="$LDFLAGS -L${withval}"
+
+else
+
+    TIFFLIB="-ltiff"
+    LDFLAGS="$LDFLAGS"
+
+
+fi
+
+
+for ac_header in tiffio.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "tiffio.h" "ac_cv_header_tiffio_h" "$ac_includes_default"
+if test "x$ac_cv_header_tiffio_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TIFFIO_H 1
+_ACEOF
+ HAVE_TIFFIO_H=1
+else
+  as_fn_error "libtiff is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TIFFGetVersion in -ltiff" >&5
+$as_echo_n "checking for TIFFGetVersion in -ltiff... " >&6; }
+if test "${ac_cv_lib_tiff_TIFFGetVersion+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ltiff  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char TIFFGetVersion ();
+int
+main ()
+{
+return TIFFGetVersion ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_tiff_TIFFGetVersion=yes
+else
+  ac_cv_lib_tiff_TIFFGetVersion=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_tiff_TIFFGetVersion" >&5
+$as_echo "$ac_cv_lib_tiff_TIFFGetVersion" >&6; }
+if test "x$ac_cv_lib_tiff_TIFFGetVersion" = x""yes; then :
+  HAVE_LIBTIFF=1
+else
+  as_fn_error "libtiff is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### geotiff #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+
+# Check whether --with-geotiff-includes was given.
+if test "${with_geotiff_includes+set}" = set; then :
+  withval=$with_geotiff_includes;
+    GEOTIFFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-geotiff-libs was given.
+if test "${with_geotiff_libs+set}" = set; then :
+  withval=$with_geotiff_libs;
+    GEOTIFFLIB="-L${withval} -lgeotiff"
+    LDFLAGS="$LDFLAGS -L${withval}"
+
+else
+
+    GEOTIFFLIB="-lgeotiff"
+    LDFLAGS="$LDFLAGS"
+
+
+fi
+
+
+for ac_header in geotiff.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "geotiff.h" "ac_cv_header_geotiff_h" "$ac_includes_default"
+if test "x$ac_cv_header_geotiff_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GEOTIFF_H 1
+_ACEOF
+ HAVE_GEOTIFFIO_H=1
+else
+  as_fn_error "libgeotiff is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GTIFNew in -lgeotiff" >&5
+$as_echo_n "checking for GTIFNew in -lgeotiff... " >&6; }
+if test "${ac_cv_lib_geotiff_GTIFNew+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgeotiff  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char GTIFNew ();
+int
+main ()
+{
+return GTIFNew ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_geotiff_GTIFNew=yes
+else
+  ac_cv_lib_geotiff_GTIFNew=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_geotiff_GTIFNew" >&5
+$as_echo "$ac_cv_lib_geotiff_GTIFNew" >&6; }
+if test "x$ac_cv_lib_geotiff_GTIFNew" = x""yes; then :
+  HAVE_LIBGEOTIFF=1
+else
+  as_fn_error "libgeotiff is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### hdf #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+
+# Check whether --with-hdf4-includes was given.
+if test "${with_hdf4_includes+set}" = set; then :
+  withval=$with_hdf4_includes;
+    HDFINC="-I${withval}"
+    CFLAGS="$CFLAGS -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-hdf4-libs was given.
+if test "${with_hdf4_libs+set}" = set; then :
+  withval=$with_hdf4_libs;
+    HDFLIB="-L${withval} -lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS -L${withval}"
+
+else
+
+    HDFLIB="-lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS"
+
+
+fi
+
+
+for ac_header in mfhdf.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "mfhdf.h" "ac_cv_header_mfhdf_h" "$ac_includes_default"
+if test "x$ac_cv_header_mfhdf_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MFHDF_H 1
+_ACEOF
+ HAVE_MFHDF_H=1
+else
+  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+for ac_header in df.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "df.h" "ac_cv_header_df_h" "$ac_includes_default"
+if test "x$ac_cv_header_df_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_DF_H 1
+_ACEOF
+ HAVE_DF_H=1
+else
+  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDstart in -lmfhdf" >&5
+$as_echo_n "checking for SDstart in -lmfhdf... " >&6; }
+if test "${ac_cv_lib_mfhdf_SDstart+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lmfhdf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SDstart ();
+int
+main ()
+{
+return SDstart ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_mfhdf_SDstart=yes
+else
+  ac_cv_lib_mfhdf_SDstart=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_mfhdf_SDstart" >&5
+$as_echo "$ac_cv_lib_mfhdf_SDstart" >&6; }
+if test "x$ac_cv_lib_mfhdf_SDstart" = x""yes; then :
+  HAVE_MFHDF=1
+else
+  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DFopen in -ldf" >&5
+$as_echo_n "checking for DFopen in -ldf... " >&6; }
+if test "${ac_cv_lib_df_DFopen+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ldf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char DFopen ();
+int
+main ()
+{
+return DFopen ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_df_DFopen=yes
+else
+  ac_cv_lib_df_DFopen=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_df_DFopen" >&5
+$as_echo "$ac_cv_lib_df_DFopen" >&6; }
+if test "x$ac_cv_lib_df_DFopen" = x""yes; then :
+  HAVE_LIBDF=1
+else
+  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+##### hdfeos #####
+
+OLDCFLAGS="$CFLAGS"
+OLDLDFLAGS="$LDFLAGS"
+
+
+# Check whether --with-hdfeos-includes was given.
+if test "${with_hdfeos_includes+set}" = set; then :
+  withval=$with_hdfeos_includes;
+    HDFEOSINC="-I${withval}"
+    CFLAGS="$CFLAGS $HDFINC --include hdf.h -I${withval}"
+
+
+fi
+
+
+
+# Check whether --with-hdfeos-libs was given.
+if test "${with_hdfeos_libs+set}" = set; then :
+  withval=$with_hdfeos_libs;
+    HDFEOSLIB="-L${withval} -lhdfeos"
+    LDFLAGS="$LDFLAGS  $HDFLIB -L${withval}"
+
+else
+
+    HDFEOSLIB="-lhdfeos"
+    LDFLAGS="$LDFLAGS  $HDFLIB"
+
+
+fi
+
+
+for ac_header in HDFEOSVersion.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "HDFEOSVersion.h" "ac_cv_header_HDFEOSVersion_h" "$ac_includes_default"
+if test "x$ac_cv_header_HDFEOSVersion_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_HDFEOSVERSION_H 1
+_ACEOF
+ HAVE_HdfEosDef_H=1
+else
+  as_fn_error "hdfeos is required to compile dwh." "$LINENO" 5
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SWopen in -lhdfeos" >&5
+$as_echo_n "checking for SWopen in -lhdfeos... " >&6; }
+if test "${ac_cv_lib_hdfeos_SWopen+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lhdfeos  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SWopen ();
+int
+main ()
+{
+return SWopen ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_hdfeos_SWopen=yes
+else
+  ac_cv_lib_hdfeos_SWopen=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hdfeos_SWopen" >&5
+$as_echo "$ac_cv_lib_hdfeos_SWopen" >&6; }
+if test "x$ac_cv_lib_hdfeos_SWopen" = x""yes; then :
+  HAVE_LIBGEOTIFF=1
+else
+  as_fn_error "hdfeos is required to compile dwh." "$LINENO" 5
+fi
+
+
+
+
+CFLAGS="$OLDCFLAGS"
+LDFLAGS="$OLDLDFLAGS"
+
+
+ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -17029,6 +17579,9 @@ do
     "share/scripts/Makefile") CONFIG_FILES="$CONFIG_FILES share/scripts/Makefile" ;;
     "share/web/Makefile") CONFIG_FILES="$CONFIG_FILES share/web/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "MRTSwath/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/Makefile" ;;
+    "MRTSwath/data/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/data/Makefile" ;;
+    "gctpc/Makefile") CONFIG_FILES="$CONFIG_FILES gctpc/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

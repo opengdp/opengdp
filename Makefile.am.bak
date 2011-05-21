@@ -4,7 +4,7 @@
 SUBDIRS = src \
 	share\
 	scripts\
-	map
+	MRTSwath
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

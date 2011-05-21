@@ -269,7 +269,50 @@ function dosubimg {
     
 }
 
+function myrescale {
+    ##### check if the image needs scaled #####
+    
+    if ! echo "$info" | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
+    then
+        
+        type="$(echo "$info" | grep -e "Band 1 " | sed 's|.*Type=\([a-zA-Z0-9]*\),.*|\1|')"
+        case "$type" in
 
+            UInt16)
+                local rescale="-32768 32767"
+            ;;
+            Int16)
+                local rescale="0 65535"
+            ;;
+            UInt32)
+                local rescale="-2147483,648 2147483647"
+            ;;
+            Int32)
+                local rescale="0 4294967295"
+            ;;
+
+            ##### all other types we just let gdal scale with minmax #####
+
+        esac
+        
+        local doscale=TRUE
+    fi
+
+    if [[ "$doscale" == "TRUE" ]] || [ -n "$rescale" ]
+    then
+
+        gdal_translate -of VRT -ot byte -scale $rescale \
+                       "${tmpdir}/${img}"\
+                       "${tmpdir}/${imgdir}${imgbase}_scaled.vrt" > /dev/null
+
+
+        img="${imgdir}${imgbase}_scaled.vrt"
+        imgfile="${img##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        
+    fi
+}
 
 ###############################################################################
 # function to bust a larger image into chunks and proccess
@@ -357,49 +400,6 @@ function doimg {
         imgext="${imgfile##*.}"
     fi
     
-    ##### check if the image needs scaled #####
-    
-    if ! echo "$info" | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
-    then
-        
-        type="$(echo "$info" | grep -e "Band 1 " | sed 's|.*Type=\([a-zA-Z0-9]*\),.*|\1|')"
-        case "$type" in
-
-            UInt16)
-                local rescale="-32768 32767"
-            ;;
-            Int16)
-                local rescale="0 65535"
-            ;;
-            UInt32)
-                local rescale="-2147483,648 2147483647"
-            ;;
-            Int32)
-                local rescale="0 4294967295"
-            ;;
-
-            ##### all other types we just let gdal scale with minmax #####
-
-        esac
-        
-        local doscale=TRUE
-    fi
-
-    if [[ "$doscale" == "TRUE" ]] || [ -n "$rescale" ]
-    then
-
-        gdal_translate -of VRT -ot byte -scale $rescale \
-                       "${tmpdir}/${img}"\
-                       "${tmpdir}/${imgdir}${imgbase}_scaled.vrt" > /dev/null
-
-
-        img="${imgdir}${imgbase}_scaled.vrt"
-        imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        
-    fi
-        
     ##### get the xy size in pixels #####
     
     local x
@@ -597,6 +597,18 @@ function doimg_multiband {
     local panfile="$5"
     local files=("${@:6}")
     
+    if [ -n "$DEBUG_doimg_multiband" ]
+    then
+    printf " base=%s\n tmpdir=%s\n ts=%s\n isoriginal=%s\n panfile=%s\n files=%s\n" \
+           "$base" \
+           "$tmpdir" \
+           "$ts" \
+           "$isoriginal" \
+           "$panfile" \
+           "$files"
+        return
+    fi
+    
     ##### make an array of the files with tmpdir prefixed #####
     
     local f
@@ -620,6 +632,8 @@ function doimg_multiband {
     gdalbuildvrt ${nodata[@]} -separate \
                  "${tmpdir}/${base}.vrt" \
                  ${bands[@]} > /dev/null || return
+    
+    local type=$(gdalinfo "${tmpdir}/${base}.vrt" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
     
     ##### fillnodata ? #####
     
@@ -654,7 +668,23 @@ function doimg_multiband {
                      "${tmpdir}/${base}.vrt" \
                      ${bands[@]} > /dev/null || return
         
-        ##### need to fill the pan band #####
+        ##### fixme need to fill the pan band #####
+        
+    fi
+    
+    ##### cloud masking? #####
+    
+    if [ -n "$cloudmask" ]
+    then
+        
+        "${#cloudmask[@]}"
+        
+        otbCloudMask "${tmpdir}/${base}.vrt" \
+                     "${tmpdir}/${base}_cloudmask.tif" \
+                     "${#cloudmask[@]}" \
+                     ${cloudmask[@]} \
+                     .2 .75 1
+                     
         
     fi
     
@@ -676,8 +706,6 @@ function doimg_multiband {
                        "${tmpdir}/${base}.vrt" \
                        "${tmpdir}/${base}_resize.vrt" > /dev/null || return
         
-        local type=$(gdalinfo "${tmpdir}/${base}.vrt" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
-        
         otbPanSharp "$type" \
                     "${tmpdir}/$panfile" \
                     "${tmpdir}/${base}_resize.vrt" \
@@ -686,8 +714,8 @@ function doimg_multiband {
         ##### build a vrt just to keep the same filename  for consistency #####
         
         gdal_translate -of VRT \
-                       "${tmpdir}/${base}.vrt" \
-                       "${tmpdir}/${base}_pan.tif" > /dev/null || return
+                       "${tmpdir}/${base}_pan.tif" \
+                       "${tmpdir}/${base}.vrt" > /dev/null || return
         
     fi
     
@@ -703,6 +731,58 @@ function doimg_multiband {
                        "${tmpdir}/${base}_prescale.vrt" \
                        "${tmpdir}/${base}.vrt" > /dev/null || return
     fi
+    
+    ##### do a washout nearblack to remove ms band staggering artefacts? #####
+    
+    if [[ "$type" != "Byte" ]] && ! [ -n "$nearwhite" ]
+    then
+        
+        ##### fixme need to generate the -colors based on how many bands there are #####
+        
+        nearblack -color 0,0,0 -color 255,0,0 -color 0,255,0 -color 0,0,255 \
+                  -color 0,255,255 -color 255,0,255 -color 255,255,0 \
+                  -near 0 -nb 0 -setalpha -of gtiff \
+                  "${tmpdir}/${base}_prescale.vrt" \
+                  -o "${tmpdir}/${base}_wash.tif" > /dev/null || return
+        
+        ##### rename the source vrt so the output vrt will have the same filename for consistency #####
+        
+        mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prewashout.vrt"
+        
+        ##### loop over the ms bands and make a seperate vrt for each one #####
+        
+        local i=0
+        for f in "${files[@]}"
+        do
+            bands[i++]="${tmpdir}/${base}_$(($i + 1)).vrt"
+            gdal_translate -b $i -of VRT \
+                           "${tmpdir}/${base}_prewashout.vrt" \
+                           "${tmpdir}/${base}_${i}.vrt" > /dev/null || return
+        done
+        
+        ##### make a vrt for the alpha band #####
+        
+        gdal_translate -b "${#files[@]}" -of VRT \
+                       "${tmpdir}/${base}_wash.tif" \
+                       "${tmpdir}/${base}_wash.vrt" > /dev/null || return
+        
+        ##### combine all the bands into a single vrt #####
+        
+        gdalbuildvrt -separate \
+                     "${tmpdir}/${base}_sep.vrt" \
+                     ${bands[@]} \
+                     "${tmpdir}/${base}_wash.vrt" > /dev/null || return
+        
+        ##### rework the vrt to rgba #####
+        
+        sed "${tmpdir}/${base}_sep.vrt" \
+            -e 's,\(band=\"1\".*>\),\1\n    <ColorInterp>Red</ColorInterp>,' \
+            -e 's,\(band=\"2\".*>\),\1\n    <ColorInterp>Green</ColorInterp>,' \
+            -e 's,\(band=\"3\".*>\),\1\n    <ColorInterp>Blue</ColorInterp>,' \
+            -e 's,\(band=\"4\".*>\),\1\n    <ColorInterp>Alpha</ColorInterp>,' > "${tmpdir}/${base}.vrt"
+            
+    fi
+    
     
     
     doimg "${base}.vrt" \
