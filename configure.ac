@@ -329,7 +329,7 @@ AC_ARG_WITH([hdfeos-libs],
 )
 
 AC_CHECK_HEADERS([HDFEOSVersion.h],[HAVE_HdfEosDef_H=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
-AC_CHECK_LIB([hdfeos],[SWopen],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
+AC_CHECK_LIB([hdfeos -lmfhdf -ldf],[SWopen],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
 
 AC_SUBST(HDFEOSINC)
 AC_SUBST(HDFEOSLIB)
