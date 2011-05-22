@@ -783,7 +783,10 @@ function dofile {
             local f
             for f in "${files[@]}"
             do
-                mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
+                if [ -f "${tmpdir}/${f}" ]
+                then
+                    mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
+                fi
             done
 
         fi
