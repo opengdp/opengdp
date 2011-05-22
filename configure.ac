@@ -289,12 +289,12 @@ AC_ARG_WITH([hdf4-includes],
 AC_ARG_WITH([hdf4-libs],
   [AC_HELP_STRING([--with-hdf4-libs],[Location of hdf4 library files.])],
   [
-    HDFLIB="-L${withval} -ldf -lmfhdf"
-    LDFLAGS="$LDFLAGS -L${withval} -ldf -lmfhdf"
+    HDFLIB="-L${withval} -lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
   ],
   [
-    HDFLIB="-ldf -lmfhdf"
-    LDFLAGS="$LDFLAGS -ldf -lmfhdf"
+    HDFLIB="-lmfhdf -ldf"
+    LDFLAGS="$LDFLAGS -lmfhdf -ldf"
   ]
 )
 
