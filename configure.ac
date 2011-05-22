@@ -300,8 +300,8 @@ AC_ARG_WITH([hdf4-libs],
 
 AC_CHECK_HEADERS([mfhdf.h],[HAVE_MFHDF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
 AC_CHECK_HEADERS([df.h],[HAVE_DF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-AC_CHECK_LIB([df],[DFopen],[HAVE_LIBDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-AC_CHECK_LIB([mfhdf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_LIB([df],[DFopen],[HAVE_DF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+AC_CHECK_LIB([mfhdf -ldf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
 
 AC_SUBST(HDFINC)
 AC_SUBST(HDFLIB)
