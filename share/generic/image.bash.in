@@ -783,21 +783,11 @@ function doimg_multiband {
             
     fi
     
-    if [ -f "${tmpdir}/${base}_sep.vrt" ]
-    then
-        doimg "${tmpdir}/${base}_sep.vrt" \
-              "$tmpdir" \
-              "$ts" \
-              "$(gdalinfo "${tmpdir}/${base}_sep.vrt")" \
-              "no" || return
-    
-    else
-        doimg "${base}.vrt" \
-              "$tmpdir" \
-              "$ts" \
-              "$(gdalinfo "${tmpdir}/${base}.vrt")" \
-              "no" || return
-    fi
+    doimg "${base}.vrt" \
+          "$tmpdir" \
+          "$ts" \
+          "$(gdalinfo "${tmpdir}/${base}.vrt")" \
+          "no" || return
     
 }
 
