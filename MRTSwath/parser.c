@@ -255,6 +255,7 @@ bool ReadCmdLine(int argc, const char **argv, Param_t *this)
 	continue;
       }
       parse_sds_name(this, input_sds_string);
+      free(input_sds_string);
     }
 
     else if (IsArgID(argv[iarg], "-kk")) {
