@@ -650,14 +650,36 @@ function dohdf {
 
     ##### correct x for dateline #####
 
-    if fcmp "$ulx > 0" && fcmp "$urx < 0"
+    local ccount=0
+    fcmp "$ulx > 0"
+    ((ccount += $?))
+    fcmp "$urx > 0"
+    ((ccount += $?))
+    fcmp "$llx > 0"
+    ((ccount += $?))
+    fcmp "$lrx > 0"
+    ((ccount += $?))
+    
+    if ((ccount < 4 && ccount > 0))
     then
-        ulx=$(fcalc "$ulx - 360")
-    fi
+        if fcmp "$ulx > 0"
+        then
+            ulx=$(fcalc "$ulx - 360")
+        fi
 
-    if fcmp "$llx > 0" && fcmp "$lrx < 0"
-    then
-        llx=$(fcalc "$llx - 360")
+        if fcmp "$llx > 0"
+        then
+            llx=$(fcalc "$llx - 360")
+        fi
+        if fcmp "$urx > 0"
+        then
+            urx=$(fcalc "$urx - 360")
+        fi
+
+        if fcmp "$lrx > 0"
+        then
+            lrx=$(fcalc "$lrx - 360")
+        fi
     fi
     
     ##### find the center of the image #####
@@ -709,7 +731,7 @@ function dohdf {
     ly=$(fmin $lly $lry)
     uy=$(fmin $uy 90)
     ly=$(fmax $ly -90)
-
+    
     local oul=()
     local olr=()
 
