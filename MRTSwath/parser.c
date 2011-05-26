@@ -1781,6 +1781,7 @@ bool parse_sds_name(Param_t *this, char *sds_string)
 */
 {
   char *sdslist;         /* copy of the SDS string */
+  char *sdslistorig;     /* save the pointer to sdslist to free */
   char *sdsname;         /* pointer to the beginning of the SDS name */
   char *bandval;         /* pointer to the beginning of the band value */
   char *sdsend;          /* pointer to the end of the SDS name (;) */
@@ -1798,7 +1799,7 @@ bool parse_sds_name(Param_t *this, char *sds_string)
   }
 
   /* duplicate the SDS string for use in this routine */
-  sdslist = strdup (sds_string);
+  sdslistorig = sdslist = strdup (sds_string);
   if (sdslist == NULL)
     LOG_RETURN_ERROR ("error duplicating SDS list", "parse_sds_name", false);
 
@@ -1917,8 +1918,11 @@ bool parse_sds_name(Param_t *this, char *sds_string)
       strcpy (this->input_sds_name_list[nsds++], sdsname);
     }
   } /* while (process_sds) */
-
+  
   this->num_input_sds = nsds;
+
+  free(sdslistorig);
+  
   return true;
 }
 
