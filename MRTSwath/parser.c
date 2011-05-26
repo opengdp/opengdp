@@ -1977,7 +1977,7 @@ bool strip_blanks(char *instr)
 
   /* copy the new string to instr */
   strcpy (instr, tmpstr);
-
+  free(tmpstr);
   return true;
 }
 
