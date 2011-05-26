@@ -11,12 +11,52 @@ AM_MAINTAINER_MODE
 AC_ISC_POSIX
 AC_PROG_CXX
 AC_PROG_CC
+AC_USE_SYSTEM_EXTENSIONS
+
 AM_PROG_CC_STDC
 AC_HEADER_STDC
 
 AM_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
+
+dnl -----------------------------------------------------------------
+dnl Check for libraries.  Most installs will need to have
+dnl -lm but under OS X it is not needed.  Thus, we look
+dnl for sin in -lm which should set -lm on most platforms.
+dnl We also look for sincos in -m and -lsunmath for Solaris.
+dnl -----------------------------------------------------------------
+dnl
+AC_SEARCH_LIBS(sin, m)
+AC_SEARCH_LIBS(sincos, [m sunmath], [SINCOS=1], [SINCOS=0])
+dnl
+dnl OSF specific check for broken sincos from Lloyd Parkes (lloyd@must-have-coffee.gen.nz)
+dnl
+if test "$SINCOS" = "1" ; then
+	AC_MSG_CHECKING(for a broken sincos function)
+	AC_TRY_RUN([int main ()
+	{
+		double s = 0.1, c = 0.2;
+		double s1, c1;
+
+		s1 = s; c1 = c;
+		sincos (0.5, &s, &c);
+		return (s == s1 || c == c1);	/* FALSE if sincos works ok */
+	}
+	], [ AC_MSG_RESULT(no)
+	AC_DEFINE([HAVE_SINCOS],[],[System has sincos])
+	], [
+	case $target in
+		*)
+			AC_MSG_RESULT([yes.])
+			AC_MSG_RESULT([I don't know how to fix sincos on this machine.])
+	esac
+	], [
+	AC_MSG_RESULT([no sincos found.])
+	])
+fi
+
 dnl bash
+
 
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
 if test $HAVE_BASH = "false"; then
