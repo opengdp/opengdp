@@ -34,8 +34,9 @@ S. Nelson, EROS		June, 1993	Added inline comments
 S. Nelson, EROS		Nov, 1993	Added loop counter in ADJUST_LON
 
 *******************************************************************************/
-#include "cproj.h"
 
+#include "../config.h"
+#include "cproj.h"
 #define MAX_VAL 4
 #define MAXLONG 2147483647.
 #define DBLLONG 4.61168601e18
@@ -45,7 +46,7 @@ S. Nelson, EROS		Nov, 1993	Added loop counter in ADJUST_LON
    than calling each function separately.  It is provided here for those
    computer systems which don`t implement this function
   ----------------------------------------------------*/
-#ifndef sun
+#ifndef HAVE_SINCOS
 void sincos(double val, double *sin_val, double *cos_val)
 { 
   *sin_val = sin(val);

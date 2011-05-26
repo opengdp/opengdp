@@ -1,12 +1,12 @@
 #ifndef CPROJ_H
 #define CPROJ_H
-
+#include "../config.h"
 #include <math.h>
 #include "proj.h"
 
-#ifndef sun
+//#ifndef HAVE_SINCOS
 void sincos(double val, double *sin_val, double *cos_val);
-#endif
+//#endif
 
 #define PI 	3.141592653589793238
 #define HALF_PI (PI*0.5)
