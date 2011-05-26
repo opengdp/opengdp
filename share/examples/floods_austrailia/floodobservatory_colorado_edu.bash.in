@@ -132,22 +132,22 @@ function getextent {
     while read w s e n
     do
 
-        if ! [ -n "$ww" ] || float_cmp "$w < $ww"
+        if ! [ -n "$ww" ] || fcmp "$w < $ww"
         then
             ww="$w"
         fi
 
-        if ! [ -n "$ss" ] || float_cmp "$s < $ss"
+        if ! [ -n "$ss" ] || fcmp "$s < $ss"
         then
             ss="$s"
         fi
 
-        if ! [ -n "$ee" ] || float_cmp "$e > $ee"
+        if ! [ -n "$ee" ] || fcmp "$e > $ee"
         then
             ee="$e"
         fi
 
-        if ! [ -n "$nn" ] || float_cmp "$nn > $nn"
+        if ! [ -n "$nn" ] || fcmp "$nn > $nn"
         then
             nn="$n"
         fi

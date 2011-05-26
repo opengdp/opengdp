@@ -61,11 +61,11 @@ EOF
 
         ##### make sure north and south arent out of bounds for 900913 #####
 	
-        if float_cmp "$n > 86"
+        if fcmp "$n > 86"
         then
             n=86
         fi
-        if float_cmp "$s < -86"
+        if fcmp "$s < -86"
         then
             s="-86"
         fi
@@ -193,11 +193,11 @@ EOF
 
         ##### make sure north and south arent out of bounds for 900913 #####
 	
-        if float_cmp "$n > 86"
+        if fcmp "$n > 86"
         then
             n=86
         fi
-        if float_cmp "$s < -86"
+        if fcmp "$s < -86"
         then
             s="-86"
         fi

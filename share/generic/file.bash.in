@@ -560,7 +560,7 @@ function dohdf {
     
     ##### check if its day or night #####
     
-    local meta=$(dumpmeta "${tmpdir}/$lastfile" /dev/stdout)
+    local meta=$(dumpmeta "${tmpdir}/$geoloc" /dev/stdout)
     local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta")
     
     if istrue "$dayonly" && ! grep -q -e "VALUE.*\"Day\"" <<<"$daynight"
@@ -569,72 +569,277 @@ function dohdf {
         return;
     fi
         
-    ##### make tiffs from the dfiles #####
-    
-    local dfile
-    for dfile in "${dfiles[@]}"
-    do
-        
-        ##### figure out what bands to extract #####
-        
-        local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
-        
-        ##### find the band name #####
-        
-        local band=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
-        
-        swath2grid -if="${tmpdir}/${dfile}" \
-                   -of="${tmpdir}/${base}.tif" \
-                   -gf="${tmpdir}/$geoloc" \
-                   -off=GEOTIFF_FMT \
-                   -oproj=GEO \
-                   -oprm=0.0,0.0,0.0,0.0,0.0 \
-                   -osp=8 \
-                   -sds="$band" > /dev/null || return
-    done
+    ##### get the corners of the image #####
 
-    ##### make an aray of the msband files needed to build the product #####
-    
-    i=0
-    local flisting=$(find "${tmpdir}/" -name "*.tif")
-    local msband
-    local ofiles=()
-    for msband in "${msbands[@]}"
-    do
-        local regex="${msband//./[.]}"
-        local regex="${regex//\*/.*}"
-        local regex="${regex//\?/.}"
+    read ulx urx lrx llx < <(grep " OBJECT.*GRINGPOINTLONGITUDE" -A4 <<<"$meta" |\
+                              grep VALUE |\
+                              sed -e 's/.*[(]\([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\)[)].*/\1 \2 \3 \4/'
+                             )
 
-        if grep -i -e "$regex" <<<"$flisting" > /dev/null
+
+    read uly ury lry lly < <(grep " OBJECT.*GRINGPOINTLATITUDE" -A4 <<<"$meta" |\
+                              grep VALUE |\
+                              sed -e 's/.*[(]\([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\)[)].*/\1 \2 \3 \4/'
+                            )
+
+    read bbe < <(grep " OBJECT.*EASTBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+                 
+    read bbn < <(grep " OBJECT.*NORTHBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+    read bbs < <(grep " OBJECT.*SOUTHBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+                 
+    read bbw < <(grep " OBJECT.*WESTBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+
+    ##### large change in lon from top to bottom then its over the pole #####
+
+    if { fcmp "$llx - $ulx > 75" || fcmp "$ulx - $llx > 75" ; } && \
+        { fcmp "$lrx - $urx > 75" || fcmp "$urx - $lrx > 75" ; }
+    then
+        #s
+        if fcmp "$lly < 0"
         then
-            ofiles[i++]="$(grep -i -e "$regex" <<<"$flisting" | \
-                            sed 's:.*/::' | \
-                            head -n 1)"
-        else
-            echo "ERROR: no match in hdf for \"$msband\""
-            return;
-        fi
-    
-    done
-    
-    ##### translate the nodata values to 0 #####
-    
-    i=0
-    local ofile
-    local vfiles=()
-    for ofile in "${ofiles[@]}"
-    do
-        obase="${ofile%.*}"
-        
-        gdalwarp -srcnodata 65535 -wo INIT_DEST=0 -of VRT \
-                 "${tmpdir}/${ofile}" \
-                 "${tmpdir}/${obase}.vrt" > /dev/null || return
-        
-        vfiles[i++]="${obase}.vrt"
-    done
-    
-    doimg_multiband "$base" "$tmpdir" "$ts" "no" "" ${vfiles[@]}
+            llx=$(fcalc "$llx - 180")
+            lrx=$(fcalc "$lrx - 180")
+            local t=$llx
+            llx=$lrx
+            lrx=$t
+            if fcmp "$llx < -180"
+            then
+                llx=$(fcalc "$llx + 360")
+            fi
+            if fcmp "$lrx < -180"
+            then
+                lrx=$(fcalc "$lrx + 360")
+            fi
 
+            lly=$(fcalc "-180 - $lly")
+            lry=$(fcalc "-180 - $lry")
+            
+        #n
+        else
+            ulx=$(fcalc "$ulx - 180")
+            urx=$(fcalc "$urx - 180")
+            local t=$ulx
+            ulx=$urx
+            urx=$t
+            if fcmp "$ulx < -180"
+            then
+                ulx=$(fcalc "$ulx + 360")
+            fi
+            if fcmp "$urx < -180"
+            then
+                urx=$(fcalc "$urx + 360")
+            fi
+
+            uly=$(fcalc "180 - $uly")
+            ury=$(fcalc "180 - $ury")
+
+        fi
+    fi
+
+    ##### correct x for dateline #####
+
+    if fcmp "$ulx > 0" && fcmp "$urx < 0"
+    then
+        ulx=$(fcalc "$ulx - 360")
+    fi
+
+    if fcmp "$llx > 0" && fcmp "$lrx < 0"
+    then
+        llx=$(fcalc "$llx - 360")
+    fi
+    
+    ##### find the center of the image #####
+    
+    local cx=$(fcalc "($llx + $ulx + $urx + $lrx) / 4")
+    local cy=$(fcalc "($lly + $uly + $ury + $lry) / 4")
+    
+    ##### correct for center x < 180 #####
+    
+    if fcmp "$cx < -180"
+    then
+        cx=$(fcalc "$cx + 360")
+    fi
+
+    ##### fix center of image if its on the other side of the pole #####
+
+    if fcmp "$cy > 90"
+    then
+        cy=$(fcalc "180 - $cy")
+        if fcmp "$cx < 0"
+        then
+            cx=$(fcalc "$cx + 180")
+        else
+            cx=$(fcalc "$cx - 180")
+        fi
+    fi
+
+    if fcmp "$cy < -90"
+    then
+        cy=$(fcalc "-180 - $cy")
+        if fcmp "$cx < 0"
+        then
+            cx=$(fcalc "$cx + 180")
+        else
+            cx=$(fcalc "$cx - 180")
+        fi
+    fi
+
+    ##### get bbox #####
+    
+    lx=$(fmin $llx $ulx)
+    rx=$(fmax $lrx $urx)
+    if fcmp "$lx < -180"
+    then
+        lx=$(fcalc "$lx + 360")
+    fi
+
+    uy=$(fmax $uly $ury)
+    ly=$(fmin $lly $lry)
+    uy=$(fmin $uy 90)
+    ly=$(fmax $ly -90)
+
+    local oul=()
+    local olr=()
+
+    ##### need to split into 2 at the dateline? #####
+
+    if fcmp "$llx < -180" || fcmp "$ulx < -180"
+    then
+        oul[0]="$lx,$uy"
+        oul[1]="-180,$uy"
+        olr[0]="180,$ly"
+        olr[1]="$rx,$ly"
+    else
+        oul[0]="$lx,$uy"
+        olr[1]="$rx,$ly"
+    fi
+        
+    ##### loop over the bboxes #####
+    
+    local ibbox
+    for (( ibbox = 0; ibbox < ${#oul[@]} ; ibbox++ ))
+    do
+   
+
+        ##### make tiffs from the dfiles #####
+            
+        local dfile
+        for dfile in "${dfiles[@]}"
+        do
+
+            ##### figure out what bands to extract #####
+
+            local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
+
+            ##### find the band base name #####
+
+            local bandbase=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
+            
+            ##### loop over the product band list to build an array of bands for this dataset #####
+            
+            local bands=( )
+            local ofiles=()
+            local msband
+            for msband in "${msbands[@]}"
+            do
+
+                ##### is the msband in this dataset? #####
+
+                if grep -q -e "$bandbase" <<<"$msband"
+                then
+                    local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
+                    bands[$bnum]=1
+                fi
+            done
+            
+            ##### is there any matching bands to do in this dataset? #####
+            
+            if [ -n "${!bands[*]}" ]
+            then
+
+                ##### build a comma delim list of bands #####
+
+                bandlist=""
+                local indices=(${!bands[*]})
+                for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+                do
+                    bandlist="$bandlist,${bands[$i]}"
+                done
+                
+
+                ##### output the image in ps with Center lon and std parallel over the center of the image #####
+                
+                swath2grid -if="${tmpdir}/${dfile}" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG \
+                           -sds="${bandbase}${bandlist}"
+
+            fi
+           
+        done
+
+        ##### make an aray of the msband files needed to build the product #####
+
+        i=0
+        local flisting=$(find "${tmpdir}/" -name "${base}_${ibbox}*.tif")
+        local msband
+        local ofiles=()
+        for msband in "${msbands[@]}"
+        do
+            local regex="${msband//./[.]}"
+            local regex="${regex//\*/.*}"
+            local regex="${regex//\?/.}"
+
+            if grep -i -e "$regex" <<<"$flisting" > /dev/null
+            then
+                ofiles[i++]="$(grep -i -e "$regex" <<<"$flisting" | \
+                                sed 's:.*/::' | \
+                                head -n 1)"
+            else
+                echo "ERROR: no match in hdf for \"$msband\""
+                return;
+            fi
+
+        done
+
+        ##### translate the nodata values to 0 #####
+
+        i=0
+        local ofile
+        local vfiles=()
+        for ofile in "${ofiles[@]}"
+        do
+            obase="${ofile%.*}"
+
+            gdalwarp -srcnodata 65535 -wo INIT_DEST=0 -of VRT \
+                     "${tmpdir}/${ofile}" \
+                     "${tmpdir}/${obase}.vrt" > /dev/null || return
+
+            vfiles[i++]="${obase}.vrt"
+        done
+
+        doimg_multiband "${base}_${ibbox}" "$tmpdir" "$ts" "no" "" ${vfiles[@]}
+
+    done
 }
 
 ###############################################################################

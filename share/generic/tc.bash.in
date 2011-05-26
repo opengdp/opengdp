@@ -43,7 +43,7 @@ function dotc {
         
         read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
 	
-        if float_cmp "$n < 86" && float_cmp "$s > -86"
+        if fcmp "$n < 86" && fcmp "$s > -86"
         then
             read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
             read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")

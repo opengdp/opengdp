@@ -116,10 +116,10 @@ function pansharp {
 
     ##### find the common extent of the ms and pan images #####
 
-    local c_xo=$(max $ms_xo $pan_xo)
-    local c_yo=$(min $ms_yo $pan_yo)
-    local c_xfar=$(min $ms_xfar $pan_xfar)
-    local c_yfar=$(max $ms_yfar $pan_yfar)
+    local c_xo=$(fmax $ms_xo $pan_xo)
+    local c_yo=$(fmin $ms_yo $pan_yo)
+    local c_xfar=$(fmin $ms_xfar $pan_xfar)
+    local c_yfar=$(fmax $ms_yfar $pan_yfar)
 
     ##### create a vrt pan image of the common extent #####
 
