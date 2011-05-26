@@ -743,7 +743,7 @@ function doimg_multiband {
                   -color 0,255,255 -color 255,0,255 -color 255,255,0 \
                   -near 0 -nb 0 -setalpha -of gtiff \
                   "${tmpdir}/${base}_prescale.vrt" \
-                  -o "${tmpdir}/${base}_wash.tif" > /dev/null || return
+                  -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || return
         
         ##### rename the source vrt so the output vrt will have the same filename for consistency #####
         
