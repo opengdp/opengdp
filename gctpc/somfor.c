@@ -22,6 +22,7 @@ ALGORITHM REFERENCES
 2.  "Software Documentation for GCTP General Cartographic Transformation
     Package", U.S. Geological Survey National Mapping Division, May 1982.
 *******************************************************************************/
+#include <stdio.h>
 #include "cproj.h"
 #define LANDSAT_RATIO 0.5201613
 

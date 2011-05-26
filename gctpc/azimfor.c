@@ -20,6 +20,8 @@ ALGORITHM REFERENCES
     U.S. Geological Survey Professional Paper 1453 , United State Government
     Printing Office, Washington D.C., 1989.
 *******************************************************************************/
+#include <stdio.h>
+
 #include "cproj.h"
 
 /* Variables common to all subroutines in this code file

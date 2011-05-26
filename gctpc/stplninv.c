@@ -105,7 +105,7 @@ if (zone > 0)
    }
    if (ind == -1)
       {
-      sprintf(buf,"Illegal zone #%4d  for spheroid #%4d",zone,sphere);
+      sprintf(buf,"Illegal zone #%4ld  for spheroid #%4ld",zone,sphere);
       p_error(buf,"state-init");
       return(21);
       }
@@ -121,14 +121,31 @@ if (zone > 0)
       }
    fseek(ptr,ind  * 432, 0);
    status = ftell(ptr);
-   fread(pname,sizeof(char),32,ptr);
-   fread(&id,sizeof(long),1,ptr);
-   fread(table,sizeof(double),9,ptr);
+    if ( 32 > fread(pname,1,32,ptr)) {
+        if (ferror(ptr)) {
+		    p_error("Error reading State Plane parameter file","state-inv");
+            return(22);
+        }
+    }
+
+    if ( 1 > fread(&id,sizeof(long),1,ptr)) {
+        if (ferror(ptr)) {
+		    p_error("Error reading State Plane parameter file","state-inv");
+            return(22);
+        }
+    }
+    if ( 9 > fread(table,sizeof(double),9,ptr)) {
+        if (ferror(ptr))
+		     {
+		    p_error("Error reading State Plane parameter file","state-inv");
+            return(22);
+        }
+    }
    fclose(ptr);
    
    if (id <= 0)
       {
-      sprintf(buf,"Illegal zone #%4d  for spheroid #%4d",zone,sphere);
+      sprintf(buf,"Illegal zone #%4ld  for spheroid #%4ld",zone,sphere);
       p_error(buf,"state-init");
       return(21);
       }

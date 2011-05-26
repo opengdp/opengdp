@@ -28,6 +28,7 @@ S. Nelson		Jun, 1993	Added inline code.
 
 *******************************************************************************/
 #include <stdio.h>
+#include <string.h>
 #include "cproj.h"
 
 #define TRUE 1
@@ -280,11 +281,11 @@ genrpt(A,S) double A; char *S;
 genrpt_long(A,S) long A; char *S;
    {
    if (terminal_p)
-      printf("   %s %d\n", S, A);
+      printf("   %s %ld\n", S, A);
    if (file_p)
       {
       fptr_p = (FILE *)fopen(parm_file,"a");
-      fprintf(fptr_p,"   %s %d\n", S, A);
+      fprintf(fptr_p,"   %s %ld\n", S, A);
       fclose(fptr_p);
       }
    }

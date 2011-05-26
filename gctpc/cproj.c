@@ -46,8 +46,12 @@ S. Nelson, EROS		Nov, 1993	Added loop counter in ADJUST_LON
    computer systems which don`t implement this function
   ----------------------------------------------------*/
 #ifndef sun
-sincos(val, sin_val, cos_val) double val; double *sin_val; double *cos_val;
-{ *sin_val = sin(val); *cos_val = cos(val); return; }
+void sincos(double val, double *sin_val, double *cos_val)
+{ 
+  *sin_val = sin(val);
+  *cos_val = cos(val);
+  return;
+}
 #endif
 
 /* Function to eliminate roundoff errors in asin

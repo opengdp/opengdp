@@ -21,3 +21,4 @@ libgctp_a_SOURCES = \
 	cproj.c report.c lamccfor.c lamccinv.c paksz.c untfz.c sphdz.c \
 	br_gctp.c
 
+libgctp_a_LDFLAGS = -lm

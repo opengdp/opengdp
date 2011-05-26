@@ -26,6 +26,7 @@ ALGORITHM REFERENCES
 3.  "Software Documentation for GCTP General Cartographic Transformation
     Package", U.S. Geological Survey National Mapping Division, May 1982.
 *******************************************************************************/
+#include <stdio.h>
 #include "cproj.h"
 
 /* Variables common to all subroutines in this code file

@@ -4,6 +4,10 @@
 #include <math.h>
 #include "proj.h"
 
+#ifndef sun
+void sincos(double val, double *sin_val, double *cos_val);
+#endif
+
 #define PI 	3.141592653589793238
 #define HALF_PI (PI*0.5)
 #define TWO_PI 	(PI*2.0)
