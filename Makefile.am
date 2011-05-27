@@ -5,7 +5,8 @@ SUBDIRS = src \
 	share\
 	scripts\
 	gctpc\
-	MRTSwath
+	MRTSwath \
+	crefl
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

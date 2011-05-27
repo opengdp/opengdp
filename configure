@@ -17073,7 +17073,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile"
+ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile crefl/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -18185,6 +18185,7 @@ do
     "MRTSwath/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/Makefile" ;;
     "MRTSwath/data/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/data/Makefile" ;;
     "gctpc/Makefile") CONFIG_FILES="$CONFIG_FILES gctpc/Makefile" ;;
+    "crefl/Makefile") CONFIG_FILES="$CONFIG_FILES crefl/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

@@ -648,19 +648,30 @@ function dohdf {
         fi
     fi
 
-    ##### correct x for dateline #####
-
-    local ccount=0
-    fcmp "$ulx > 0"
-    ((ccount += $?))
-    fcmp "$urx > 0"
-    ((ccount += $?))
-    fcmp "$llx > 0"
-    ((ccount += $?))
-    fcmp "$lrx > 0"
-    ((ccount += $?))
     
-    if ((ccount < 4 && ccount > 0))
+
+    
+    
+    ##### count the left corners > 90 #####
+    
+    local lcount=0
+    fcmp "$ulx > 90"
+    ((lcount += $?))
+    fcmp "$llx > 90"
+    ((lcount += $?))
+    
+    ##### count the right corners < -90 #####
+    
+    local rcount=0
+    fcmp "$urx < -90"
+    ((rcount += $?))
+    fcmp "$lrx < -90"
+    ((rcount += $?))
+    
+    ##### if the image has left corners west of the dateline and right      #####
+    ##### corners east of the dateline, then the image is over the dateline #####
+    
+    if ((lcount > 0 && rcount > 0))
     then
         if fcmp "$ulx > 0"
         then
@@ -736,8 +747,8 @@ function dohdf {
     local olr=()
 
     ##### need to split into 2 at the dateline? #####
-
-    if fcmp "$llx < -180" || fcmp "$ulx < -180"
+    
+    if ((lcount > 0 && rcount > 0))
     then
         oul[0]="${lx},${uy}"
         oul[1]="-180,${uy}"
