@@ -46,7 +46,7 @@ cd "$outdir"
                     grep -e "Pixel Size" |\
                     sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
 
-    local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
+    local orig=$(bc <<< "scale = 16; $(fmin $xr $yr) * 72 * 4374754")
     local scale=$(bc <<< "$orig + 150000")
 
     rm -rf ${tmpdir} > /dev/null
@@ -83,7 +83,7 @@ cd "$outdir"
                     grep -e "Pixel Size" |\
                     sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
 
-    local orig=$(bc <<< "scale = 16; $(min $xr $yr) * 72 * 4374754")
+    local orig=$(bc <<< "scale = 16; $(fmin $xr $yr) * 72 * 4374754")
     local scale=$(bc <<< "$orig + 150000")
 
     ##### res = scale / (72 * 4374754) #####
