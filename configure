@@ -15754,6 +15754,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+cflagsold="$CFLAGS"
+ldflagsold="$LDFLAGS"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing sin" >&5
 $as_echo_n "checking for library containing sin... " >&6; }
 if test "${ac_cv_search_sin+set}" = set; then :
@@ -17072,6 +17074,8 @@ fi
 
 
 
+CFLAGS="$cflagsold"
+LDFLAGS="$ldflagsold"
 
 ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile crefl/Makefile"
 
