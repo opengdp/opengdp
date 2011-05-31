@@ -99,7 +99,7 @@ cd "$outdir"
     cat > "${tmpdir}/${dsname}${ts}.xml" << EOF
 <GDAL_WMS>
     <Service name="WMS">
-        <ServerURL>${urlcgibin}?</ServerUrl>
+        <ServerUrl>${urlcgibin}?</ServerUrl>
         <ImageFormat>image/tiff</ImageFormat>
         <Transparent>TRUE</Transparent>
         <Layers>${dsname}_${ts}</Layers>

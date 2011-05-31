@@ -664,7 +664,7 @@ function doimg_multiband {
         
         ##### make a vrt of the filled ms bands #####
         
-        gdalbuildvrt -srcnodata 0 -separate \
+        gdalbuildvrt -srcnodata 0 -separate -resolution highest \
                      "${tmpdir}/${base}.vrt" \
                      ${bands[@]} > /dev/null || return
         
