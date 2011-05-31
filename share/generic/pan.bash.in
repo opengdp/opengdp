@@ -79,8 +79,8 @@ function pansharp {
 
     ##### pan calc the corner opisite of the origin #####
 
-    local pan_xfar=$(bc <<<"scale = 16; $pan_xo + $pan_xd * $pan_xsize")
-    local pan_yfar=$(bc <<<"scale = 16; $pan_yo + $pan_yd * $pan_ysize")
+    local pan_xfar=$(fcalc "$pan_xo + $pan_xd * $pan_xsize")
+    local pan_yfar=$(fcalc "$pan_yo + $pan_yd * $pan_ysize")
 
     ##### get ms info ##### 
 
@@ -89,13 +89,13 @@ function pansharp {
    
     ##### calc the multiplyer for the ms image size #####
 
-    local xmult=$(bc <<<"scale = 16; $ms_xd / $pan_xd")
-    local ymult=$(bc <<<"scale = 16; $ms_yd / $pan_yd")
+    local xmult=$(fcalc "$ms_xd / $pan_xd")
+    local ymult=$(fcalc "$ms_yd / $pan_yd")
 
     ##### calc the new pixel size for the ms image #####
 
-    local ms_new_xsize=$(bc <<<"scale = 16; $ms_xsize * $xmult")
-    local ms_new_ysize=$(bc <<<"scale = 16; $ms_ysize * $ymult")
+    local ms_new_xsize=$(fcalc "$ms_xsize * $xmult")
+    local ms_new_ysize=$(fcalc "$ms_ysize * $ymult")
 
     ##### resample the ms image vrt so its the same pixel size as the pan band #####
 
@@ -111,8 +111,8 @@ function pansharp {
 
     ##### ms calc the corner opisite of the origin #####
 
-    local ms_xfar=$(bc <<<"scale = 16; $ms_xo + $ms_xd * $ms_xsize")
-    local ms_yfar=$(bc <<<"scale = 16; $ms_yo + $ms_yd * $ms_ysize")
+    local ms_xfar=$(fcalc "$ms_xo + $ms_xd * $ms_xsize")
+    local ms_yfar=$(fcalc "$ms_yo + $ms_yd * $ms_ysize")
 
     ##### find the common extent of the ms and pan images #####
 

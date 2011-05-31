@@ -23,7 +23,7 @@ function print_res {
     maxResolution=156543.0339 
     for (( zoom=0; zoom<=24; ++zoom ))
     do
-        bc -l <<<"$maxResolution / 2^${zoom}"
+        fcalc "$maxResolution / 2^${zoom}"
     done
 }
 
@@ -34,7 +34,7 @@ function dotc {
 (
     for map in $(find $outdir -name "*.map" | sort )
     do
-        if [[ "$doovr" == "yes" ]]
+        if istrue "$doovr" 1
         then
             layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
         else

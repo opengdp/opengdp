@@ -48,7 +48,7 @@ EOF
 
     for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
     do
-        if [[ "$doovr" == "yes" ]]
+        if istrue "$doovr" 1
         then
             layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
         else
@@ -182,7 +182,7 @@ EOF
 
     for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
     do
-        if [[ "$doovr" == "yes" ]]
+        if istrue "$doovr" 1
         then
             layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
         else

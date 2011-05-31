@@ -40,7 +40,7 @@ function addo {
     
     ((o=2))
     ovrs=""
-    while [[ 64 -lt $(bc <<<"$x / $o") ]] && [[ 64 -lt $(bc <<<"$y / $o") ]]
+    while fcmp "64 < $x / $o" && fcmp "64 < $y / $o"
     do
         ovrs="$ovrs $o"
         ((o*=2))
@@ -68,7 +68,7 @@ function readdo2 {
     
     ((o=2))
     ovrs=""
-    while [[ 64 -lt $(bc <<<"$x / $o") ]] && [[ 64 -lt $(bc <<<"$y / $o") ]]
+    while fcmp "64 < $x / $o" && fcmp "64 < $y / $o"
     do
         ovrs="$ovrs $o"
         ((o*=2))

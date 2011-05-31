@@ -43,10 +43,10 @@ function comp_meter {
     lines=$2
     donelines=$3
     
-    decdone=$(bc <<< "scale = 6; $donelines / $lines")
-    percdone=$(bc <<< "scale = 0; $decdone * 100")
+    decdone=$(fcalc "$donelines / $lines")
+    percdone=$(fcalc "scale = 0; $decdone * 100")
     elap=$(($(date +%s) - started))
-    comp=$(bc <<< "scale=0; $elap / $decdone")
+    comp=$(fcalc "scale=0; $elap / $decdone")
     ((comp +=  started))
     
     printf "\r%3.0f%% complete. EST. finish at %s" $percdone "$(date -d "@${comp}")"
@@ -319,7 +319,7 @@ function sub_main {
        
                 extent=$(getextent "$ts")
                 
-                if [[ "$doovr" == "yes" ]]
+                if istrue "$doovr" 1
                 then
 
                     ##### write a temp map file #####
@@ -381,7 +381,7 @@ function sub_main {
 
                 extent=$(getextent "$ts")
 
-                if [[ "$doovr" == "yes" ]]
+                if istrue "$doovr" 1
                 then
 
                     ##### get the overview scale from the old mapfile #####
@@ -598,10 +598,6 @@ function main {
         exit
     fi
     
-    ##### do ovrview default #####
-    
-    if ! [ -n "$doovr" ] ; then doovr="yes" ; fi
-
     ##### resamp_alg #####
     
     if ! [ -n "$resample_alg" ] ; then resample_alg="average" ; fi

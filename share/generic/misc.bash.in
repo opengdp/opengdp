@@ -20,6 +20,39 @@
 # DEALINGS IN THE SOFTWARE.
 
 ###############################################################################
+# function to test for true
+###############################################################################
+
+function istrue {
+    
+   case "$1" in
+        [nN][oO])
+            false
+            ;;
+        [yY][eE][sS])
+            true
+            ;;
+        [fF][aA][lL][sS][eE])
+            false
+            ;;
+        [tT][rR][uU][eE])
+            true
+            ;;
+        *)
+            ##### if there is a second numeric arg return it by itself,#####
+            ##### otherwise return the default of false #####
+            
+            if [ -n "$2" ]
+            then
+                return $2
+            else
+                false
+            fi
+            ;;
+    esac
+    
+}
+###############################################################################
 # to remove dupe /'s from a path
 ###############################################################################
 
@@ -72,6 +105,50 @@ max($1, $2)
 EOF
 }
 
+###############################################################################
+# frontend to bc for calcing floats
+###############################################################################
+
+function fcalc {
+
+    if [[ $# -gt 0 ]]
+    then
+        echo "scale=20; $*" | bc -q 2>/dev/null
+    fi
+}
+    
+###############################################################################
+# frontend to bc for compareing floats
+###############################################################################
+
+function fcmp {
+
+    local cond=0
+    if [[ $# -gt 0 ]]
+    then
+        cond=$(echo "$*" | bc -q 2>/dev/null)
+        if [[ -z "$cond" ]]
+        then
+            cond=0
+        fi
+        if [[ "$cond" != 0  &&  "$cond" != 1 ]]
+        then
+            cond=0
+        fi
+    fi
+    local res=$((cond == 0))
+    return $res
+}
+
+###############################################################################
+# convert sci noteation to dec
+###############################################################################
+
+function fsci2dec {
+    
+    fcalc $(sed 's/e[+]*/*10^/g' <<< "$1")
+}
+    
 ###############################################################################
 # function to get a ts from a lftp command
 ###############################################################################
@@ -233,40 +310,7 @@ function getlist {
 }
 
 
-###############################################################################
-# frontend to bc for calcing floats
-###############################################################################
 
-function fcalc {
-
-    if [[ $# -gt 0 ]]
-    then
-        echo "scale=20; $*" | bc -q 2>/dev/null
-    fi
-}
-    
-###############################################################################
-# frontend to bc for compareing floats
-###############################################################################
-
-function fcmp {
-
-    local cond=0
-    if [[ $# -gt 0 ]]
-    then
-        cond=$(echo "$*" | bc -q 2>/dev/null)
-        if [[ -z "$cond" ]]
-        then
-            cond=0
-        fi
-        if [[ "$cond" != 0  &&  "$cond" != 1 ]]
-        then
-            cond=0
-        fi
-    fi
-    local res=$((cond == 0))
-    return $res
-}
 
 
 function dotc_old {
@@ -274,7 +318,7 @@ function dotc_old {
 (
     for map in $(find $outdir -name "*.map" | sort )
     do
-        if [[ "$doovr" == "yes" ]]
+        if istrue "$doovr" 1
         then
             layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
         else
@@ -321,13 +365,13 @@ function get_transform {
                 "${tmpdir}/testy.vrt" \
                 "$infile" > /dev/null || return
 
-    read xo xd xr yo yr yd < <(grep GeoTransform "${tmpdir}/testy.vrt" | sed -r 's/<.?GeoTransform>//g' | sed 's/,//g' | sed 's/e[+]*/*10^/g')
-    xo=$(bc <<<"scale = 20; $xo")
-    xd=$(bc <<<"scale = 20; $xd")
-    xr=$(bc <<<"scale = 20; $xr")
-    yo=$(bc <<<"scale = 20; $yo")
-    yd=$(bc <<<"scale = 20; $yd")
-    yr=$(bc <<<"scale = 20; $yr")
+    read xo xd xr yo yr yd < <(grep GeoTransform "${tmpdir}/testy.vrt" | sed -r 's/<.?GeoTransform>//g' | sed 's/,//g')
+    xo=$(fsci2dec "$xo")
+    xd=$(fsci2dec "$xd")
+    xr=$(fsci2dec "$xr")
+    yo=$(fsci2dec "$yo")
+    yd=$(fsci2dec "$yd")
+    yr=$(fsci2dec "$yr")
 
     rm -r "$tmpdir"
 
@@ -345,37 +389,4 @@ function get_size {
 
 }
 
-###############################################################################
-# function to test for true
-###############################################################################
-
-function istrue {
-    
-   case "$1" in
-        [nN][oO])
-            false
-            ;;
-        [yY][eE][sS])
-            true
-            ;;
-        [fF][aA][lL][sS][eE])
-            false
-            ;;
-        [tT][rR][uU][eE])
-            true
-            ;;
-        *)
-            ##### if there is a second numeric arg return it by itself,#####
-            ##### otherwise return the default of false #####
-            
-            if [ -n "$2" ]
-            then
-                return $2
-            else
-                false
-            fi
-            ;;
-    esac
-    
-}
 
