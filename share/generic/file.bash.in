@@ -929,7 +929,7 @@ function dofile {
         
         local ts=$(${datefunc} <<< "$myline")
         
-        if [ -n "$DEBUG_dofile" ]
+        if istrue "$DEBUG_dofile"
         then
             printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
                     "$myline" \

@@ -58,7 +58,6 @@ function comp_meter {
 
 function mainloop {
     local mirrorfile="$1"
-    local dofunc="$2"
     
     ((doing=0))
     
@@ -89,7 +88,7 @@ function mainloop {
 
         if [ $doing -lt $limit ]
         then
-        	${dofunc} "$line"  &
+        	dofile "$line"  &
          	((doing++))
          	
         ##### over the limit wait for a job to finish before starting #####
@@ -105,7 +104,7 @@ function mainloop {
 
             comp_meter $started $lines $donelines
             
-            ${dofunc} "$line"  &
+            dofile "$line"  &
          	((doing++))
         fi
 
@@ -245,9 +244,7 @@ function sub_main {
         
             ##### loop over the commands in the mirrorfile #####
         
-            if ! [ -n "$dofunc" ] ; then dofunc="dofile" ; fi
-        
-            if ! mainloop "$mirrorfile" "$dofunc"
+            if ! mainloop "$mirrorfile"
             then
                 exit
             fi
