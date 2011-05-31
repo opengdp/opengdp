@@ -85,7 +85,7 @@ function dosubimg {
             
             if [[ "$islossy" == "true" ]]
             then
-                if [[ "$nearwhite" == "true" ]]
+                if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -setmask -nb 0 -white -of GTiff "${tmpdir}/${img}" \
                               -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
@@ -94,7 +94,7 @@ function dosubimg {
                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
                 fi
             else
-                if [[ "$nearwhite" == "true" ]]
+                if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -setmask -near 0 -nb 0 -white -of GTiff "${tmpdir}/${img}" \
                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || return
@@ -180,7 +180,7 @@ function dosubimg {
 
             if [[ "$islossy" == "true" ]]
             then
-                if [[ "$nearwhite" == "true" ]]
+                if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -nb 0 -setmask -white -of GTiff \
                              "${tmpdir}/${img}" \
@@ -191,7 +191,7 @@ function dosubimg {
                              -o "${tmpram}/final_${imgbase}.tif" > /dev/null || return
                 fi
             else
-                if [[ "$nearwhite" == "true" ]]
+                if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -setmask -white -of GTiff \
                              -near 0 -nb 0 \
@@ -734,7 +734,7 @@ function doimg_multiband {
     
     ##### do a washout nearblack to remove ms band staggering artefacts? #####
     
-    if [[ "$type" != "Byte" ]] && ! [ -n "$nearwhite" ]
+    if [[ "$type" != "Byte" ]] && ! istrue "$nearwhite"
     then
         
         ##### fixme need to generate the -colors based on how many bands there are #####
