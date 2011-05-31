@@ -83,7 +83,7 @@ function dosubimg {
             
             #####  create a mask with the nearblack method #####
             
-            if [[ "$islossy" == "true" ]]
+            if istrue "$islossy"
             then
                 if istrue "$nearwhite"
                 then
@@ -178,7 +178,7 @@ function dosubimg {
             
             #####  create a mask and compress #####
 
-            if [[ "$islossy" == "true" ]]
+            if istrue "$islossy"
             then
                 if istrue "$nearwhite"
                 then
