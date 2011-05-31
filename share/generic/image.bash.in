@@ -104,7 +104,7 @@ function dosubimg {
                 fi
             fi
             
-            if [[ "$isoriginal" == "no" ]]
+            if ! istrue "$isoriginal" 1
             then
                 rm "${tmpdir}/${img}"
             fi
@@ -138,7 +138,7 @@ function dosubimg {
                      "${tmpdir}/${img}" \
                      "${tmpram}/warped_${imgbase}.tif"  > /dev/null || return
             
-            if [[ "$isoriginal" == "no" ]]
+            if ! istrue "$isoriginal" 1
             then
                 rm "${tmpdir}/${img}"
             fi
@@ -169,7 +169,7 @@ function dosubimg {
                      "${tmpdir}/${img}" \
                      "${tmpram}/final_${imgbase}.tif" > /dev/null || return
             
-            if [[ "$isoriginal" == "no" ]]
+            if ! istrue "$isoriginal" 1
             then
                 rm "${tmpdir}/${img}"
             fi
@@ -205,7 +205,7 @@ function dosubimg {
                 fi
             fi
 
-            if [[ "$isoriginal" == "no" ]]
+            if ! istrue "$isoriginal" 1
             then
                 rm "${tmpdir}/${img}"
             fi
