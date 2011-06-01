@@ -437,9 +437,14 @@ if (MOD02QKMfile) printf("MOD/MYD02QKMfile = %s\n", MOD02QKMfile);
 
 		if ((ancpath = getenv("ANCPATH")) == NULL)
 			sprintf(dem.filename, "%s/%s", ANCPATH, DEMFILENAME);
-		else
+		else {
+#ifdef CREFL_DATA_DIR
+            sprintf(dem.filename, "%s/%s", CREFL_DATA_DIR, DEMFILENAME);
+#else            
 			sprintf(dem.filename, "%s/%s", ancpath, DEMFILENAME);
-
+#endif
+        }
+        
 		if ( (dem.file_id = SDstart(dem.filename, DFACC_READ)) == -1 ) {
 			fprintf(stderr, "Cannot open file %s.\n", dem.filename);
 			exit(1);
