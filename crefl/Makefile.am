@@ -8,3 +8,6 @@ crefl_CFLAGS = \
     @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@
   
 crefl_LDFLAGS = @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@
+
+SUBDIRS = \
+	data
