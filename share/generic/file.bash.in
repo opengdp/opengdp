@@ -656,17 +656,17 @@ function dohdf {
     
     local lcount=0
     fcmp "$ulx > 90"
-    ((lcount += $?))
+    ((lcount += !$?))
     fcmp "$llx > 90"
-    ((lcount += $?))
+    ((lcount += !$?))
     
     ##### count the right corners < -90 #####
     
     local rcount=0
     fcmp "$urx < -90"
-    ((rcount += $?))
+    ((rcount += !$?))
     fcmp "$lrx < -90"
-    ((rcount += $?))
+    ((rcount += !$?))
     
     ##### if the image has left corners west of the dateline and right      #####
     ##### corners east of the dateline, then the image is over the dateline #####
