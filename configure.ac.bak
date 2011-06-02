@@ -19,6 +19,8 @@ AC_HEADER_STDC
 AM_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
+cflagsold="$CFLAGS"
+ldflagsold="$LDFLAGS"
 dnl -----------------------------------------------------------------
 dnl Check for libraries.  Most installs will need to have
 dnl -lm but under OS X it is not needed.  Thus, we look
@@ -374,6 +376,8 @@ AC_CHECK_LIB([hdfeos -lmfhdf -ldf],[SWopen],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(hd
 AC_SUBST(HDFEOSINC)
 AC_SUBST(HDFEOSLIB)
 
+CFLAGS="$cflagsold"
+LDFLAGS="$ldflagsold"
 
 AC_OUTPUT([
 Makefile
@@ -393,4 +397,5 @@ src/Makefile
 MRTSwath/Makefile
 MRTSwath/data/Makefile
 gctpc/Makefile
+crefl/Makefile
 ])

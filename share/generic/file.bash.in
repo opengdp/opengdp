@@ -761,7 +761,7 @@ function dohdf {
     
     if [ -n "$creflfiles" ]
     then
-        crefl \
+        crefl --toa \
         ${tmpdir}/${creflfiles[0]} \
         ${tmpdir}/${creflfiles[1]} \
         ${tmpdir}/${creflfiles[2]} \
