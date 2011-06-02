@@ -648,10 +648,6 @@ function dohdf {
         fi
     fi
 
-    
-
-    
-    
     ##### count the left corners > 90 #####
     
     local lcount=0
@@ -745,7 +741,7 @@ function dohdf {
     
     local oul=()
     local olr=()
-
+    
     ##### need to split into 2 at the dateline? #####
     
     if ((lcount > 0 && rcount > 0))
@@ -761,6 +757,19 @@ function dohdf {
 
     fi
 
+    ##### do we need to run crefl? #####
+    
+    if [ -n "$creflfiles" ]
+    then
+        crefl \
+        ${tmpdir}/${creflfiles[0]} \
+        ${tmpdir}/${creflfiles[1]} \
+        ${tmpdir}/${creflfiles[2]} \
+        --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || return
+    
+        dfiles=( "crefl.${base}.hdf" )
+    fi
+    
     ##### loop over the bboxes #####
     
     local ibbox
@@ -774,62 +783,71 @@ function dohdf {
         for dfile in "${dfiles[@]}"
         do
 
-            ##### figure out what bands to extract #####
-
-            local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
-
-            ##### find the band base name #####
-
-            local bandbase=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
-            
-            ##### loop over the product band list to build an array of bands for this dataset #####
-            
-            local bands=( )
-            local ofiles=()
-            local msband
-            for msband in "${msbands[@]}"
-            do
-
-                ##### is the msband in this dataset? #####
-
-                if grep -q -e "$bandbase" <<<"$msband"
-                then
-                    local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
-                    bands[$bnum]=1
-                fi
-            done
-            
-            ##### is there any matching bands to do in this dataset? #####
-            
-            if [ -n "${!bands[*]}" ]
+            if ! [ -n "$creflfiles" ]
             then
+            
+                ##### figure out what bands to extract #####
 
-                ##### build a comma delim list of bands #####
+                local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
 
-                bandlist=""
-                local indices=(${!bands[*]})
-                for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+                ##### find the band base name #####
+                
+                local bandbase=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
+                
+                ##### loop over the product band list to build an array of bands for this dataset #####
+                
+                local bands=( )
+                local ofiles=()
+                local msband
+                
+                for msband in "${msbands[@]}"
                 do
-                    bandlist="$bandlist,${bands[$i]}"
+
+                    ##### is the msband in this dataset? #####
+
+                    if grep -q -e "$bandbase" <<<"$msband"
+                    then
+                        local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
+                        bands[$bnum]=1
+                    fi
                 done
                 
-
-                ##### output the image in ps with Center lon and std parallel over the center of the image #####
+                ##### is there any matching bands to do in this dataset? #####
                 
-                swath2grid -if="${tmpdir}/${dfile}" \
-                           -of="${tmpdir}/${base}_${ibbox}.tif" \
-                           -gf="${tmpdir}/$geoloc" \
-                           -off=GEOTIFF_FMT \
-                           -oproj=PS \
-                           -oprm=0,0,0,0,${cx},${cy} \
-                           -oul="${oul[$ibbox]}" \
-                           -olr="${olr[$ibbox]}" \
-                           -osp=8 \
-                           -osst=LAT_LONG \
-                           -sds="${bandbase}${bandlist}" > /dev/null || return
+                if [ -n "${!bands[*]}" ]
+                then
+                    
+                    ##### build a comma delim list of bands #####
 
+                    bandlist=""
+                    local indices=(${!bands[*]})
+                    for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+                    do
+                        bandlist="$bandlist,${bands[$i]}"
+                    done
+                    
+                    local sds="-sds=\"${bandbase}${bandlist}\""
+                else 
+                    continue;
+                fi
+            else
+                local sds=""
             fi
-           
+            
+            ##### output the image in ps with Center lon and std parallel over the center of the image #####
+            
+            swath2grid -if="${tmpdir}/${dfile}" \
+                       -of="${tmpdir}/${base}_${ibbox}.tif" \
+                       -gf="${tmpdir}/$geoloc" \
+                       -off=GEOTIFF_FMT \
+                       -oproj=PS \
+                       -oprm=0,0,0,0,${cx},${cy} \
+                       -oul="${oul[$ibbox]}" \
+                       -olr="${olr[$ibbox]}" \
+                       -osp=8 \
+                       -osst=LAT_LONG \
+                       $sds > /dev/null || return
+
         done
 
         ##### make an aray of the msband files needed to build the product #####
@@ -864,8 +882,16 @@ function dohdf {
         for ofile in "${ofiles[@]}"
         do
             obase="${ofile%.*}"
-
-            gdalwarp -srcnodata 65535 -wo INIT_DEST=0 -of VRT \
+            
+            local type=$(gdalinfo "${tmpdir}/${ofile}" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
+            if [[ type == "Int16" ]]
+            then
+                local nodatav=-32768
+            else
+                local nodatav=65535
+            fi            
+            
+            gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
                      "${tmpdir}/${ofile}" \
                      "${tmpdir}/${obase}.vrt" > /dev/null || return
 
