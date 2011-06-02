@@ -70,7 +70,7 @@ Revision history:
 #define MAXSOLZ 86.5
 #define MAXAIRMASS 18
 #define	SCALEHEIGHT 8000
-#define FILL_INT16	32767
+#define FILL_INT16	-32768
 #define	NUM1KMCOLPERSCAN	1354
 #define	NUM1KMROWPERSCAN	10
 #define	TAUSTEP4SPHALB		0.0001
@@ -435,15 +435,17 @@ if (MOD02QKMfile) printf("MOD/MYD02QKMfile = %s\n", MOD02QKMfile);
 	if (!sealevel && !TOA) {
 		dem.filename = dem_filename_buff;
 
-		if ((ancpath = getenv("ANCPATH")) == NULL)
-			sprintf(dem.filename, "%s/%s", ANCPATH, DEMFILENAME);
-		else {
+		if ((ancpath = getenv("ANCPATH")) == NULL) {
 #ifdef CREFL_DATA_DIR
             sprintf(dem.filename, "%s/%s", CREFL_DATA_DIR, DEMFILENAME);
 #else            
-			sprintf(dem.filename, "%s/%s", ancpath, DEMFILENAME);
+            sprintf(dem.filename, "%s/%s", ANCPATH, DEMFILENAME);
 #endif
         }
+
+        else
+			sprintf(dem.filename, "%s/%s", ancpath, DEMFILENAME);
+
         
 		if ( (dem.file_id = SDstart(dem.filename, DFACC_READ)) == -1 ) {
 			fprintf(stderr, "Cannot open file %s.\n", dem.filename);
