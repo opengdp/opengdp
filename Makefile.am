@@ -15,11 +15,22 @@ dwhdoc_DATA = \
 	AUTHORS\
 	ChangeLog\
 	INSTALL\
-	NEWS
-
+	NEWS\
+	doc/*
+    
 
 EXTRA_DIST = $(dwhdoc_DATA)
 
+
+
+if MAINTAINER_MODE
+
+CLEANFILES = doc/html*
+
+doc/*: Doxyfile Makefile
+	doxygen
+
+endif
 
 # Remove doc directory on uninstall
 uninstall-local:

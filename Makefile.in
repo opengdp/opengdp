@@ -285,9 +285,11 @@ dwhdoc_DATA = \
 	AUTHORS\
 	ChangeLog\
 	INSTALL\
-	NEWS
+	NEWS\
+	doc/*
 
 EXTRA_DIST = $(dwhdoc_DATA)
+@MAINTAINER_MODE_TRUE@CLEANFILES = doc/html*
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -708,6 +710,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -806,6 +809,9 @@ uninstall-am: uninstall-dwhdocDATA uninstall-local
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
 	uninstall uninstall-am uninstall-dwhdocDATA uninstall-local
 
+
+@MAINTAINER_MODE_TRUE@doc/*: Doxyfile Makefile
+@MAINTAINER_MODE_TRUE@	doxygen
 
 # Remove doc directory on uninstall
 uninstall-local:
