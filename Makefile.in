@@ -85,8 +85,9 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(dwhdocdir)"
-DATA = $(dwhdoc_DATA)
+am__installdirs = "$(DESTDIR)$(dwhdocdir)" "$(DESTDIR)$(dwhhtmldir)" \
+	"$(DESTDIR)$(dwhhtmlsearchdir)"
+DATA = $(dwhdoc_DATA) $(dwhhtml_DATA) $(dwhhtmlsearch_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -285,11 +286,24 @@ dwhdoc_DATA = \
 	AUTHORS\
 	ChangeLog\
 	INSTALL\
-	NEWS\
-	doc/*
+	NEWS
 
-EXTRA_DIST = $(dwhdoc_DATA)
-@MAINTAINER_MODE_TRUE@CLEANFILES = doc/html*
+dwhhtmlsearchdir = ${prefix}/doc/dwh/html/search
+dwhhtmldir = ${prefix}/doc/dwh/html
+dwhhtmlsearch_DATA = \
+	doc/html/search/*.*
+
+dwhhtml_DATA = \
+	doc/html/*.*
+
+EXTRA_DIST = $(dwhdoc_DATA) \
+    $(dwhhtml_DATA) \
+    $(dwhhtmlsearch_DATA)
+
+@MAINTAINER_MODE_TRUE@CLEANFILES = \
+@MAINTAINER_MODE_TRUE@	doc/html/search/*.* \
+@MAINTAINER_MODE_TRUE@	doc/html/*.*
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -374,6 +388,46 @@ uninstall-dwhdocDATA:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(dwhdocdir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(dwhdocdir)" && rm -f $$files
+install-dwhhtmlDATA: $(dwhhtml_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(dwhhtmldir)" || $(MKDIR_P) "$(DESTDIR)$(dwhhtmldir)"
+	@list='$(dwhhtml_DATA)'; test -n "$(dwhhtmldir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dwhhtmldir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dwhhtmldir)" || exit $$?; \
+	done
+
+uninstall-dwhhtmlDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dwhhtml_DATA)'; test -n "$(dwhhtmldir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(dwhhtmldir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(dwhhtmldir)" && rm -f $$files
+install-dwhhtmlsearchDATA: $(dwhhtmlsearch_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(dwhhtmlsearchdir)" || $(MKDIR_P) "$(DESTDIR)$(dwhhtmlsearchdir)"
+	@list='$(dwhhtmlsearch_DATA)'; test -n "$(dwhhtmlsearchdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dwhhtmlsearchdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dwhhtmlsearchdir)" || exit $$?; \
+	done
+
+uninstall-dwhhtmlsearchDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dwhhtmlsearch_DATA)'; test -n "$(dwhhtmlsearchdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(dwhhtmlsearchdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(dwhhtmlsearchdir)" && rm -f $$files
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -690,7 +744,7 @@ check: check-recursive
 all-am: Makefile $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(dwhdocdir)"; do \
+	for dir in "$(DESTDIR)$(dwhdocdir)" "$(DESTDIR)$(dwhhtmldir)" "$(DESTDIR)$(dwhhtmlsearchdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -741,7 +795,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-dwhdocDATA
+install-data-am: install-dwhdocDATA install-dwhhtmlDATA \
+	install-dwhhtmlsearchDATA
 
 install-dvi: install-dvi-recursive
 
@@ -787,7 +842,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dwhdocDATA uninstall-local
+uninstall-am: uninstall-dwhdocDATA uninstall-dwhhtmlDATA \
+	uninstall-dwhhtmlsearchDATA uninstall-local
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all \
 	ctags-recursive install-am install-strip tags-recursive
@@ -800,17 +856,23 @@ uninstall-am: uninstall-dwhdocDATA uninstall-local
 	distclean-libtool distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-dwhdocDATA install-exec install-exec-am \
+	install-dvi-am install-dwhdocDATA install-dwhhtmlDATA \
+	install-dwhhtmlsearchDATA install-exec install-exec-am \
 	install-html install-html-am install-info install-info-am \
 	install-man install-pdf install-pdf-am install-ps \
 	install-ps-am install-strip installcheck installcheck-am \
 	installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-dwhdocDATA uninstall-local
+	uninstall uninstall-am uninstall-dwhdocDATA \
+	uninstall-dwhhtmlDATA uninstall-dwhhtmlsearchDATA \
+	uninstall-local
 
 
-@MAINTAINER_MODE_TRUE@doc/*: Doxyfile Makefile
+@MAINTAINER_MODE_TRUE@doc/html/*.*: Doxyfile Makefile
+@MAINTAINER_MODE_TRUE@	doxygen
+
+@MAINTAINER_MODE_TRUE@doc/html/search/*.*: Doxyfile Makefile
 @MAINTAINER_MODE_TRUE@	doxygen
 
 # Remove doc directory on uninstall

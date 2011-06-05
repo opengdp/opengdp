@@ -1,5 +1,4 @@
-## Process this file with automake to produce Makefile.in
-## Created by Anjuta
+
 
 SUBDIRS = src \
 	share\
@@ -15,19 +14,31 @@ dwhdoc_DATA = \
 	AUTHORS\
 	ChangeLog\
 	INSTALL\
-	NEWS\
-	doc/*
-    
+	NEWS
 
-EXTRA_DIST = $(dwhdoc_DATA)
+dwhhtmlsearchdir = ${prefix}/doc/dwh/html/search
+dwhhtmldir = ${prefix}/doc/dwh/html
 
+dwhhtmlsearch_DATA = \
+	doc/html/search/*.*
 
+dwhhtml_DATA = \
+	doc/html/*.*
+
+EXTRA_DIST = $(dwhdoc_DATA) \
+    $(dwhhtml_DATA) \
+    $(dwhhtmlsearch_DATA)
 
 if MAINTAINER_MODE
 
-CLEANFILES = doc/html*
+CLEANFILES = \
+	doc/html/search/*.* \
+	doc/html/*.*
 
-doc/*: Doxyfile Makefile
+doc/html/*.*: Doxyfile Makefile
+	doxygen
+
+doc/html/search/*.*: Doxyfile Makefile
 	doxygen
 
 endif
