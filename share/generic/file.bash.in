@@ -761,11 +761,11 @@ function dohdf {
     
     if [ -n "$creflfiles" ]
     then
-        crefl --toa \
-        ${tmpdir}/${creflfiles[0]} \
-        ${tmpdir}/${creflfiles[1]} \
-        ${tmpdir}/${creflfiles[2]} \
-        --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || return
+        crefl \
+              ${tmpdir}/${creflfiles[0]} \
+              ${tmpdir}/${creflfiles[1]} \
+              ${tmpdir}/${creflfiles[2]} \
+              --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || return
     
         dfiles=( "crefl.${base}.hdf" )
     fi
