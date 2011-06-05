@@ -144,8 +144,10 @@ double fintexp3(float tau);
 float correctedrefl(float refl, float TtotraytH2O, float tOG, float rhoray, float sphalb);
 int interp_dem(float lat, float lon, SDS *dem);
 
+/******************************************************************************
 
-
+main
+******************************************************************************/
 
 int main(int argc, char *argv[])
 {
@@ -1050,8 +1052,8 @@ int input_file_type(char *filename)
 /**************************************************************************//**
  Parse band list and set relevant elements in process[] array.
 
- @param bandstr
- @param process
+ @param bandstr     comma delem list of bands to proccess
+ @param process     array of true/false bands to flag as proccess
 
  @returns non-zero if invalid band(s) specified, 0 otherwise (i.e., success).
  
@@ -1164,8 +1166,8 @@ int interp_dem(float lat, float lon, SDS *dem)
 /**************************************************************************//**
  Write current scan line for all processed bands.
 
- @param iscan
- @param process
+ @param iscan       current scanline
+ @param process     array of true/false bands to flag as proccess
  @param outsds      output subdataset array
 
  @return 0 if no errors, non-zero otherwise.
@@ -1223,7 +1225,9 @@ int read_scan(int iscan, SDS sds[Nitems])
 }
 
 /**************************************************************************//**
- @param tau
+compute the spherical albedo of the molecular layer.
+
+ @param tau  molecular optical depth
 
 ******************************************************************************/
 
@@ -1234,7 +1238,7 @@ float csalbr(float tau)
 
 
 /**************************************************************************//**
- @param tau
+ @param tau molecular optical depth
 
 ******************************************************************************/
 
@@ -1256,7 +1260,10 @@ double fintexp1(float tau)
 
 
 /**************************************************************************//**
- @param tau
+ This function computes the parameter Α(τR) necessary to compute Rayleigh
+ spherical albedo
+
+ @param tau  molecular optical depth
 
 ******************************************************************************/
 
@@ -1267,13 +1274,17 @@ double fintexp3(float tau)
 
 
 /**************************************************************************//**
- @param phi    azimuthal difference between sun and observation in degree
-               (phi=0 in backscattering direction)
- @param mus    cosine of the sun zenith angle
- @param muv    cosine of the observation zenith angle
- @param taur   molecular optical depth
- @param rhoray molecular path reflectance
+This function computes the molecular atmospheric reflectance 
 
+ @param phi     azimuthal difference between sun and observation in degree
+                (phi=0 in backscattering direction)
+ @param mus     cosine of the sun zenith angle
+ @param muv     cosine of the observation zenith angle
+ @param taur    molecular optical depth
+ @param rhoray  molecular path reflectance
+ @param trup
+ @param trdown
+ @param process array of true/false bands to flag as proccess
  constant xdep: depolarization factor (0.0279)
  xfd = (1-xdep/(2-xdep)) / (1 + 2*xdep/(2-xdep)) = 2 * (1 - xdep) / (2 + xdep) = 0.958725775
 ******************************************************************************/
@@ -1341,24 +1352,29 @@ void chand(float phi,
 
 }
 
-
 /**************************************************************************//**
 
- @param mus    cosine of the sun zenith angle
- @param muv    cosine of the observation zenith angle
- @param phi    azimuthal difference between sun and observation in degree
-               (phi=0 in backscattering direction)
+ @param mus             cosine of the sun zenith angle
+ @param muv             cosine of the observation zenith angle
+ @param phi             azimuthal difference between sun and observation in degree
+                        (phi=0 in backscattering direction)
  @param height
- @param process
- @param sphalb
- @param rhoray molecular path reflectance
+ @param process         array of true/false bands to flag as proccess
+ @param sphalb          spherical albedo correction table
+ @param rhoray          molecular path reflectance
  @param TtotraytH2O
  @param tOG
 
 ******************************************************************************/
 
-int getatmvariables(float mus, float muv, float phi, int16 height,
-                    unsigned char *process, float *sphalb, float *rhoray, float *TtotraytH2O,
+int getatmvariables(float mus,
+                    float muv,
+                    float phi,
+                    int16 height,
+                    unsigned char *process,
+                    float *sphalb,
+                    float *rhoray,
+                    float *TtotraytH2O,
                     float *tOG)
 {
     double m, Ttotrayu, Ttotrayd, tO3, tO2, tH2O;
@@ -1430,14 +1446,18 @@ int getatmvariables(float mus, float muv, float phi, int16 height,
  @param refl
  @param TtotraytH2O
  @param tOG
- @param rhoray molecular path reflectance
- @param sphalb
+ @param rhoray          molecular path reflectance
+ @param sphalb          spherical albedo correction table
 
  @return corrected reflectance
 
 ******************************************************************************/
 
-float correctedrefl(float refl, float TtotraytH2O, float tOG, float rhoray, float sphalb)
+float correctedrefl(float refl,
+                    float TtotraytH2O,
+                    float tOG,
+                    float rhoray,
+                    float sphalb)
 {
     float corr_refl;
 
@@ -1447,9 +1467,10 @@ float correctedrefl(float refl, float TtotraytH2O, float tOG, float rhoray, floa
 }
 
 /**************************************************************************//**
+ create output SDSs and set SDS-specific attributes and dimension names
 
  @param sd_id
- @param process
+ @param process  array of true/false bands to flag as proccess
  @param outsds   output subdataset array
  @param sds      input subdataset array
  @param gzip     non zero if the output is gziped
@@ -1459,8 +1480,12 @@ float correctedrefl(float refl, float TtotraytH2O, float tOG, float rhoray, floa
 
 ******************************************************************************/
 
-int init_output_sds(int32 sd_id, unsigned char *process, SDS outsds[Nbands], SDS sds[Nitems],
-                    int gzip, int verbose)
+int init_output_sds(int32 sd_id,
+                    unsigned char *process,
+                    SDS outsds[Nbands],
+                    SDS sds[Nitems],
+                    int gzip,
+                    int verbose)
 {
     int ib;
     int32 dim_id;
@@ -1585,9 +1610,14 @@ int init_output_sds(int32 sd_id, unsigned char *process, SDS outsds[Nbands], SDS
 
 ******************************************************************************/
 
-int write_global_attributes(int32 sd_id, char *MOD021KMfile,
-                            char *MOD02HKMfile, char *MOD02QKMfile, float maxsolz,
-                            int sealevel, int TOA, int nearest)
+int write_global_attributes(int32 sd_id,
+                            char *MOD021KMfile,
+                            char *MOD02HKMfile,
+                            char *MOD02QKMfile,
+                            float maxsolz,
+                            int sealevel,
+                            int TOA,
+                            int nearest)
 {
     char *ptr;
     int j;
@@ -1642,7 +1672,9 @@ int write_global_attributes(int32 sd_id, char *MOD021KMfile,
 
 ******************************************************************************/
 
-int range_check(float x, float xmin, float xmax)
+int range_check(float x,
+                float xmin,
+                float xmax)
 {
     return (x < xmin) || (x > xmax);
 }

@@ -635,19 +635,22 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>This function computes the molecular atmospheric reflectance</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">phi</td><td>azimuthal difference between sun and observation in degree (phi=0 in backscattering direction) </td></tr>
     <tr><td class="paramname">mus</td><td>cosine of the sun zenith angle </td></tr>
     <tr><td class="paramname">muv</td><td>cosine of the observation zenith angle </td></tr>
     <tr><td class="paramname">taur</td><td>molecular optical depth </td></tr>
-    <tr><td class="paramname">rhoray</td><td>molecular path reflectance</td></tr>
+    <tr><td class="paramname">rhoray</td><td>molecular path reflectance </td></tr>
+    <tr><td class="paramname">trup</td><td></td></tr>
+    <tr><td class="paramname">trdown</td><td></td></tr>
+    <tr><td class="paramname">process</td><td>array of true/false bands to flag as proccess constant xdep: depolarization factor (0.0279) xfd = (1-xdep/(2-xdep)) / (1 + 2*xdep/(2-xdep)) = 2 * (1 - xdep) / (2 + xdep) = 0.958725775 </td></tr>
   </table>
   </dd>
 </dl>
-<p>constant xdep: depolarization factor (0.0279) xfd = (1-xdep/(2-xdep)) / (1 + 2*xdep/(2-xdep)) = 2 * (1 - xdep) / (2 + xdep) = 0.958725775 </p>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01281">1281</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01292">1292</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -699,13 +702,13 @@ Functions</h2></td></tr>
     <tr><td class="paramname">TtotraytH2O</td><td></td></tr>
     <tr><td class="paramname">tOG</td><td></td></tr>
     <tr><td class="paramname">rhoray</td><td>molecular path reflectance </td></tr>
-    <tr><td class="paramname">sphalb</td><td></td></tr>
+    <tr><td class="paramname">sphalb</td><td>spherical albedo correction table</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>corrected reflectance </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01440">1440</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01456">1456</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -723,14 +726,15 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>compute the spherical albedo of the molecular layer.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">tau</td><td></td></tr>
+    <tr><td class="paramname">tau</td><td>molecular optical depth </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01230">1230</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01234">1234</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -750,12 +754,12 @@ Functions</h2></td></tr>
 <div class="memdoc">
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">tau</td><td></td></tr>
+    <tr><td class="paramname">tau</td><td>molecular optical depth </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01241">1241</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01245">1245</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -773,14 +777,15 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>This function computes the parameter Α(τR) necessary to compute Rayleigh spherical albedo</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">tau</td><td></td></tr>
+    <tr><td class="paramname">tau</td><td>molecular optical depth </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01263">1263</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01270">1270</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -856,8 +861,8 @@ Functions</h2></td></tr>
     <tr><td class="paramname">muv</td><td>cosine of the observation zenith angle </td></tr>
     <tr><td class="paramname">phi</td><td>azimuthal difference between sun and observation in degree (phi=0 in backscattering direction) </td></tr>
     <tr><td class="paramname">height</td><td></td></tr>
-    <tr><td class="paramname">process</td><td></td></tr>
-    <tr><td class="paramname">sphalb</td><td></td></tr>
+    <tr><td class="paramname">process</td><td>array of true/false bands to flag as proccess </td></tr>
+    <tr><td class="paramname">sphalb</td><td>spherical albedo correction table </td></tr>
     <tr><td class="paramname">rhoray</td><td>molecular path reflectance </td></tr>
     <tr><td class="paramname">TtotraytH2O</td><td></td></tr>
     <tr><td class="paramname">tOG</td><td></td></tr>
@@ -865,7 +870,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01360">1360</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01370">1370</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -917,10 +922,11 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>create output SDSs and set SDS-specific attributes and dimension names</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">sd_id</td><td></td></tr>
-    <tr><td class="paramname">process</td><td></td></tr>
+    <tr><td class="paramname">process</td><td>array of true/false bands to flag as proccess </td></tr>
     <tr><td class="paramname">outsds</td><td>output subdataset array </td></tr>
     <tr><td class="paramname">sds</td><td>input subdataset array </td></tr>
     <tr><td class="paramname">gzip</td><td>non zero if the output is gziped </td></tr>
@@ -930,7 +936,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if ok, non zero on error </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01462">1462</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01483">1483</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -956,7 +962,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01012">1012</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01014">1014</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1001,7 +1007,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>elevation of the point at lat,lon </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01130">1130</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01132">1132</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1030,7 +1036,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l00150">150</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l00152">152</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1061,14 +1067,14 @@ Functions</h2></td></tr>
 <p>Parse band list and set relevant elements in process[] array.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">bandstr</td><td></td></tr>
-    <tr><td class="paramname">process</td><td></td></tr>
+    <tr><td class="paramname">bandstr</td><td>comma delem list of bands to proccess </td></tr>
+    <tr><td class="paramname">process</td><td>array of true/false bands to flag as proccess</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>non-zero if invalid band(s) specified, 0 otherwise (i.e., success). </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01060">1060</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01062">1062</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1113,7 +1119,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if xmin &lt;= x &lt;= xmax, non-zero otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01645">1645</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01675">1675</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1151,7 +1157,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if no errors, non-zero otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01203">1203</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01205">1205</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1196,7 +1202,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>height </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01094">1094</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01096">1096</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1216,7 +1222,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 <p>print usage </p>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l00991">991</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l00993">993</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1296,7 +1302,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if no errors, non-zero otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01588">1588</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01613">1613</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1333,15 +1339,15 @@ Functions</h2></td></tr>
 <p>Write current scan line for all processed bands.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">iscan</td><td></td></tr>
-    <tr><td class="paramname">process</td><td></td></tr>
+    <tr><td class="paramname">iscan</td><td>current scanline </td></tr>
+    <tr><td class="paramname">process</td><td>array of true/false bands to flag as proccess </td></tr>
     <tr><td class="paramname">outsds</td><td>output subdataset array</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 if no errors, non-zero otherwise. </dd></dl>
 
-<p>Definition at line <a class="el" href="crefl_8c_source.html#l01175">1175</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
+<p>Definition at line <a class="el" href="crefl_8c_source.html#l01177">1177</a> of file <a class="el" href="crefl_8c_source.html">crefl.c</a>.</p>
 
 </div>
 </div>
@@ -1360,7 +1366,7 @@ Functions</h2></td></tr>
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sun Jun 5 2011 14:52:21 for dwh by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Sun Jun 5 2011 22:10:29 for dwh by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.2 </small></address>
 </body>
