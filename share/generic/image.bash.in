@@ -629,7 +629,9 @@ function doimg_multiband {
     ##### make a vrt of the ms bands first ######
     
     
-    gdalbuildvrt ${nodata[@]} -separate \
+    gdalbuildvrt ${nodata[@]} \
+                 -separate \
+                 -resolution highest \
                  "${tmpdir}/${base}.vrt" \
                  ${bands[@]} > /dev/null || return
     
@@ -741,7 +743,7 @@ function doimg_multiband {
         
         nearblack -color 0,0,0 -color 255,0,0 -color 0,255,0 -color 0,0,255 \
                   -color 0,255,255 -color 255,0,255 -color 255,255,0 \
-                  -near 0 -nb 2 -setalpha -of gtiff \
+                  -near 0 -nb 0 -setalpha -of gtiff \
                   "${tmpdir}/${base}_prescale.vrt" \
                   -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || return
         
