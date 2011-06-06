@@ -585,6 +585,59 @@ function rebuildtindexs {
 }
 
 ###############################################################################
+# function to write a vrt to rescale with a lut
+###############################################################################
+
+function mk_lut_vrt {
+    local infile="$1"
+    local outvrt="$2"
+    local lut="$3"
+    
+    local xs
+    local ys
+    read xs ys < <(get_size "$infile")
+    
+    local xo
+    local yo
+    read xo yo < <(get_origin "$infile")
+    
+    local xd
+    local yd
+    read xd yd < <(get_pixelsize "$infile")
+    
+    local srs
+    read srs < <(get_srs "$infile")
+    
+    cat > "$outvrt" << EOF
+<VRTDataset rasterXSize="$xs" rasterYSize="$ys">
+  <SRS>$srs</SRS>
+  <GeoTransform>$xo,  $xd,  0.0,  $yo,  0.0, $yd</GeoTransform>
+EOF
+    
+    for ((ib = 1; ib <= $(get_num_bands "$infile"); ib++ ))
+    do  
+        read type < <(get_band_type "$infile" $ib)
+        cat >> "$outvrt" << EOF
+  <VRTRasterBand dataType="Byte" band="$ib">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>$ib</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+EOF
+    done
+
+    cat >> "$outvrt" << EOF
+</VRTDataset>
+EOF
+
+}
+
+###############################################################################
 # function to do a multiband image
 ###############################################################################
 
@@ -732,7 +785,17 @@ function doimg_multiband {
         gdal_translate -ot byte -scale $rescale -of VRT \
                        "${tmpdir}/${base}_prescale.vrt" \
                        "${tmpdir}/${base}.vrt" > /dev/null || return
+    elif [ -n "$lut" ]
+    
+        ##### rename the source vrt so the output vrt will have the same filename for consistency #####
+        
+        mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
+        
+        mk_lut_vrt "${tmpdir}/${base}_prescale.vrt" \
+                   "${tmpdir}/${base}.vrt" "$lut"
+
     fi
+    
     
     ##### do a washout nearblack to remove ms band staggering artefacts? #####
     
