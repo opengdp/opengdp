@@ -786,7 +786,7 @@ function doimg_multiband {
                        "${tmpdir}/${base}_prescale.vrt" \
                        "${tmpdir}/${base}.vrt" > /dev/null || return
     elif [ -n "$lut" ]
-    
+    then
         ##### rename the source vrt so the output vrt will have the same filename for consistency #####
         
         mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
