@@ -767,7 +767,7 @@ function dohdf {
                   ${tmpdir}/${creflfiles[0]} \
                   ${tmpdir}/${creflfiles[1]} \
                   ${tmpdir}/${creflfiles[2]} \
-                  --bands="$creflbands"
+                  --bands="$creflbands" \
                   --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
         else
         
