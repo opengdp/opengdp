@@ -761,12 +761,23 @@ function dohdf {
     
     if [ -n "$creflfiles" ]
     then
-        crefl \
-              ${tmpdir}/${creflfiles[0]} \
-              ${tmpdir}/${creflfiles[1]} \
-              ${tmpdir}/${creflfiles[2]} \
-              --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
-    
+        if [ -n "$creflbands" ]
+        then
+            crefl \
+                  ${tmpdir}/${creflfiles[0]} \
+                  ${tmpdir}/${creflfiles[1]} \
+                  ${tmpdir}/${creflfiles[2]} \
+                  --bands="$creflbands"
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
+        else
+        
+            crefl \
+                  ${tmpdir}/${creflfiles[0]} \
+                  ${tmpdir}/${creflfiles[1]} \
+                  ${tmpdir}/${creflfiles[2]} \
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
+        fi
+            
         dfiles=( "crefl.${base}.hdf" )
     fi
     
