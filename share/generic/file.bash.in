@@ -81,7 +81,7 @@ function dozip_multiband {
     unzip "${origdir}/${zipfile}" \
            ${files[@]} \
            ${panfiles[@]} \
-           -d "$tmpdir" > /dev/null 2> /dev/null || printerror ; return
+           -d "$tmpdir" > /dev/null 2> /dev/null || { printerror ; return; }
     
     doimg_multiband "$base" "$tmpdir" "$ts" "no" "${panfiles[0]}" ${files[@]}
     
@@ -180,7 +180,7 @@ function dotar_multiband {
     tar -x${switch}f "${origdir}/${zipfile}" \
         -C "$tmpdir" \
         ${files[@]} \
-        ${panfiles[@]} > /dev/null 2> /dev/null || printerror ; return
+        ${panfiles[@]} > /dev/null 2> /dev/null || { printerror ; return; }
                 
     doimg_multiband "$base" "$tmpdir" "$ts" "no" "${panfiles[0]}" ${files[@]}
     
@@ -314,7 +314,7 @@ function dozip {
         
         unzip "${origdir}/${zipfile}" \
               ${zipargs[@]} \
-              -d "$tmpdir" > /dev/null 2> /dev/null || printerror ; return
+              -d "$tmpdir" > /dev/null 2> /dev/null || { printerror ; return; }
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no"
 
@@ -455,7 +455,7 @@ function dotar {
         
         tar -x${switch}f "${origdir}/${zipfile}" \
             -C "$tmpdir" \
-            "$f" "$world" "$aux" "$auxxml" > /dev/null 2> /dev/null || printerror ; return
+            "$f" "$world" "$aux" "$auxxml" > /dev/null 2> /dev/null || { printerror ; return; }
         
         doimg "$f" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
         
@@ -481,14 +481,14 @@ function dokmz {
 
         ##### extract the kml #####
         
-        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" || printerror ; return
+        unzip "${origdir}/${zipfile}" "$f" -d "$tmpdir" || { printerror ; return; }
         
         ##### find and extract the corisponding img #####
         
         local img=$(grep '<GroundOverlay>' -A12 "${tmpdir}/$f" |\
                     grep href | sed -r 's|.*<href>(.*)</href>.*|\1|')
         
-        unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir" || printerror ; return
+        unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir" || { printerror ; return; }
         
         local imgfile="${img##*/}"
         local imgbase="${imgfile%.*}"
@@ -515,7 +515,7 @@ function dokmz {
                        -a_ullr $w $n $e $s \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
-                       "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt" || printerror ; return
+                       "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt" || { printerror ; return; }
         
         ##### proccess #####
         
@@ -768,14 +768,14 @@ function dohdf {
                   ${tmpdir}/${creflfiles[1]} \
                   ${tmpdir}/${creflfiles[2]} \
                   --bands="$creflbands" \
-                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
         else
         
             crefl \
                   ${tmpdir}/${creflfiles[0]} \
                   ${tmpdir}/${creflfiles[1]} \
                   ${tmpdir}/${creflfiles[2]} \
-                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || printerror ; return
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
         fi
             
         dfiles=( "crefl.${base}.hdf" )
@@ -857,7 +857,7 @@ function dohdf {
                        -olr="${olr[$ibbox]}" \
                        -osp=8 \
                        -osst=LAT_LONG \
-                       $sds > /dev/null || printerror ; return
+                       $sds > /dev/null || { printerror ; return; }
 
         done
 
@@ -904,7 +904,7 @@ function dohdf {
             
             gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
                      "${tmpdir}/${ofile}" \
-                     "${tmpdir}/${obase}.vrt" > /dev/null || printerror ; return
+                     "${tmpdir}/${obase}.vrt" > /dev/null || { printerror ; return; }
 
             vfiles[i++]="${obase}.vrt"
         done

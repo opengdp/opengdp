@@ -88,19 +88,19 @@ function dosubimg {
                 if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -setmask -nb 0 -white -of GTiff "${tmpdir}/${img}" \
-                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || printerror ; return
+                              -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 else
                     nearblack -co TILED=YES -setmask -nb 0 -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 fi
             else
                 if istrue "$nearwhite"
                 then
                     nearblack -co TILED=YES -setmask -near 0 -nb 0 -white -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 else
                     nearblack -co TILED=YES -setmask -near 0 -nb 0 -of GTiff "${tmpdir}/${img}" \
-                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/prewarp_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 fi
             fi
             
@@ -115,7 +115,7 @@ function dosubimg {
                      -dstalpha \
                      -t_srs EPSG:4326 \
                      "${tmpram}/prewarp_${imgbase}.tif" \
-                     "${tmpram}/warped_${imgbase}.tif" > /dev/null || printerror ; return
+                     "${tmpram}/warped_${imgbase}.tif" > /dev/null || { printerror ; return; }
             
             #####  create a mask and compress #####
             
@@ -124,7 +124,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
-                     "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                     "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
             rm "${tmpram}/warped_${imgbase}.tif"
 
         ##### since it has a alpha band already skip the nearblack #####
@@ -136,7 +136,7 @@ function dosubimg {
             gdalwarp -co TILED=YES \
                      -t_srs EPSG:4326 \
                      "${tmpdir}/${img}" \
-                     "${tmpram}/warped_${imgbase}.tif"  > /dev/null || printerror ; return
+                     "${tmpram}/warped_${imgbase}.tif"  > /dev/null || { printerror ; return; }
             
             if ! istrue "$isoriginal" 1
             then
@@ -148,7 +148,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpram}/warped_${imgbase}.tif" \
-                     "${tmpram}/final_${imgbase}.tif"  > /dev/null || printerror ; return
+                     "${tmpram}/final_${imgbase}.tif"  > /dev/null || { printerror ; return; }
 
             rm "${tmpram}/warped_${imgbase}.tif"
             
@@ -167,7 +167,7 @@ function dosubimg {
             gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR \
                      -b 1 -b 2 -b 3 -mask 4 \
                      "${tmpdir}/${img}" \
-                     "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                     "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
             
             if ! istrue "$isoriginal" 1
             then
@@ -184,11 +184,11 @@ function dosubimg {
                 then
                     nearblack -co TILED=YES -nb 0 -setmask -white -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 else
                     nearblack -co TILED=YES -nb 0 -setmask -of GTiff \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 fi
             else
                 if istrue "$nearwhite"
@@ -196,12 +196,12 @@ function dosubimg {
                     nearblack -co TILED=YES -setmask -white -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 else
                     nearblack -co TILED=YES -setmask -of GTiff \
                              -near 0 -nb 0 \
                              "${tmpdir}/${img}" \
-                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || printerror ; return
+                             -o "${tmpram}/final_${imgbase}.tif" > /dev/null || { printerror ; return; }
                 fi
             fi
 
@@ -224,7 +224,7 @@ function dosubimg {
         
     ##### move the output to the outdir #####
     
-    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif" || printerror ; return
+    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif" || { printerror ; return; }
     
     rm -rf "${tmpram}"
     ##### add the file to the tile index #####
@@ -379,7 +379,7 @@ function doimg {
         gdal_translate -a_srs "$s_srs" \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
-                       "${tmpdir}/${imgdir}${imgbase}_srs.vrt" > /dev/null || printerror ; return
+                       "${tmpdir}/${imgdir}${imgbase}_srs.vrt" > /dev/null || { printerror ; return; }
 
         img="${imgdir}${imgbase}_srs.vrt"
         imgfile="${img##*/}"
@@ -475,7 +475,7 @@ function doimg {
                                 $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                 -s 0 \
                                 -i "${tmpdir}/${img}" \
-                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || printerror ; return
+                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || { printerror ; return; }
 
                     ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
                     
@@ -484,7 +484,7 @@ function doimg {
                         gdal_translate -of VRT \
                                         -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
                                         "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
-                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || printerror ; return
+                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || { printerror ; return; }
                     else
                         echo "ERROR: no srs for ${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
                         ls -l ${tmpram}/
@@ -509,7 +509,7 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || printerror ; return
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || { printerror ; return; }
             
                     dosubimg "${imgbase}_${xoff}_${yoff}.tif" \
                              "$tmpram" "$ts" \
@@ -523,7 +523,7 @@ function doimg {
                                    $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                    $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
                                    "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || printerror ; return
+                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || { printerror ; return; }
             
                     dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
                              "$tmpram" "$ts" \
@@ -713,7 +713,7 @@ function doimg_multiband {
             CPL_TMPDIR="$tmpdir" gdal_fillnodata.py -md $fillnodata_md \
                                                     -b $i \
                                                     "${tmpdir}/${base}.vrt" \
-                                                    "${tmpdir}/${base}_${i}_filled.tif" > /dev/null || printerror ; return
+                                                    "${tmpdir}/${base}_${i}_filled.tif" > /dev/null || { printerror ; return; }
 
         done
         
@@ -721,7 +721,7 @@ function doimg_multiband {
         
         gdalbuildvrt -srcnodata 0 -separate -resolution highest \
                      "${tmpdir}/${base}.vrt" \
-                     ${bands[@]} > /dev/null || printerror ; return
+                     ${bands[@]} > /dev/null || { printerror ; return; }
         
         ##### fixme need to fill the pan band #####
         
@@ -759,12 +759,12 @@ function doimg_multiband {
         
         gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
                        "${tmpdir}/${base}.vrt" \
-                       "${tmpdir}/${base}_resize.vrt" > /dev/null || printerror ; return
+                       "${tmpdir}/${base}_resize.vrt" > /dev/null || { printerror ; return; }
         
         otbPanSharp "$type" \
                     "${tmpdir}/$panfile" \
                     "${tmpdir}/${base}_resize.vrt" \
-                    "${tmpdir}/${base}_pan.tif" > /dev/null || printerror ; return
+                    "${tmpdir}/${base}_pan.tif" > /dev/null || { printerror ; return; }
         
         ##### build a vrt just to keep the same filename  for consistency #####
         
@@ -784,7 +784,7 @@ function doimg_multiband {
         
         gdal_translate -ot byte -scale $rescale -of VRT \
                        "${tmpdir}/${base}_prescale.vrt" \
-                       "${tmpdir}/${base}.vrt" > /dev/null || printerror ; return
+                       "${tmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
     elif [ -n "$lut" ]
     then
         ##### rename the source vrt so the output vrt will have the same filename for consistency #####
@@ -808,7 +808,7 @@ function doimg_multiband {
                   -color 0,255,255 -color 255,0,255 -color 255,255,0 \
                   -near 0 -nb 0 -setalpha -of gtiff \
                   "${tmpdir}/${base}_prescale.vrt" \
-                  -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || printerror ; return
+                  -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || { printerror ; return; }
         
         ##### rename the source vrt so the output vrt will have the same filename for consistency #####
         
@@ -822,21 +822,21 @@ function doimg_multiband {
             bands[i++]="${tmpdir}/${base}_$(($i + 1)).vrt"
             gdal_translate -b $i -of VRT \
                            "${tmpdir}/${base}_prewashout.vrt" \
-                           "${tmpdir}/${base}_${i}.vrt" > /dev/null || printerror ; return
+                           "${tmpdir}/${base}_${i}.vrt" > /dev/null || { printerror ; return; }
         done
         
         ##### make a vrt for the alpha band #####
         
         gdal_translate -b "${#files[@]}" -of VRT \
                        "${tmpdir}/${base}_wash.tif" \
-                       "${tmpdir}/${base}_wash.vrt" > /dev/null || printerror ; return
+                       "${tmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
         
         ##### combine all the bands into a single vrt #####
         
         gdalbuildvrt -separate \
                      "${tmpdir}/${base}_sep.vrt" \
                      ${bands[@]} \
-                     "${tmpdir}/${base}_wash.vrt" > /dev/null || printerror ; return
+                     "${tmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
         
         ##### rework the vrt to rgba #####
         
