@@ -34,7 +34,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = crefl$(EXEEXT)
+@HAVE_HDF_TRUE@bin_PROGRAMS = crefl$(EXEEXT)
 subdir = crefl
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,7 +47,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_crefl_OBJECTS = crefl-crefl.$(OBJEXT)
+am__crefl_SOURCES_DIST = crefl.c
+@HAVE_HDF_TRUE@am_crefl_OBJECTS = crefl-crefl.$(OBJEXT)
 crefl_OBJECTS = $(am_crefl_OBJECTS)
 crefl_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_$(V))
@@ -83,7 +84,7 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(crefl_SOURCES)
-DIST_SOURCES = $(crefl_SOURCES)
+DIST_SOURCES = $(am__crefl_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -98,7 +99,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = data
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -162,6 +163,7 @@ GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
 HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_HDF = @HAVE_HDF@
 HAVE_MC = @HAVE_MC@
 HAVE_MRSIDDECODE = @HAVE_MRSIDDECODE@
 HAVE_OTB = @HAVE_OTB@
@@ -271,16 +273,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-crefl_SOURCES = \
-	crefl.c
+@HAVE_HDF_TRUE@crefl_SOURCES = \
+@HAVE_HDF_TRUE@	crefl.c
 
-crefl_CFLAGS = \
-    -DCREFL_DATA_DIR=\"$(pkgdatadir)/crefl\" \
-    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@
+@HAVE_HDF_TRUE@crefl_CFLAGS = \
+@HAVE_HDF_TRUE@    -DCREFL_DATA_DIR=\"$(pkgdatadir)/crefl\" \
+@HAVE_HDF_TRUE@    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@
 
-crefl_LDFLAGS = @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@
-SUBDIRS = \
-	data
+@HAVE_HDF_TRUE@crefl_LDFLAGS = @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@
+@HAVE_HDF_TRUE@SUBDIRS = \
+@HAVE_HDF_TRUE@	data
 
 all: all-recursive
 

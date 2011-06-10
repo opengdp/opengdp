@@ -604,6 +604,9 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+HAVE_HDF_FALSE
+HAVE_HDF_TRUE
+HAVE_HDF
 HDFEOSLIB
 HDFEOSINC
 HDFLIB
@@ -16560,9 +16563,16 @@ if test "x$ac_cv_header_tiffio_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TIFFIO_H 1
 _ACEOF
- HAVE_TIFFIO_H=1
+
+        HAVE_TIFFIO_H=1
+        HAVE_HDF="true"
+
 else
-  as_fn_error "libtiff is required to compile dwh." "$LINENO" 5
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: libtiff is required for hdf support." >&5
+$as_echo "libtiff is required for hdf support." >&6; }
+        unset HAVE_HDF
+
 fi
 
 done
@@ -16604,9 +16614,17 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_tiff_TIFFGetVersion" >&5
 $as_echo "$ac_cv_lib_tiff_TIFFGetVersion" >&6; }
 if test "x$ac_cv_lib_tiff_TIFFGetVersion" = x""yes; then :
-  HAVE_LIBTIFF=1
+
+        HAVE_LIBTIFF=1
+        HAVE_HDF="true"
+
 else
-  as_fn_error "libtiff is required to compile dwh." "$LINENO" 5
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: libtiff is required for hdf support." >&5
+$as_echo "libtiff is required for hdf support." >&6; }
+        unset HAVE_HDF
+
+
 fi
 
 
@@ -16615,12 +16633,14 @@ fi
 
 ##### geotiff #####
 
+if test "$HAVE_HDF" = "true"
+then
 
 # Check whether --with-geotiff-includes was given.
 if test "${with_geotiff_includes+set}" = set; then :
   withval=$with_geotiff_includes;
-    GEOTIFFINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
+        GEOTIFFINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
 
 
 fi
@@ -16630,33 +16650,39 @@ fi
 # Check whether --with-geotiff-libs was given.
 if test "${with_geotiff_libs+set}" = set; then :
   withval=$with_geotiff_libs;
-    GEOTIFFLIB="-L${withval} -lgeotiff"
-    LDFLAGS="$LDFLAGS -L${withval} -lgeotiff"
+        GEOTIFFLIB="-L${withval} -lgeotiff"
+        LDFLAGS="$LDFLAGS -L${withval} -lgeotiff"
 
 else
 
-    GEOTIFFLIB="-lgeotiff"
-    LDFLAGS="$LDFLAGS -lgeotiff"
+        GEOTIFFLIB="-lgeotiff"
+        LDFLAGS="$LDFLAGS -lgeotiff"
 
 
 fi
 
 
-for ac_header in geotiff.h
+    for ac_header in geotiff.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "geotiff.h" "ac_cv_header_geotiff_h" "$ac_includes_default"
 if test "x$ac_cv_header_geotiff_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GEOTIFF_H 1
 _ACEOF
- HAVE_GEOTIFFIO_H=1
+
+            HAVE_GEOTIFFIO_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "libgeotiff is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "libgeotiff is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GTIFNew in -lgeotiff" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for GTIFNew in -lgeotiff" >&5
 $as_echo_n "checking for GTIFNew in -lgeotiff... " >&6; }
 if test "${ac_cv_lib_geotiff_GTIFNew+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -16693,23 +16719,33 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_geotiff_GTIFNew" >&5
 $as_echo "$ac_cv_lib_geotiff_GTIFNew" >&6; }
 if test "x$ac_cv_lib_geotiff_GTIFNew" = x""yes; then :
-  HAVE_LIBGEOTIFF=1
+
+            HAVE_LIBGEOTIFF=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "libgeotiff is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "libgeotiff is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
 
+fi
 
-##### jpeg #####
+    ##### jpeg #####
+
+if test "$HAVE_HDF" = "true"
+then
 
 
 # Check whether --with-jpeg-includes was given.
 if test "${with_jpeg_includes+set}" = set; then :
   withval=$with_jpeg_includes;
-    JPEGINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
+        JPEGINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
 
 
 fi
@@ -16719,33 +16755,39 @@ fi
 # Check whether --with-jpeg-libs was given.
 if test "${with_jpeg_libs+set}" = set; then :
   withval=$with_jpeg_libs;
-    JPEGLIB="-L${withval} -ljpeg"
-    LDFLAGS="$LDFLAGS -L${withval} -ljpeg"
+        JPEGLIB="-L${withval} -ljpeg"
+        LDFLAGS="$LDFLAGS -L${withval} -ljpeg"
 
 else
 
-    JPEGLIB="-ljpeg"
-    LDFLAGS="$LDFLAGS -ljpeg"
+        JPEGLIB="-ljpeg"
+        LDFLAGS="$LDFLAGS -ljpeg"
 
 
 fi
 
 
-for ac_header in jpeglib.h
+    for ac_header in jpeglib.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "jpeglib.h" "ac_cv_header_jpeglib_h" "$ac_includes_default"
 if test "x$ac_cv_header_jpeglib_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_JPEGLIB_H 1
 _ACEOF
- HAVE_JPEG_H=1
+
+            HAVE_JPEG_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "jpeg is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "jpeg is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jpeg_set_defaults in -ljpeg" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for jpeg_set_defaults in -ljpeg" >&5
 $as_echo_n "checking for jpeg_set_defaults in -ljpeg... " >&6; }
 if test "${ac_cv_lib_jpeg_jpeg_set_defaults+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -16782,24 +16824,33 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_jpeg_jpeg_set_defaults" >&5
 $as_echo "$ac_cv_lib_jpeg_jpeg_set_defaults" >&6; }
 if test "x$ac_cv_lib_jpeg_jpeg_set_defaults" = x""yes; then :
-  HAVE_JPEG=1
+
+            HAVE_JPEG=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "jpeg is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "jpeg is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
 
+fi
 
+    ##### szip #####
 
-##### szip #####
+if test "$HAVE_HDF" = "true"
+then
 
 
 # Check whether --with-szip-includes was given.
 if test "${with_szip_includes+set}" = set; then :
   withval=$with_szip_includes;
-    JPEGINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
+        JPEGINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
 
 
 fi
@@ -16809,33 +16860,39 @@ fi
 # Check whether --with-szip-libs was given.
 if test "${with_szip_libs+set}" = set; then :
   withval=$with_szip_libs;
-    SZLIB="-L${withval} -lsz"
-    LDFLAGS="$LDFLAGS -L${withval} -lsz"
+        SZLIB="-L${withval} -lsz"
+        LDFLAGS="$LDFLAGS -L${withval} -lsz"
 
 else
 
-    SZLIB="-lsz"
-    LDFLAGS="$LDFLAGS -lsz"
+        SZLIB="-lsz"
+        LDFLAGS="$LDFLAGS -lsz"
 
 
 fi
 
 
-for ac_header in szlib.h
+    for ac_header in szlib.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "szlib.h" "ac_cv_header_szlib_h" "$ac_includes_default"
 if test "x$ac_cv_header_szlib_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SZLIB_H 1
 _ACEOF
- HAVE_SZLIB_H=1
+
+            HAVE_SZLIB_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "szip is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "szip is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lsz" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lsz" >&5
 $as_echo_n "checking for SZ_Decompress in -lsz... " >&6; }
 if test "${ac_cv_lib_sz_SZ_Decompress+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -16872,24 +16929,33 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sz_SZ_Decompress" >&5
 $as_echo "$ac_cv_lib_sz_SZ_Decompress" >&6; }
 if test "x$ac_cv_lib_sz_SZ_Decompress" = x""yes; then :
-  HAVE_SZ=1
+
+            HAVE_SZ=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "szip is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "szip is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
 
+fi
 
+    ##### zlib #####
 
-##### zlib #####
+if test "$HAVE_HDF" = "true"
+then
 
 
 # Check whether --with-zlib-includes was given.
 if test "${with_zlib_includes+set}" = set; then :
   withval=$with_zlib_includes;
-    ZINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
+        ZINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
 
 
 fi
@@ -16899,33 +16965,39 @@ fi
 # Check whether --with-zlib-libs was given.
 if test "${with_zlib_libs+set}" = set; then :
   withval=$with_zlib_libs;
-    ZLIB="-L${withval} -lz"
-    LDFLAGS="$LDFLAGS -L${withval} -lz"
+        ZLIB="-L${withval} -lz"
+        LDFLAGS="$LDFLAGS -L${withval} -lz"
 
 else
 
-    ZLIB="-lz"
-    LDFLAGS="$LDFLAGS -lz"
+        ZLIB="-lz"
+        LDFLAGS="$LDFLAGS -lz"
 
 
 fi
 
 
-for ac_header in szlib.h
+    for ac_header in szlib.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "szlib.h" "ac_cv_header_szlib_h" "$ac_includes_default"
 if test "x$ac_cv_header_szlib_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SZLIB_H 1
 _ACEOF
- HAVE_SZLIB_H=1
+
+            HAVE_SZLIB_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "zlib is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "zlib is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lz" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SZ_Decompress in -lz" >&5
 $as_echo_n "checking for SZ_Decompress in -lz... " >&6; }
 if test "${ac_cv_lib_z_SZ_Decompress+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -16962,24 +17034,32 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_SZ_Decompress" >&5
 $as_echo "$ac_cv_lib_z_SZ_Decompress" >&6; }
 if test "x$ac_cv_lib_z_SZ_Decompress" = x""yes; then :
-  HAVE_SZ=1
+
+            HAVE_SZ=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "zlib is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "zlib is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
 
+fi
 
+    ##### hdf #####
 
-##### hdf #####
-
+if test "$HAVE_HDF" = "true"
+then
 
 # Check whether --with-hdf4-includes was given.
 if test "${with_hdf4_includes+set}" = set; then :
   withval=$with_hdf4_includes;
-    HDFINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
+        HDFINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
 
 
 fi
@@ -16989,47 +17069,59 @@ fi
 # Check whether --with-hdf4-libs was given.
 if test "${with_hdf4_libs+set}" = set; then :
   withval=$with_hdf4_libs;
-    HDFLIB="-L${withval} -lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
+        HDFLIB="-L${withval} -lmfhdf -ldf"
+        LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
 
 else
 
-    HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lmfhdf -ldf"
+        HDFLIB="-lmfhdf -ldf"
+        LDFLAGS="$LDFLAGS -lmfhdf -ldf"
 
 
 fi
 
 
-for ac_header in mfhdf.h
+    for ac_header in mfhdf.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "mfhdf.h" "ac_cv_header_mfhdf_h" "$ac_includes_default"
 if test "x$ac_cv_header_mfhdf_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MFHDF_H 1
 _ACEOF
- HAVE_MFHDF_H=1
+
+            HAVE_MFHDF_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-for ac_header in df.h
+    for ac_header in df.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "df.h" "ac_cv_header_df_h" "$ac_includes_default"
 if test "x$ac_cv_header_df_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DF_H 1
 _ACEOF
- HAVE_DF_H=1
+
+            HAVE_DF_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for DFopen in -ldf" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for DFopen in -ldf" >&5
 $as_echo_n "checking for DFopen in -ldf... " >&6; }
 if test "${ac_cv_lib_df_DFopen+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -17066,12 +17158,18 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_df_DFopen" >&5
 $as_echo "$ac_cv_lib_df_DFopen" >&6; }
 if test "x$ac_cv_lib_df_DFopen" = x""yes; then :
-  HAVE_DF=1
+
+            HAVE_DF=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDstart in -lmfhdf -ldf" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDstart in -lmfhdf -ldf" >&5
 $as_echo_n "checking for SDstart in -lmfhdf -ldf... " >&6; }
 if test "${ac_cv_lib_mfhdf__ldf_SDstart+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -17108,23 +17206,32 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_mfhdf__ldf_SDstart" >&5
 $as_echo "$ac_cv_lib_mfhdf__ldf_SDstart" >&6; }
 if test "x$ac_cv_lib_mfhdf__ldf_SDstart" = x""yes; then :
-  HAVE_MFHDF=1
+
+            HAVE_MFHDF=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdf4 is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
 
+fi
 
-##### hdfeos #####
+    ##### hdfeos #####
 
+if test "$HAVE_HDF" = "true"
+then
 
 # Check whether --with-hdfeos-includes was given.
 if test "${with_hdfeos_includes+set}" = set; then :
   withval=$with_hdfeos_includes;
-    HDFEOSINC="-I${withval}"
-    CFLAGS="$CFLAGS --include hdf.h -I${withval}"
+        HDFEOSINC="-I${withval}"
+        CFLAGS="$CFLAGS --include hdf.h -I${withval}"
 
 
 fi
@@ -17134,33 +17241,39 @@ fi
 # Check whether --with-hdfeos-libs was given.
 if test "${with_hdfeos_libs+set}" = set; then :
   withval=$with_hdfeos_libs;
-    HDFEOSLIB="-L${withval} -lhdfeos"
-    LDFLAGS="$LDFLAGS -L${withval} -lhdfeos"
+        HDFEOSLIB="-L${withval} -lhdfeos"
+        LDFLAGS="$LDFLAGS -L${withval} -lhdfeos"
 
 else
 
-    HDFEOSLIB="-lhdfeos"
-    LDFLAGS="$LDFLAGS -lhdfeos"
+        HDFEOSLIB="-lhdfeos"
+        LDFLAGS="$LDFLAGS -lhdfeos"
 
 
 fi
 
 
-for ac_header in HDFEOSVersion.h
+    for ac_header in HDFEOSVersion.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "HDFEOSVersion.h" "ac_cv_header_HDFEOSVersion_h" "$ac_includes_default"
 if test "x$ac_cv_header_HDFEOSVersion_h" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_HDFEOSVERSION_H 1
 _ACEOF
- HAVE_HdfEosDef_H=1
+
+            HAVE_HdfEosDef_H=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdfeos is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdfeos is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SWopen in -lhdfeos -lmfhdf -ldf" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SWopen in -lhdfeos -lmfhdf -ldf" >&5
 $as_echo_n "checking for SWopen in -lhdfeos -lmfhdf -ldf... " >&6; }
 if test "${ac_cv_lib_hdfeos__lmfhdf__ldf_SWopen+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -17197,13 +17310,31 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hdfeos__lmfhdf__ldf_SWopen" >&5
 $as_echo "$ac_cv_lib_hdfeos__lmfhdf__ldf_SWopen" >&6; }
 if test "x$ac_cv_lib_hdfeos__lmfhdf__ldf_SWopen" = x""yes; then :
-  HAVE_LIBGEOTIFF=1
+
+            HAVE_LIBHdfEos=1
+            HAVE_HDF="true"
+
 else
-  as_fn_error "hdfeos is required to compile dwh." "$LINENO" 5
+
+            as_fn_error "hdfeos is required for hdf support." "$LINENO" 5
+            unset HAVE_HDF
+
 fi
 
 
 
+
+
+fi
+
+
+ if test "$HAVE_HDF" = "true"; then
+  HAVE_HDF_TRUE=
+  HAVE_HDF_FALSE='#'
+else
+  HAVE_HDF_TRUE='#'
+  HAVE_HDF_FALSE=
+fi
 
 
 CFLAGS="$cflagsold"
@@ -17346,6 +17477,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_OTB_TRUE}" && test -z "${HAVE_OTB_FALSE}"; then
   as_fn_error "conditional \"HAVE_OTB\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_HDF_TRUE}" && test -z "${HAVE_HDF_FALSE}"; then
+  as_fn_error "conditional \"HAVE_HDF\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

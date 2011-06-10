@@ -34,7 +34,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = swath2grid$(EXEEXT) dumpmeta$(EXEEXT)
+@HAVE_HDF_TRUE@bin_PROGRAMS = swath2grid$(EXEEXT) dumpmeta$(EXEEXT)
 subdir = MRTSwath
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,20 +47,37 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_dumpmeta_OBJECTS = dumpmeta-param.$(OBJEXT) \
-	dumpmeta-geoloc.$(OBJEXT) dumpmeta-input.$(OBJEXT) \
-	dumpmeta-scan.$(OBJEXT) dumpmeta-output.$(OBJEXT) \
-	dumpmeta-space.$(OBJEXT) dumpmeta-kernel.$(OBJEXT) \
-	dumpmeta-patches.$(OBJEXT) dumpmeta-myhdf.$(OBJEXT) \
-	dumpmeta-mystring.$(OBJEXT) dumpmeta-parser.$(OBJEXT) \
-	dumpmeta-myerror.$(OBJEXT) dumpmeta-InitGeoTiff.$(OBJEXT) \
-	dumpmeta-deg2dms.$(OBJEXT) dumpmeta-degdms.$(OBJEXT) \
-	dumpmeta-convert_corners.$(OBJEXT) dumpmeta-metadata.$(OBJEXT) \
-	dumpmeta-geo_trans.$(OBJEXT) dumpmeta-write_hdr.$(OBJEXT) \
-	dumpmeta-write_rb.$(OBJEXT) dumpmeta-addmeta.$(OBJEXT) \
-	dumpmeta-logh.$(OBJEXT) dumpmeta-geowrpr.$(OBJEXT) \
-	dumpmeta-filegeo.$(OBJEXT) dumpmeta-myendian.$(OBJEXT) \
-	dumpmeta-dumpmeta.$(OBJEXT)
+am__dumpmeta_SOURCES_DIST = param.c geoloc.c input.c scan.c output.c \
+	space.c kernel.c patches.c myhdf.c mystring.c parser.c \
+	myerror.c InitGeoTiff.c deg2dms.c degdms.c convert_corners.c \
+	metadata.c geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c \
+	geowrpr.c filegeo.c myendian.c dumpmeta.c
+@HAVE_HDF_TRUE@am_dumpmeta_OBJECTS = dumpmeta-param.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-geoloc.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-input.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-scan.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-output.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-space.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-kernel.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-patches.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-myhdf.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-mystring.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-parser.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-myerror.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-InitGeoTiff.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-deg2dms.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-degdms.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-convert_corners.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-metadata.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-geo_trans.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-write_hdr.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-write_rb.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-addmeta.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-logh.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-geowrpr.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-filegeo.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-myendian.$(OBJEXT) \
+@HAVE_HDF_TRUE@	dumpmeta-dumpmeta.$(OBJEXT)
 dumpmeta_OBJECTS = $(am_dumpmeta_OBJECTS)
 dumpmeta_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_$(V))
@@ -69,20 +86,37 @@ am__v_lt_0 = --silent
 dumpmeta_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dumpmeta_CFLAGS) \
 	$(CFLAGS) $(dumpmeta_LDFLAGS) $(LDFLAGS) -o $@
-am_swath2grid_OBJECTS = swath2grid-param.$(OBJEXT) \
-	swath2grid-geoloc.$(OBJEXT) swath2grid-input.$(OBJEXT) \
-	swath2grid-scan.$(OBJEXT) swath2grid-output.$(OBJEXT) \
-	swath2grid-space.$(OBJEXT) swath2grid-kernel.$(OBJEXT) \
-	swath2grid-patches.$(OBJEXT) swath2grid-myhdf.$(OBJEXT) \
-	swath2grid-mystring.$(OBJEXT) swath2grid-parser.$(OBJEXT) \
-	swath2grid-myerror.$(OBJEXT) swath2grid-InitGeoTiff.$(OBJEXT) \
-	swath2grid-deg2dms.$(OBJEXT) swath2grid-degdms.$(OBJEXT) \
-	swath2grid-convert_corners.$(OBJEXT) \
-	swath2grid-metadata.$(OBJEXT) swath2grid-geo_trans.$(OBJEXT) \
-	swath2grid-write_hdr.$(OBJEXT) swath2grid-write_rb.$(OBJEXT) \
-	swath2grid-addmeta.$(OBJEXT) swath2grid-logh.$(OBJEXT) \
-	swath2grid-geowrpr.$(OBJEXT) swath2grid-filegeo.$(OBJEXT) \
-	swath2grid-myendian.$(OBJEXT) swath2grid-resamp.$(OBJEXT)
+am__swath2grid_SOURCES_DIST = param.c geoloc.c input.c scan.c output.c \
+	space.c kernel.c patches.c myhdf.c mystring.c parser.c \
+	myerror.c InitGeoTiff.c deg2dms.c degdms.c convert_corners.c \
+	metadata.c geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c \
+	geowrpr.c filegeo.c myendian.c resamp.c
+@HAVE_HDF_TRUE@am_swath2grid_OBJECTS = swath2grid-param.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-geoloc.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-input.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-scan.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-output.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-space.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-kernel.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-patches.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-myhdf.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-mystring.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-parser.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-myerror.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-InitGeoTiff.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-deg2dms.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-degdms.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-convert_corners.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-metadata.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-geo_trans.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-write_hdr.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-write_rb.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-addmeta.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-logh.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-geowrpr.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-filegeo.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-myendian.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-resamp.$(OBJEXT)
 swath2grid_OBJECTS = $(am_swath2grid_OBJECTS)
 swath2grid_LDADD = $(LDADD)
 swath2grid_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -115,7 +149,8 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(dumpmeta_SOURCES) $(swath2grid_SOURCES)
-DIST_SOURCES = $(dumpmeta_SOURCES) $(swath2grid_SOURCES)
+DIST_SOURCES = $(am__dumpmeta_SOURCES_DIST) \
+	$(am__swath2grid_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -130,7 +165,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = data
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -194,6 +229,7 @@ GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
 HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_HDF = @HAVE_HDF@
 HAVE_MC = @HAVE_MC@
 HAVE_MRSIDDECODE = @HAVE_MRSIDDECODE@
 HAVE_OTB = @HAVE_OTB@
@@ -303,46 +339,46 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = \
-	resamp.h param.h geoloc.h input.h scan.h output.h space.h kernel.h \
-	patches.h myhdf.h mystring.h myerror.h bool.h range.h parser.h \
-	myproj.h myproj_const.h usage.h const.h deg2dms.h GeoS2G.h addmeta.h \
-	geowrpr.h myendian.h
+@HAVE_HDF_TRUE@EXTRA_DIST = \
+@HAVE_HDF_TRUE@	resamp.h param.h geoloc.h input.h scan.h output.h space.h kernel.h \
+@HAVE_HDF_TRUE@	patches.h myhdf.h mystring.h myerror.h bool.h range.h parser.h \
+@HAVE_HDF_TRUE@	myproj.h myproj_const.h usage.h const.h deg2dms.h GeoS2G.h addmeta.h \
+@HAVE_HDF_TRUE@	geowrpr.h myendian.h
 
-swath2grid_SOURCES = \
-	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
-	patches.c myhdf.c mystring.c parser.c myerror.c \
-	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
-	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
-	filegeo.c myendian.c resamp.c
+@HAVE_HDF_TRUE@swath2grid_SOURCES = \
+@HAVE_HDF_TRUE@	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
+@HAVE_HDF_TRUE@	patches.c myhdf.c mystring.c parser.c myerror.c \
+@HAVE_HDF_TRUE@	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
+@HAVE_HDF_TRUE@	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
+@HAVE_HDF_TRUE@	filegeo.c myendian.c resamp.c
 
-swath2grid_CFLAGS = \
-    -DH4_HAVE_NETCDF -DHAVE_INT8 \
-    -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
-    -I ../gctpc \
-    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
+@HAVE_HDF_TRUE@swath2grid_CFLAGS = \
+@HAVE_HDF_TRUE@    -DH4_HAVE_NETCDF -DHAVE_INT8 \
+@HAVE_HDF_TRUE@    -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
+@HAVE_HDF_TRUE@    -I ../gctpc \
+@HAVE_HDF_TRUE@    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
 
-swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
-    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
+@HAVE_HDF_TRUE@swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
+@HAVE_HDF_TRUE@    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
-dumpmeta_SOURCES = \
-	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
-	patches.c myhdf.c mystring.c parser.c myerror.c \
-	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
-	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
-	filegeo.c myendian.c dumpmeta.c
+@HAVE_HDF_TRUE@dumpmeta_SOURCES = \
+@HAVE_HDF_TRUE@	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
+@HAVE_HDF_TRUE@	patches.c myhdf.c mystring.c parser.c myerror.c \
+@HAVE_HDF_TRUE@	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
+@HAVE_HDF_TRUE@	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
+@HAVE_HDF_TRUE@	filegeo.c myendian.c dumpmeta.c
 
-dumpmeta_CFLAGS = \
-    -DH4_HAVE_NETCDF -DHAVE_INT8 \
-    -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
-    -I ../gctpc \
-    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
+@HAVE_HDF_TRUE@dumpmeta_CFLAGS = \
+@HAVE_HDF_TRUE@    -DH4_HAVE_NETCDF -DHAVE_INT8 \
+@HAVE_HDF_TRUE@    -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
+@HAVE_HDF_TRUE@    -I ../gctpc \
+@HAVE_HDF_TRUE@    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
 
-dumpmeta_LDFLAGS = -L../gctpc/ -lgctp \
-    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
+@HAVE_HDF_TRUE@dumpmeta_LDFLAGS = -L../gctpc/ -lgctp \
+@HAVE_HDF_TRUE@    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
-SUBDIRS = \
-	data
+@HAVE_HDF_TRUE@SUBDIRS = \
+@HAVE_HDF_TRUE@	data
 
 all: all-recursive
 

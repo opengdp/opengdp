@@ -41,7 +41,8 @@ EXTRA_DIST = \
 
 do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
                -e 's,[@]HAVE_OTB[@],$(HAVE_OTB),g' \
-               -e 's,[@]HAVE_MRSIDDECODE[@],$(HAVE_MRSIDDECODE),g'
+               -e 's,[@]HAVE_MRSIDDECODE[@],$(HAVE_MRSIDDECODE),g' \
+               -e 's,[@]HAVE_HDF[@],$(HAVE_HDF),g'
                
 generic.bash: generic.bash.in Makefile
 	$(do_subst) < $(srcdir)/generic.bash.in > generic.bash

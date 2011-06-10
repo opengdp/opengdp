@@ -1,4 +1,6 @@
 
+if HAVE_HDF
+
 EXTRA_DIST = \
         README \
         cproj.h \
@@ -22,3 +24,5 @@ libgctp_a_SOURCES = \
 	br_gctp.c
 
 libgctp_a_LDFLAGS = -lm
+
+endif

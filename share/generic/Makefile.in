@@ -113,6 +113,7 @@ GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
 HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_HDF = @HAVE_HDF@
 HAVE_MC = @HAVE_MC@
 HAVE_MRSIDDECODE = @HAVE_MRSIDDECODE@
 HAVE_OTB = @HAVE_OTB@
@@ -262,7 +263,8 @@ EXTRA_DIST = \
 
 do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
                -e 's,[@]HAVE_OTB[@],$(HAVE_OTB),g' \
-               -e 's,[@]HAVE_MRSIDDECODE[@],$(HAVE_MRSIDDECODE),g'
+               -e 's,[@]HAVE_MRSIDDECODE[@],$(HAVE_MRSIDDECODE),g' \
+               -e 's,[@]HAVE_HDF[@],$(HAVE_HDF),g'
 
 all: all-am
 

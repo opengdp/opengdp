@@ -54,30 +54,53 @@ am__v_at_ = $(am__v_at_$(AM_DEFAULT_VERBOSITY))
 am__v_at_0 = @
 libgctp_a_AR = $(AR) $(ARFLAGS)
 libgctp_a_LIBADD =
-am_libgctp_a_OBJECTS = gctp.$(OBJEXT) alberfor.$(OBJEXT) \
-	alberinv.$(OBJEXT) alconfor.$(OBJEXT) alconinv.$(OBJEXT) \
-	azimfor.$(OBJEXT) aziminv.$(OBJEXT) eqconfor.$(OBJEXT) \
-	eqconinv.$(OBJEXT) equifor.$(OBJEXT) equiinv.$(OBJEXT) \
-	gnomfor.$(OBJEXT) gnominv.$(OBJEXT) goodfor.$(OBJEXT) \
-	goodinv.$(OBJEXT) gvnspfor.$(OBJEXT) gvnspinv.$(OBJEXT) \
-	hamfor.$(OBJEXT) haminv.$(OBJEXT) imolwfor.$(OBJEXT) \
-	imolwinv.$(OBJEXT) lamazfor.$(OBJEXT) lamazinv.$(OBJEXT) \
-	merfor.$(OBJEXT) merinv.$(OBJEXT) millfor.$(OBJEXT) \
-	millinv.$(OBJEXT) molwfor.$(OBJEXT) molwinv.$(OBJEXT) \
-	obleqfor.$(OBJEXT) obleqinv.$(OBJEXT) omerfor.$(OBJEXT) \
-	omerinv.$(OBJEXT) orthfor.$(OBJEXT) orthinv.$(OBJEXT) \
-	polyfor.$(OBJEXT) polyinv.$(OBJEXT) psfor.$(OBJEXT) \
-	psinv.$(OBJEXT) robfor.$(OBJEXT) robinv.$(OBJEXT) \
-	sinfor.$(OBJEXT) sininv.$(OBJEXT) somfor.$(OBJEXT) \
-	sominv.$(OBJEXT) sterfor.$(OBJEXT) sterinv.$(OBJEXT) \
-	stplnfor.$(OBJEXT) stplninv.$(OBJEXT) tmfor.$(OBJEXT) \
-	tminv.$(OBJEXT) utmfor.$(OBJEXT) utminv.$(OBJEXT) \
-	vandgfor.$(OBJEXT) vandginv.$(OBJEXT) wivfor.$(OBJEXT) \
-	wivinv.$(OBJEXT) wviifor.$(OBJEXT) wviiinv.$(OBJEXT) \
-	for_init.$(OBJEXT) inv_init.$(OBJEXT) cproj.$(OBJEXT) \
-	report.$(OBJEXT) lamccfor.$(OBJEXT) lamccinv.$(OBJEXT) \
-	paksz.$(OBJEXT) untfz.$(OBJEXT) sphdz.$(OBJEXT) \
-	br_gctp.$(OBJEXT)
+am__libgctp_a_SOURCES_DIST = gctp.c alberfor.c alberinv.c alconfor.c \
+	alconinv.c azimfor.c aziminv.c eqconfor.c eqconinv.c equifor.c \
+	equiinv.c gnomfor.c gnominv.c goodfor.c goodinv.c gvnspfor.c \
+	gvnspinv.c hamfor.c haminv.c imolwfor.c imolwinv.c lamazfor.c \
+	lamazinv.c merfor.c merinv.c millfor.c millinv.c molwfor.c \
+	molwinv.c obleqfor.c obleqinv.c omerfor.c omerinv.c orthfor.c \
+	orthinv.c polyfor.c polyinv.c psfor.c psinv.c robfor.c \
+	robinv.c sinfor.c sininv.c somfor.c sominv.c sterfor.c \
+	sterinv.c stplnfor.c stplninv.c tmfor.c tminv.c utmfor.c \
+	utminv.c vandgfor.c vandginv.c wivfor.c wivinv.c wviifor.c \
+	wviiinv.c for_init.c inv_init.c cproj.c report.c lamccfor.c \
+	lamccinv.c paksz.c untfz.c sphdz.c br_gctp.c
+@HAVE_HDF_TRUE@am_libgctp_a_OBJECTS = gctp.$(OBJEXT) \
+@HAVE_HDF_TRUE@	alberfor.$(OBJEXT) alberinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	alconfor.$(OBJEXT) alconinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	azimfor.$(OBJEXT) aziminv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	eqconfor.$(OBJEXT) eqconinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	equifor.$(OBJEXT) equiinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	gnomfor.$(OBJEXT) gnominv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	goodfor.$(OBJEXT) goodinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	gvnspfor.$(OBJEXT) gvnspinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	hamfor.$(OBJEXT) haminv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	imolwfor.$(OBJEXT) imolwinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	lamazfor.$(OBJEXT) lamazinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	merfor.$(OBJEXT) merinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	millfor.$(OBJEXT) millinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	molwfor.$(OBJEXT) molwinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	obleqfor.$(OBJEXT) obleqinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	omerfor.$(OBJEXT) omerinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	orthfor.$(OBJEXT) orthinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	polyfor.$(OBJEXT) polyinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	psfor.$(OBJEXT) psinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	robfor.$(OBJEXT) robinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	sinfor.$(OBJEXT) sininv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	somfor.$(OBJEXT) sominv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	sterfor.$(OBJEXT) sterinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	stplnfor.$(OBJEXT) stplninv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	tmfor.$(OBJEXT) tminv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	utmfor.$(OBJEXT) utminv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	vandgfor.$(OBJEXT) vandginv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	wivfor.$(OBJEXT) wivinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	wviifor.$(OBJEXT) wviiinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	for_init.$(OBJEXT) inv_init.$(OBJEXT) \
+@HAVE_HDF_TRUE@	cproj.$(OBJEXT) report.$(OBJEXT) \
+@HAVE_HDF_TRUE@	lamccfor.$(OBJEXT) lamccinv.$(OBJEXT) \
+@HAVE_HDF_TRUE@	paksz.$(OBJEXT) untfz.$(OBJEXT) sphdz.$(OBJEXT) \
+@HAVE_HDF_TRUE@	br_gctp.$(OBJEXT)
 libgctp_a_OBJECTS = $(am_libgctp_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -106,7 +129,7 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(libgctp_a_SOURCES)
-DIST_SOURCES = $(libgctp_a_SOURCES)
+DIST_SOURCES = $(am__libgctp_a_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -147,6 +170,7 @@ GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
 HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_HDF = @HAVE_HDF@
 HAVE_MC = @HAVE_MC@
 HAVE_MRSIDDECODE = @HAVE_MRSIDDECODE@
 HAVE_OTB = @HAVE_OTB@
@@ -256,29 +280,29 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = \
-        README \
-        cproj.h \
-        proj.h
+@HAVE_HDF_TRUE@EXTRA_DIST = \
+@HAVE_HDF_TRUE@        README \
+@HAVE_HDF_TRUE@        cproj.h \
+@HAVE_HDF_TRUE@        proj.h
 
-noinst_LIBRARIES = \
-	libgctp.a
+@HAVE_HDF_TRUE@noinst_LIBRARIES = \
+@HAVE_HDF_TRUE@	libgctp.a
 
-libgctp_a_SOURCES = \
-	gctp.c alberfor.c alberinv.c alconfor.c alconinv.c azimfor.c \
-	aziminv.c eqconfor.c eqconinv.c equifor.c equiinv.c gnomfor.c \
-	gnominv.c goodfor.c goodinv.c gvnspfor.c gvnspinv.c hamfor.c \
-	haminv.c imolwfor.c imolwinv.c lamazfor.c lamazinv.c merfor.c \
-	merinv.c millfor.c millinv.c molwfor.c molwinv.c obleqfor.c  \
-	obleqinv.c omerfor.c omerinv.c orthfor.c orthinv.c polyfor.c \
-	polyinv.c psfor.c psinv.c robfor.c robinv.c sinfor.c sininv.c \
-	somfor.c sominv.c sterfor.c sterinv.c stplnfor.c stplninv.c \
-	tmfor.c tminv.c utmfor.c utminv.c vandgfor.c vandginv.c \
-	wivfor.c wivinv.c wviifor.c wviiinv.c for_init.c inv_init.c \
-	cproj.c report.c lamccfor.c lamccinv.c paksz.c untfz.c sphdz.c \
-	br_gctp.c
+@HAVE_HDF_TRUE@libgctp_a_SOURCES = \
+@HAVE_HDF_TRUE@	gctp.c alberfor.c alberinv.c alconfor.c alconinv.c azimfor.c \
+@HAVE_HDF_TRUE@	aziminv.c eqconfor.c eqconinv.c equifor.c equiinv.c gnomfor.c \
+@HAVE_HDF_TRUE@	gnominv.c goodfor.c goodinv.c gvnspfor.c gvnspinv.c hamfor.c \
+@HAVE_HDF_TRUE@	haminv.c imolwfor.c imolwinv.c lamazfor.c lamazinv.c merfor.c \
+@HAVE_HDF_TRUE@	merinv.c millfor.c millinv.c molwfor.c molwinv.c obleqfor.c  \
+@HAVE_HDF_TRUE@	obleqinv.c omerfor.c omerinv.c orthfor.c orthinv.c polyfor.c \
+@HAVE_HDF_TRUE@	polyinv.c psfor.c psinv.c robfor.c robinv.c sinfor.c sininv.c \
+@HAVE_HDF_TRUE@	somfor.c sominv.c sterfor.c sterinv.c stplnfor.c stplninv.c \
+@HAVE_HDF_TRUE@	tmfor.c tminv.c utmfor.c utminv.c vandgfor.c vandginv.c \
+@HAVE_HDF_TRUE@	wivfor.c wivinv.c wviifor.c wviiinv.c for_init.c inv_init.c \
+@HAVE_HDF_TRUE@	cproj.c report.c lamccfor.c lamccinv.c paksz.c untfz.c sphdz.c \
+@HAVE_HDF_TRUE@	br_gctp.c
 
-libgctp_a_LDFLAGS = -lm
+@HAVE_HDF_TRUE@libgctp_a_LDFLAGS = -lm
 all: all-am
 
 .SUFFIXES:

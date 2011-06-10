@@ -1,3 +1,5 @@
+if HAVE_HDF
+
 bin_PROGRAMS = \
 	crefl
 
@@ -12,3 +14,5 @@ crefl_LDFLAGS = @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@
 
 SUBDIRS = \
 	data
+
+endif

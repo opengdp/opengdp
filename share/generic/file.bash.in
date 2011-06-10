@@ -19,6 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+have_hdf="@HAVE_HDF@"
+
 ###############################################################################
 # function to process a zip in a multiband case
 ###############################################################################
@@ -1034,7 +1036,13 @@ function dofile {
                 ;;
 
             *hdf)
-                dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
+                if [ -n "$have_hdf" ]
+                then
+                    dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
+                else
+                    printerror "dwh is built without hdf support"
+                fi
+                    
                 ;;
             
             *)

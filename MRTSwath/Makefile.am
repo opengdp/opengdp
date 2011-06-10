@@ -1,3 +1,5 @@
+if HAVE_HDF
+
 EXTRA_DIST = \
 	resamp.h param.h geoloc.h input.h scan.h output.h space.h kernel.h \
 	patches.h myhdf.h mystring.h myerror.h bool.h range.h parser.h \
@@ -43,4 +45,5 @@ dumpmeta_LDFLAGS = -L../gctpc/ -lgctp \
 SUBDIRS = \
 	data
 
+endif
 
