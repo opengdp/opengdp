@@ -16675,7 +16675,8 @@ _ACEOF
 
 else
 
-            as_fn_error "libgeotiff is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: libgeotiff is required for hdf support." >&5
+$as_echo "libgeotiff is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16725,7 +16726,8 @@ if test "x$ac_cv_lib_geotiff_GTIFNew" = x""yes; then :
 
 else
 
-            as_fn_error "libgeotiff is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: libgeotiff is required for hdf support." >&5
+$as_echo "libgeotiff is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16780,7 +16782,8 @@ _ACEOF
 
 else
 
-            as_fn_error "jpeg is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: jpeg is required for hdf support." >&5
+$as_echo "jpeg is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16830,7 +16833,8 @@ if test "x$ac_cv_lib_jpeg_jpeg_set_defaults" = x""yes; then :
 
 else
 
-            as_fn_error "jpeg is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: jpeg is required for hdf support." >&5
+$as_echo "jpeg is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16885,7 +16889,8 @@ _ACEOF
 
 else
 
-            as_fn_error "szip is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: szip is required for hdf support." >&5
+$as_echo "szip is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16935,7 +16940,8 @@ if test "x$ac_cv_lib_sz_SZ_Decompress" = x""yes; then :
 
 else
 
-            as_fn_error "szip is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: szip is required for hdf support." >&5
+$as_echo "szip is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -16990,7 +16996,8 @@ _ACEOF
 
 else
 
-            as_fn_error "zlib is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: zlib is required for hdf support." >&5
+$as_echo "zlib is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17040,7 +17047,8 @@ if test "x$ac_cv_lib_z_SZ_Decompress" = x""yes; then :
 
 else
 
-            as_fn_error "zlib is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: zlib is required for hdf support." >&5
+$as_echo "zlib is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17094,7 +17102,8 @@ _ACEOF
 
 else
 
-            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdf4 is required for hdf support." >&5
+$as_echo "hdf4 is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17114,7 +17123,8 @@ _ACEOF
 
 else
 
-            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdf4 is required for hdf support." >&5
+$as_echo "hdf4 is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17164,7 +17174,8 @@ if test "x$ac_cv_lib_df_DFopen" = x""yes; then :
 
 else
 
-            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdf4 is required for hdf support." >&5
+$as_echo "hdf4 is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17212,7 +17223,8 @@ if test "x$ac_cv_lib_mfhdf__ldf_SDstart" = x""yes; then :
 
 else
 
-            as_fn_error "hdf4 is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdf4 is required for hdf support." >&5
+$as_echo "hdf4 is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17266,7 +17278,8 @@ _ACEOF
 
 else
 
-            as_fn_error "hdfeos is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdfeos is required for hdf support." >&5
+$as_echo "hdfeos is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi
@@ -17316,7 +17329,8 @@ if test "x$ac_cv_lib_hdfeos__lmfhdf__ldf_SWopen" = x""yes; then :
 
 else
 
-            as_fn_error "hdfeos is required for hdf support." "$LINENO" 5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: hdfeos is required for hdf support." >&5
+$as_echo "hdfeos is required for hdf support." >&6; }
             unset HAVE_HDF
 
 fi

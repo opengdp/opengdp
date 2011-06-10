@@ -278,7 +278,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(libgeotiff is required for hdf support.)
+            AC_MSG_RESULT(libgeotiff is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([geotiff],[GTIFNew],
@@ -287,7 +287,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(libgeotiff is required for hdf support.)
+            AC_MSG_RESULT(libgeotiff is required for hdf support.)
             unset HAVE_HDF
         ])
 
@@ -326,7 +326,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(jpeg is required for hdf support.)
+            AC_MSG_RESULT(jpeg is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([jpeg],[jpeg_set_defaults],
@@ -335,7 +335,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(jpeg is required for hdf support.)
+            AC_MSG_RESULT(jpeg is required for hdf support.)
             unset HAVE_HDF
         ])
 
@@ -374,7 +374,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(szip is required for hdf support.)
+            AC_MSG_RESULT(szip is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([sz],[SZ_Decompress],
@@ -383,7 +383,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(szip is required for hdf support.)
+            AC_MSG_RESULT(szip is required for hdf support.)
             unset HAVE_HDF
         ])
 
@@ -422,7 +422,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(zlib is required for hdf support.)
+            AC_MSG_RESULT(zlib is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([z],[SZ_Decompress],
@@ -431,7 +431,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(zlib is required for hdf support.)
+            AC_MSG_RESULT(zlib is required for hdf support.)
             unset HAVE_HDF
         ])
 
@@ -469,7 +469,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdf4 is required for hdf support.)
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_HEADERS([df.h],
@@ -478,7 +478,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdf4 is required for hdf support.)
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([df],[DFopen],
@@ -487,7 +487,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdf4 is required for hdf support.)
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([mfhdf -ldf],[SDstart],
@@ -496,7 +496,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdf4 is required for hdf support.)
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
             unset HAVE_HDF
         ])
 
@@ -534,7 +534,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdfeos is required for hdf support.)
+            AC_MSG_RESULT(hdfeos is required for hdf support.)
             unset HAVE_HDF
         ])
     AC_CHECK_LIB([hdfeos -lmfhdf -ldf],[SWopen],
@@ -543,7 +543,7 @@ then
             HAVE_HDF="true"
         ],
         [
-            AC_MSG_ERROR(hdfeos is required for hdf support.)
+            AC_MSG_RESULT(hdfeos is required for hdf support.)
             unset HAVE_HDF
         ])
     
