@@ -1,3 +1,6 @@
+
+if HAVE_OTB
+
 INCLUDES = \
 	@GDAL_CFLAGS@
 
@@ -34,3 +37,4 @@ otbCloudMask_LDFLAGS = @OTBLIB@
 
 otbCloudMask_LDADD =
 
+endif

@@ -34,7 +34,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = otbPanSharp$(EXEEXT) otbCloudMask$(EXEEXT)
+@HAVE_OTB_TRUE@bin_PROGRAMS = otbPanSharp$(EXEEXT) \
+@HAVE_OTB_TRUE@	otbCloudMask$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,7 +48,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_otbCloudMask_OBJECTS = otbCloudMask-otbCloudMask.$(OBJEXT)
+am__otbCloudMask_SOURCES_DIST = otbCloudMask.cpp
+@HAVE_OTB_TRUE@am_otbCloudMask_OBJECTS =  \
+@HAVE_OTB_TRUE@	otbCloudMask-otbCloudMask.$(OBJEXT)
 otbCloudMask_OBJECTS = $(am_otbCloudMask_OBJECTS)
 otbCloudMask_DEPENDENCIES =
 AM_V_lt = $(am__v_lt_$(V))
@@ -56,7 +59,9 @@ am__v_lt_0 = --silent
 otbCloudMask_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(otbCloudMask_LDFLAGS) $(LDFLAGS) -o $@
-am_otbPanSharp_OBJECTS = otbPanSharp-otbPanSharp.$(OBJEXT)
+am__otbPanSharp_SOURCES_DIST = otbPanSharp.cpp
+@HAVE_OTB_TRUE@am_otbPanSharp_OBJECTS =  \
+@HAVE_OTB_TRUE@	otbPanSharp-otbPanSharp.$(OBJEXT)
 otbPanSharp_OBJECTS = $(am_otbPanSharp_OBJECTS)
 otbPanSharp_DEPENDENCIES =
 otbPanSharp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -89,7 +94,8 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(otbCloudMask_SOURCES) $(otbPanSharp_SOURCES)
-DIST_SOURCES = $(otbCloudMask_SOURCES) $(otbPanSharp_SOURCES)
+DIST_SOURCES = $(am__otbCloudMask_SOURCES_DIST) \
+	$(am__otbPanSharp_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -129,6 +135,9 @@ GEOTIFFINC = @GEOTIFFINC@
 GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
+HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_MC = @HAVE_MC@
+HAVE_OTB = @HAVE_OTB@
 HDFEOSINC = @HDFEOSINC@
 HDFEOSLIB = @HDFEOSLIB@
 HDFINC = @HDFINC@
@@ -143,15 +152,17 @@ JPEGLIB = @JPEGLIB@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBS = \
-	@GDAL_LIBS@
+@HAVE_OTB_TRUE@LIBS = \
+@HAVE_OTB_TRUE@	@GDAL_LIBS@
 
+LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MC = @MC@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -235,30 +246,30 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-INCLUDES = \
-	@GDAL_CFLAGS@
+@HAVE_OTB_TRUE@INCLUDES = \
+@HAVE_OTB_TRUE@	@GDAL_CFLAGS@
 
-AM_CPPFLAGS = \
-	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
-	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\"
+@HAVE_OTB_TRUE@AM_CPPFLAGS = \
+@HAVE_OTB_TRUE@	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
+@HAVE_OTB_TRUE@	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
+@HAVE_OTB_TRUE@	-DPACKAGE_DATA_DIR=\""$(datadir)"\"
 
-AM_CFLAGS = \
-	 -Wall\
-	 -g
+@HAVE_OTB_TRUE@AM_CFLAGS = \
+@HAVE_OTB_TRUE@	 -Wall\
+@HAVE_OTB_TRUE@	 -g
 
-otbPanSharp_SOURCES = \
-	otbPanSharp.cpp
+@HAVE_OTB_TRUE@otbPanSharp_SOURCES = \
+@HAVE_OTB_TRUE@	otbPanSharp.cpp
 
-otbPanSharp_CPPFLAGS = @OTBINC@
-otbPanSharp_LDFLAGS = @OTBLIB@ 
-otbPanSharp_LDADD = 
-otbCloudMask_SOURCES = \
-	otbCloudMask.cpp
+@HAVE_OTB_TRUE@otbPanSharp_CPPFLAGS = @OTBINC@
+@HAVE_OTB_TRUE@otbPanSharp_LDFLAGS = @OTBLIB@ 
+@HAVE_OTB_TRUE@otbPanSharp_LDADD = 
+@HAVE_OTB_TRUE@otbCloudMask_SOURCES = \
+@HAVE_OTB_TRUE@	otbCloudMask.cpp
 
-otbCloudMask_CPPFLAGS = @OTBINC@
-otbCloudMask_LDFLAGS = @OTBLIB@ 
-otbCloudMask_LDADD = 
+@HAVE_OTB_TRUE@otbCloudMask_CPPFLAGS = @OTBINC@
+@HAVE_OTB_TRUE@otbCloudMask_LDFLAGS = @OTBLIB@ 
+@HAVE_OTB_TRUE@otbCloudMask_LDADD = 
 all: all-am
 
 .SUFFIXES:

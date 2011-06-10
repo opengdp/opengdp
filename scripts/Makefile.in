@@ -112,6 +112,9 @@ GEOTIFFINC = @GEOTIFFINC@
 GEOTIFFLIB = @GEOTIFFLIB@
 GREP = @GREP@
 HAVE_BASH = @HAVE_BASH@
+HAVE_DIALOG = @HAVE_DIALOG@
+HAVE_MC = @HAVE_MC@
+HAVE_OTB = @HAVE_OTB@
 HDFEOSINC = @HDFEOSINC@
 HDFEOSLIB = @HDFEOSLIB@
 HDFINC = @HDFINC@
@@ -133,6 +136,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MC = @MC@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -223,7 +227,10 @@ CLEANFILES = $(bin_SCRIPTS)
 EXTRA_DIST = \
 	dwh-mkproject.bash.in
 
-do_subst = sed -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g'
+do_subst = sed -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g' \
+               -e 's,[@]HAVE_DIALOG[@],$(HAVE_DIALOG),g' \
+               -e 's,[@]HAVE_MC[@],$(HAVE_MC),g'
+
 all: all-am
 
 .SUFFIXES:

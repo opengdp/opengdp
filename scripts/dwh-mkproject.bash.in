@@ -19,11 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-if ! which dialog
-then
-    echo "this script requires the dialog utility"
-    exit 1
-fi
+have_dialog="@HAVE_DIALOG@"
+have_mc="@HAVE_MC@"
 
 ##### source the cached config if there is one #####
 
@@ -81,14 +78,39 @@ fi
 
 
 
-#####
+##### input box function #####
+
 function inputbox {
-    echo $(dialog --clear --inputbox "$1" 12 80 "$2" 2>&1 >/dev/tty)
+    
+    if [ -n "$have_dialog" ]
+    then
+        echo $(dialog --clear --inputbox "$1" 12 80 "$2" 2>&1 >/dev/tty)
+    else
+        local myvar
+        read -e -i "$2" -p "$1:" myvar
+        echo $myvar
+    fi
 }
+
+##### yes no box function #####
 
 function yesnobox {
     
-    dialog --clear --yesno "$1" 12 80  2>&1 >/dev/tty
+    if [ -n "$have_dialog" ]
+    then
+        dialog --clear --yesno "$1" 12 80  2>&1 >/dev/tty
+        return $?
+    else
+        local myvar
+        read -e -p "$1 : " myvar
+        if [[ "$myvar" = "yes" ]]
+        then
+            return 0;
+        else
+            return 1;
+        fi
+    fi
+    
 }
 
 ##### name of project #####
@@ -403,7 +425,7 @@ htmlbase="$htmldir/$project"
 
 ##### print the stuff #####
 
-dialog --clear --msgbox "$(
+myvars=$(
 echo "------------------------------------------------------------------------"
 echo "fullproject:      $fullproject"
 echo "project:          $project"
@@ -426,7 +448,15 @@ echo "urlhtmldir:       $urlhtmldir"
 echo "mapcenter:        $mapcenter"
 echo "mapzoom:          $mapzoom"
 echo "------------------------------------------------------------------------"
-)" 30 100
+)
+
+if [ -n "$have_dialog" ]
+then
+    dialog --clear --msgbox "$myvars" 30 100
+else
+    echo "$myvars"
+fi
+
 
 					 
 ##### fix the , in mapcenter #####
@@ -559,8 +589,12 @@ c_mapcenter="$mapcenter"
 c_mapzoom="$mapzoom"
 EOF
 
-if which mc && \
-    yesnobox "Do you wish to use mc to copy any of the example scripts to your project? : "
+if [ -n "$have_mc" ]
 then
-    mc -u "@PKGDATADIR@/examples" "$scriptdir"
+    if yesnobox "Do you wish to use mc to copy any of the example scripts to your project? : "
+    then
+        mc -u "@PKGDATADIR@/examples" "$scriptdir"
+    fi
+else
+    echo "there are example scripts in @PKGDATADIR@/examples you can copy to $scriptdir"
 fi

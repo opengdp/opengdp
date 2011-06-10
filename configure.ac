@@ -68,11 +68,25 @@ fi
 
 dnl Check for dialog
 AC_CHECK_PROGS([DIALOG], [dialog], [:])
-if test "$DIALOG" = :; then
-AC_MSG_ERROR([dialog not found])
+if test "$DIALOG" = :
+then
+    AC_MSG_RESULT([dialog not found])
+else
+    AC_MSG_RESULT([dialog $DIALOG])
+    HAVE_DIALOG=true
+    AC_SUBST(HAVE_DIALOG)
 fi
-AC_MSG_RESULT([dialog $DIALOG])
 
+dnl Check for mc
+AC_CHECK_PROGS([MC], [mc], [:])
+if test "$MC" = :
+then
+    AC_MSG_RESULT([mc not found])
+else
+    AC_MSG_RESULT([mc $MC])
+    HAVE_MC=true
+    AC_SUBST(HAVE_MC)
+fi
 
 ##### tar #####
 
@@ -123,7 +137,6 @@ AM_CONDITIONAL(HAVE_GDAL, test "x$GDAL_CONFIG" != "x")
 
 ##### OTB #####
 
-
 AC_ARG_WITH(otb-lib,
   [AS_HELP_STRING([--with-otb-lib=/some/path],
     [path to the OTBConfig.cmake file])],
@@ -167,14 +180,16 @@ then
   done << EOF
 $prefrm
 EOF
-  
-
+  HAVE_OTB="true"
   AC_SUBST(OTBINC)
   AC_SUBST(OTBLIB)
+  AC_SUBST(HAVE_OTB)
+  
 else
-  AC_MSG_FAILURE([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
+  AC_MSG_RESULT([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
 fi
-
+AM_CONDITIONAL(HAVE_OTB, test "$HAVE_OTB" = "true")
+  
 ##### tiff #####
 
 AC_ARG_WITH([tiff-includes],

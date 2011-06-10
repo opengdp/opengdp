@@ -19,6 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+have_otb="@HAVE_OTB@"
+
 ###############################################################################
 # function to proccess a single file
 ###############################################################################
@@ -747,6 +749,11 @@ function doimg_multiband {
     
     if [ -n "$panfile" ]
     then
+        if ! [ -n "$have_otb" ]
+        then
+            printerror "dwh is built without otb"
+            return 1
+        fi
         
         ##### get the pix size of the pan image #####
         ##### this don't seem to work with gaps, the gaps in the pan band arent filled #####
