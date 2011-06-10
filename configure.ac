@@ -57,8 +57,7 @@ if test "$SINCOS" = "1" ; then
 	])
 fi
 
-dnl bash
-
+##### bash #####
 
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
 if test $HAVE_BASH = "false"; then
@@ -66,7 +65,8 @@ if test $HAVE_BASH = "false"; then
 fi
 
 
-dnl Check for dialog
+##### dialog #####
+
 AC_CHECK_PROGS([DIALOG], [dialog], [:])
 if test "$DIALOG" = :
 then
@@ -77,7 +77,8 @@ else
     AC_SUBST(HAVE_DIALOG)
 fi
 
-dnl Check for mc
+##### mc #####
+
 AC_CHECK_PROGS([MC], [mc], [:])
 if test "$MC" = :
 then
@@ -86,6 +87,18 @@ else
     AC_MSG_RESULT([mc $MC])
     HAVE_MC=true
     AC_SUBST(HAVE_MC)
+fi
+
+##### mrsiddecode #####
+
+AC_CHECK_PROGS([MRSIDDECODE], [mrsiddecode], [:])
+if test "$MC" = :
+then
+    AC_MSG_RESULT([mrsiddecode not found])
+else
+    AC_MSG_RESULT([mrsiddecode $MRSIDDECODE])
+    HAVE_MRSIDDECODE=true
+    AC_SUBST(HAVE_MRSIDDECODE)
 fi
 
 ##### tar #####

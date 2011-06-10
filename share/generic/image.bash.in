@@ -20,6 +20,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 have_otb="@HAVE_OTB@"
+have_mrsiddecode="@HAVE_MRSIDDECODE@"
 
 ###############################################################################
 # function to proccess a single file
@@ -471,7 +472,12 @@ function doimg {
                 
                 if [[ "$imgextlower" == "sid" ]]
                 then
-
+                    if ! [ -n "$have_mrsiddecode" ]
+                    then
+                        printerror "dwh is built without mrsiddecode"
+                        return 1
+                    fi
+                    
                     mrsiddecode -ulxy $xoff $yoff -wh \
                                 $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
                                 $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
@@ -733,6 +739,11 @@ function doimg_multiband {
     
     if [ -n "$cloudmask" ]
     then
+        if ! [ -n "$have_otb" ]
+        then
+            printerror "dwh is built without otb"
+            return 1
+        fi
         
         "${#cloudmask[@]}"
         
