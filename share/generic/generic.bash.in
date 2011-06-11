@@ -589,12 +589,6 @@ function main {
         exit
     fi
     
-    if ! [ -x "${mapserverpath}/shp2img" ]
-    then
-        echo "ERROR: no executable ${mapserverpath}/shp2img"
-        exit
-    fi
-    
     ##### resamp_alg #####
     
     if ! [ -n "$resample_alg" ] ; then resample_alg="average" ; fi
