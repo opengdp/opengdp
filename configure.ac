@@ -117,6 +117,14 @@ if test "$" = :; then
 fi
 AC_MSG_RESULT([unzip $UNZIP])
 
+##### lftp #####
+
+AC_CHECK_PROGS([LFTP], [lftp], [:])
+if test "$" = :; then
+  AC_MSG_ERROR([lftp not found])
+fi
+AC_MSG_RESULT([lftp $LFTP])
+
 ##### grep #####
 
 AC_PROG_GREP
