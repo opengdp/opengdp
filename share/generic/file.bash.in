@@ -210,7 +210,7 @@ function dozip {
     
     ##### if exglob is set get a list of those files #####
     
-    local regex="${pattern//./[.]}"
+    local regex="${extglob//./[.]}"
     local regex="${regex//\*/.*}"
     local regex="${regex//\?/.}"
     
