@@ -206,7 +206,7 @@ function dozip {
         return
     fi
         
-    zipinfo="$(zipinfo -1 "${origdir}/${zipfile}")"
+    zipinfo=$(zipinfo -1 "${origdir}/${zipfile}")
     
     ##### if exglob is set get a list of those files #####
     
@@ -214,9 +214,9 @@ function dozip {
     local regex="${regex//\*/.*}"
     local regex="${regex//\?/.}"
     
-    if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+    if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
     then
-        local images="$(grep -i -e "$regex" <<<"$zipinfo")"
+        local images="$(grep -i -e "^$regex$" <<<"$zipinfo")"
     
     ##### tif #####
     
@@ -384,9 +384,9 @@ function dotar {
     local regex="${regex//\*/.*}"
     local regex="${regex//?/.}"
     
-    if [ -n "$extglob" ] && grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+    if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
     then
-        local images="$(grep -i -e "$regex" <<<"$zipinfo")"
+        local images="$(grep -i -e "^$regex$" <<<"$zipinfo")"
     
     ##### tif #####
     
