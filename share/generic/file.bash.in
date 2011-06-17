@@ -576,7 +576,7 @@ function dohdf {
                       sed 's/.*"\([^"]*\)".*/\1/'
                     )
     
-    if istrue "$dayonly" && { [[ "$daynight" == "Day" ]] || [[ "$daynight" == "Both" ]] }
+    if istrue "$dayonly" && { [[ "$daynight" == "Day" ]] || [[ "$daynight" == "Both" ]] ; }
     then
         return;
     fi
@@ -798,7 +798,6 @@ function dohdf {
     local ibbox
     for (( ibbox = 0; ibbox < ${#oul[@]} ; ibbox++ ))
     do
-   
 
         ##### make tiffs from the dfiles #####
             
