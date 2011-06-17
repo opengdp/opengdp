@@ -571,10 +571,12 @@ function dohdf {
     ##### check if its day or night #####
     
     local meta=$(dumpmeta "${tmpdir}/$geoloc" /dev/stdout)
-    local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta")
+    local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta" |\
+                      grep "VALUE" |\
+                      sed 's/.*"\([^"]*\)".*/\1/'
+                    )
     
-    if istrue "$dayonly" && ! grep -q -e "VALUE.*\"Day\"" <<<"$daynight"
-
+    if istrue "$dayonly" && { [[ "$daynight" == "Day" ]] || [[ "$daynight" == "Both" ]] }
     then
         return;
     fi
