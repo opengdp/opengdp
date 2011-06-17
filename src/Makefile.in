@@ -35,7 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HAVE_OTB_TRUE@bin_PROGRAMS = otbPanSharp$(EXEEXT) \
-@HAVE_OTB_TRUE@	otbCloudMask$(EXEEXT)
+@HAVE_OTB_TRUE@	otbCloudMask$(EXEEXT) otbCalc$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -48,14 +48,21 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
+am__otbCalc_SOURCES_DIST = otbCalc.cpp
+@HAVE_OTB_TRUE@am_otbCalc_OBJECTS = otbCalc-otbCalc.$(OBJEXT)
+otbCalc_OBJECTS = $(am_otbCalc_OBJECTS)
+otbCalc_DEPENDENCIES =
+AM_V_lt = $(am__v_lt_$(V))
+am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+am__v_lt_0 = --silent
+otbCalc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(otbCalc_LDFLAGS) $(LDFLAGS) -o $@
 am__otbCloudMask_SOURCES_DIST = otbCloudMask.cpp
 @HAVE_OTB_TRUE@am_otbCloudMask_OBJECTS =  \
 @HAVE_OTB_TRUE@	otbCloudMask-otbCloudMask.$(OBJEXT)
 otbCloudMask_OBJECTS = $(am_otbCloudMask_OBJECTS)
 otbCloudMask_DEPENDENCIES =
-AM_V_lt = $(am__v_lt_$(V))
-am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
-am__v_lt_0 = --silent
 otbCloudMask_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(otbCloudMask_LDFLAGS) $(LDFLAGS) -o $@
@@ -93,8 +100,10 @@ am__v_CXXLD_0 = @echo "  CXXLD " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(otbCloudMask_SOURCES) $(otbPanSharp_SOURCES)
-DIST_SOURCES = $(am__otbCloudMask_SOURCES_DIST) \
+SOURCES = $(otbCalc_SOURCES) $(otbCloudMask_SOURCES) \
+	$(otbPanSharp_SOURCES)
+DIST_SOURCES = $(am__otbCalc_SOURCES_DIST) \
+	$(am__otbCloudMask_SOURCES_DIST) \
 	$(am__otbPanSharp_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
@@ -274,6 +283,12 @@ top_srcdir = @top_srcdir@
 @HAVE_OTB_TRUE@otbCloudMask_CPPFLAGS = @OTBINC@
 @HAVE_OTB_TRUE@otbCloudMask_LDFLAGS = @OTBLIB@ 
 @HAVE_OTB_TRUE@otbCloudMask_LDADD = 
+@HAVE_OTB_TRUE@otbCalc_SOURCES = \
+@HAVE_OTB_TRUE@	otbCalc.cpp
+
+@HAVE_OTB_TRUE@otbCalc_CPPFLAGS = @OTBINC@
+@HAVE_OTB_TRUE@otbCalc_LDFLAGS = @OTBLIB@ 
+@HAVE_OTB_TRUE@otbCalc_LDADD = 
 all: all-am
 
 .SUFFIXES:
@@ -351,6 +366,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+otbCalc$(EXEEXT): $(otbCalc_OBJECTS) $(otbCalc_DEPENDENCIES) 
+	@rm -f otbCalc$(EXEEXT)
+	$(AM_V_CXXLD)$(otbCalc_LINK) $(otbCalc_OBJECTS) $(otbCalc_LDADD) $(LIBS)
 otbCloudMask$(EXEEXT): $(otbCloudMask_OBJECTS) $(otbCloudMask_DEPENDENCIES) 
 	@rm -f otbCloudMask$(EXEEXT)
 	$(AM_V_CXXLD)$(otbCloudMask_LINK) $(otbCloudMask_OBJECTS) $(otbCloudMask_LDADD) $(LIBS)
@@ -364,6 +382,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/otbCalc-otbCalc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/otbCloudMask-otbCloudMask.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/otbPanSharp-otbPanSharp.Po@am__quote@
 
@@ -390,6 +409,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+otbCalc-otbCalc.o: otbCalc.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCalc_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbCalc-otbCalc.o -MD -MP -MF $(DEPDIR)/otbCalc-otbCalc.Tpo -c -o otbCalc-otbCalc.o `test -f 'otbCalc.cpp' || echo '$(srcdir)/'`otbCalc.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/otbCalc-otbCalc.Tpo $(DEPDIR)/otbCalc-otbCalc.Po
+@am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='otbCalc.cpp' object='otbCalc-otbCalc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCalc_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o otbCalc-otbCalc.o `test -f 'otbCalc.cpp' || echo '$(srcdir)/'`otbCalc.cpp
+
+otbCalc-otbCalc.obj: otbCalc.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCalc_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbCalc-otbCalc.obj -MD -MP -MF $(DEPDIR)/otbCalc-otbCalc.Tpo -c -o otbCalc-otbCalc.obj `if test -f 'otbCalc.cpp'; then $(CYGPATH_W) 'otbCalc.cpp'; else $(CYGPATH_W) '$(srcdir)/otbCalc.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/otbCalc-otbCalc.Tpo $(DEPDIR)/otbCalc-otbCalc.Po
+@am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='otbCalc.cpp' object='otbCalc-otbCalc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCalc_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o otbCalc-otbCalc.obj `if test -f 'otbCalc.cpp'; then $(CYGPATH_W) 'otbCalc.cpp'; else $(CYGPATH_W) '$(srcdir)/otbCalc.cpp'; fi`
 
 otbCloudMask-otbCloudMask.o: otbCloudMask.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(otbCloudMask_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT otbCloudMask-otbCloudMask.o -MD -MP -MF $(DEPDIR)/otbCloudMask-otbCloudMask.Tpo -c -o otbCloudMask-otbCloudMask.o `test -f 'otbCloudMask.cpp' || echo '$(srcdir)/'`otbCloudMask.cpp
