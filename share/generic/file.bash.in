@@ -799,6 +799,29 @@ function dohdf {
     for (( ibbox = 0; ibbox < ${#oul[@]} ; ibbox++ ))
     do
 
+        ##### check if the msbands have landmask #####
+    
+        for msband in "${msbands[@]}"
+        do
+            if [[ "$msband" == *LandSeaMask* ]]
+            then
+            
+                ##### extract the landmask from the geoloc file #####
+            
+                swath2grid -if="${tmpdir}/$geoloc" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG \
+                           -sds="Land/SeaMask" > /dev/null || { printerror ; return; }
+            fi
+        done
+        
         ##### make tiffs from the dfiles #####
             
         local dfile
