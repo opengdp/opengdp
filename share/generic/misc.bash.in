@@ -451,3 +451,11 @@ function get_band_type {
 function get_srs {
     echo $(gdalinfo "$1" | sed -n '/PROJCS\|GEOGCS/,${//p;/^   /p;}' | uniq | tr "\n" " " |  sed -e 's/[ ]*//g' -e 's/"/&quot;/')  
 }
+
+###############################################################################
+# an array of gdal types
+###############################################################################
+
+GDAL_TYPES=( Byte UInt16 Int16 UInt32 Int32 
+             Float32 Float64)
+
