@@ -562,6 +562,13 @@ function dohdf {
         fi
     done
     
+    ##### if there is no geoloc file bail #####
+
+    if ! [ -n "$geoloc" ]
+    then
+        return
+    fi
+
     ##### get a output prefix #####
     
     base="${lastfile#*.}"
@@ -576,7 +583,7 @@ function dohdf {
                       sed 's/.*"\([^"]*\)".*/\1/'
                     )
     
-    if istrue "$dayonly" && { [[ "$daynight" == "Day" ]] || [[ "$daynight" == "Both" ]] ; }
+    if istrue "$dayonly" && { [[ "$daynight" != "Day" ]] && [[ "$daynight" != "Both" ]] ; }
     then
         return;
     fi
@@ -835,48 +842,77 @@ function dohdf {
 
                 local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
 
-                ##### find the band base name #####
+                ##### find the sds base names #####
                 
-                local bandbase=$(grep -e " OBJECT.*PARAMETERNAME" -A4 <<<"$meta" | grep -e RefSB | cut -d '"' -f 2)
+                local bandbases=$(grep -e "OBJECT=DataField" -A4 <<<"$meta" |\
+                                   grep -e DataFieldName |\
+                                   sed 's/.*"\([^"]*\)".*/\1/'
+                                  )
                 
                 ##### loop over the product band list to build an array of bands for this dataset #####
                 
-                local bands=( )
+                
                 local ofiles=()
                 local msband
+                local sds=""
                 
-                for msband in "${msbands[@]}"
+                ##### loop over the sds base names #####
+                
+                for bandbase in $bandbases
                 do
-
-                    ##### is the msband in this dataset? #####
-
-                    if grep -q -e "$bandbase" <<<"$msband"
+                    ##### loop over the msbands #####
+                    local bands=( )
+                    for msband in "${msbands[@]}"
+                    do
+                        ##### is the sds base name in the msband name? #####
+                    
+                        if [[  "$msband" == ${bandbase}* ]]
+                        then
+                            local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
+                            bands[$bnum]=1
+                        fi
+                    done
+                
+                    ##### is there any matching bands to do in this dataset? #####
+                    
+                    if [ -n "${!bands[*]}" ]
                     then
-                        local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
-                        bands[$bnum]=1
-                    fi
+                    
+                        ##### build a comma delim list of bands #####
+
+                        local bandlist=""
+                        local indices=(${!bands[*]})
+                        for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+                        do
+                            bandlist="$bandlist,${bands[$i]}"
+                        done
+                        
+                        ##### add the basename and list to the sds list #####
+                        
+                        if [ -n "$sds" ]
+                        then
+                            sds="${sds}; ${bandbase}${bandlist}"
+                        else
+                            sds="${sds}${bandbase}${bandlist}"
+                        fi
+                    
+                    elif [[  "$msband" == "${bandbase}" ]]
+                    then
+                        ##### add the basename and list to the sds list #####
+                        
+                        if [ -n "$sds" ]
+                        then
+                            sds="${sds}; ${bandbase}"
+                        else
+                            sds="${sds}${bandbase}"
+                        fi
+                     fi
                 done
                 
-                ##### is there any matching bands to do in this dataset? #####
-                
-                if [ -n "${!bands[*]}" ]
+                if [ -n "$sds" ]
                 then
-                    
-                    ##### build a comma delim list of bands #####
-
-                    bandlist=""
-                    local indices=(${!bands[*]})
-                    for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
-                    do
-                        bandlist="$bandlist,${bands[$i]}"
-                    done
-                    
-                    local sds="-sds=\"${bandbase}${bandlist}\""
-                else 
-                    continue;
+                    sds="-sds=\"${sds}\""
                 fi
-            else
-                local sds=""
             fi
             
             ##### output the image in ps with Center lon and std parallel over the center of the image #####
