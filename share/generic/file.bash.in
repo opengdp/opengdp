@@ -1050,7 +1050,8 @@ function dofile {
             return
         fi
 
-        local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
+        local tmpdir
+        tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
         
         
         if [[ "$DWH_REBUILD" == "rebuild" ]]

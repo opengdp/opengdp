@@ -646,6 +646,40 @@ EOF
 }
 
 ###############################################################################
+# function to build a 3 band vrt out of a 1 band image
+###############################################################################
+
+function mk_3of1_vrt {
+    in=$1
+    out=$2
+    
+    ##### make a temp dir #####
+    
+    local tmpdir
+    tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
+    
+    ##### build a temp vrt to get most of our info from #####
+
+    gdal_translate -of VRT "$in" "${tmpdir}/mk_3of1_vrt.vrt" || { printerror ; return; }
+    
+    ##### get the band type #####
+    
+    local type=$(get_band_type "$in" 1)
+
+    keep=$(sed "${tmpdir}/mk_3of1_vrt.vrt" -e 's:</VRTDataset>::')
+    
+    cat > "$out" << EOF
+$keep
+  <VRTRasterBand dataType="$type" band="2">
+  </VRTRasterBand>
+  <VRTRasterBand dataType="$type" band="3">
+  </VRTRasterBand>
+</VRTDataset>
+EOF
+
+}
+
+###############################################################################
 # function to do a multiband image
 ###############################################################################
 
@@ -674,7 +708,7 @@ function doimg_multiband {
     
     local f
     local i
-    local bands
+    local bands=( )
     for f in "${files[@]}"
     do
         bands[i++]="${tmpdir}/$f"
@@ -688,7 +722,6 @@ function doimg_multiband {
     fi
     
     ##### make a vrt of the ms bands first ######
-    
     
     gdalbuildvrt ${nodata[@]} \
                  -separate \
@@ -737,10 +770,12 @@ function doimg_multiband {
     
     if [ -n "$mscalc" ] 
     then
-        mv "${tmpdir}/${base}.vrt" "${tmpdir}/prcalc_${base}.vrt"
-        otbCalc "${tmpdir}/prcalc_${base}.vrt" \
-                "${tmpdir}/${base}.vrt" \
+        otbCalc "${tmpdir}/${base}.vrt" \
+                "${tmpdir}/${base}.tif" \
                 "$mscalc"  > /dev/null || { printerror ; return; }
+        
+        mk_3of1_vrt "${tmpdir}/${base}.tif" "${tmpdir}/${base}.vrt" || return
+        
     else
                 
         ##### cloud masking? #####
