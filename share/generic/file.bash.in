@@ -908,26 +908,37 @@ function dohdf {
                         fi
                      fi
                 done
-                
-                if [ -n "$sds" ]
-                then
-                    sds="-sds=\"${sds}\""
-                fi
             fi
             
-            ##### output the image in ps with Center lon and std parallel over the center of the image #####
+            if [ -n "$sds" ]
+            then
             
-            swath2grid -if="${tmpdir}/${dfile}" \
-                       -of="${tmpdir}/${base}_${ibbox}.tif" \
-                       -gf="${tmpdir}/$geoloc" \
-                       -off=GEOTIFF_FMT \
-                       -oproj=PS \
-                       -oprm=0,0,0,0,${cx},${cy} \
-                       -oul="${oul[$ibbox]}" \
-                       -olr="${olr[$ibbox]}" \
-                       -osp=8 \
-                       -osst=LAT_LONG \
-                       $sds > /dev/null || { printerror ; return; }
+                swath2grid -if="${tmpdir}/${dfile}" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG \
+                           -sds="$sds" > /dev/null || { printerror ; return; }
+                
+            else
+                
+                swath2grid -if="${tmpdir}/${dfile}" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG > /dev/null || { printerror ; return; }
+            fi
+            
 
         done
 
@@ -1145,7 +1156,7 @@ function dofile {
 
         fi
 
-        rm -rf "${tmpdir}"
+        #rm -rf "${tmpdir}"
     
     fi    
 

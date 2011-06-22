@@ -770,12 +770,24 @@ function doimg_multiband {
     
     if [ -n "$mscalc" ] 
     then
-        otbCalc "${tmpdir}/${base}.vrt" \
+    
+        local tmpcalc=$(echo "$mscalc" | tr "\n" " " | sed 's/[ ]\{1,\}/ /g')
+        
+        ###### mixed bands are a pain, lets just translate it to float64 #####
+        
+        gdal_translate -ot Float64 -of VRT \
+                       "${tmpdir}/${base}.vrt" \
+                       "${tmpdir}/${base}_float.vrt" > /dev/null || { printerror ; return; }
+
+        otbCalc "${tmpdir}/${base}_float.vrt" \
                 "${tmpdir}/${base}.tif" \
-                "$mscalc"  > /dev/null || { printerror ; return; }
+                "$tmpcalc"  > /dev/null || { printerror ; return; }
         
-        mk_3of1_vrt "${tmpdir}/${base}.tif" "${tmpdir}/${base}.vrt" || return
+        mk_3of1_vrt "${tmpdir}/${base}.tif" "${tmpdir}/${base}_3.vrt" || return
         
+        gdal_translate -ot Byte -of VRT \
+                       "${tmpdir}/${base}_3.vrt" \
+                       "${tmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
     else
                 
         ##### cloud masking? #####
