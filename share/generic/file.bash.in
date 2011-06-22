@@ -1156,7 +1156,7 @@ function dofile {
 
         fi
 
-        #rm -rf "${tmpdir}"
+        rm -rf "${tmpdir}"
     
     fi    
 
