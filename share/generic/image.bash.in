@@ -718,8 +718,8 @@ function doimg_multiband {
             outdir="${outdir}${sub}"
             dsname="${dsname}${sub}"
             local tmp
-            eval tmp=\( \"\$msbands$sub\[\@\]\" \)
-            local msbands=( "$tmp[@]}" )
+            eval tmp=\( \$\{msbands$sub\[@\]\} \)
+            local msbands=( "${tmp[@]}" )
             unset tmp
             local tmp
             eval tmp=\"\$mscalc$sub\"
@@ -738,7 +738,7 @@ function doimg_multiband {
             local bands=( )
             for f in "${files[@]}"
             do
-                for msb in "$(msbands[@]}"
+                for msb in "${msbands[@]}"
                 do
                     if [[ "$f" = *$msb* ]]
                     then

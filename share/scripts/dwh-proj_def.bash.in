@@ -23,7 +23,7 @@ project="@project@"
 
 basedir="@basedir@"
 indir=$(fixpath "${basedir}/source/${dsname}")
-outdir=$(fixpath "${basedir}/done/${dsname}/")
+outdir=$(fixpath "${basedir}/done/${dsname}")
 
 mapfile="@mapfile@"
 

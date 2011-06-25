@@ -560,8 +560,8 @@ function dohdf {
     for sub in "${subdsnames[@]}"
     do
         local tmp
-        eval tmp=\( \"\$msbands$sub\[\@\]\" \)
-        allmsbands=( "$allmsbands[@]}" "$tmp[@]}" )
+        eval tmp=\( \$\{msbands$sub\[\@\]\} \)
+        allmsbands=( ${allmsbands[@]} ${tmp[@]} )
     done
     
     ##### seperate out the geolocation file #####

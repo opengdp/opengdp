@@ -330,49 +330,44 @@ function sub_main {
                      while read ts
                     do
                         
+                        addinclude "$ts"
 
-                                addinclude "$ts"
+                        ##### add an include line in the main Newworld mapfile #####
 
-                                ##### add an include line in the main Newworld mapfile #####
+                        addinclude_NewWorld "$ts"
 
-                                addinclude_NewWorld "$ts"
+                        ##### get the extent of the ds #####
 
+                        extent=$(getextent "$ts")
+
+                        if istrue "$doovr" 1
+                        then
+
+                            ##### write a temp map file #####
+
+                            writemap_noover "$ts" "$extent"
+
+                            ##### create a single file for larger area overviews #####
+
+                            scale=$(makeoverview "$ts" "$extent")
+
+                            ##### write the map file with the correct scale #####
+
+                            writemap_withover "$ts" "$extent" "$scale"
+
+                        else
+
+                            ##### write the map file with no min max layers #####
+
+                            writemap_noover "$ts" "$extent"
+
+                        fi
+
+                        ##### create a map file for new world #####
                         
-                                ##### get the extent of the ds #####
-                       
-                                extent=$(getextent "$ts")
-                                
-                                if istrue "$doovr" 1
-                                ##### add an include line in the main mapfile #####
-                                then
+                        writemap_NewWorld "$ts" "$extent"
 
-                                    ##### write a temp map file #####
-
-                                    writemap_noover "$ts" "$extent"
-
-                                    ##### create a single file for larger area overviews #####
-                                
-                                    scale=$(makeoverview "$ts" "$extent")
-                                    
-                                    ##### write the map file with the correct scale #####
-
-                                    writemap_withover "$ts" "$extent" "$scale"
-
-                                else
-                                    
-                                    ##### write the map file with no min max layers #####
-                                    
-                                    writemap_noover "$ts" "$extent"
-                                    
-                                fi
-                                
-                                ##### create a map file for new world #####
-
-                                writemap_NewWorld "$ts" "$extent"
-
-                            done
-                        )
-                    done        
+                    done
                 )
             done
             if ((stop == 1))
