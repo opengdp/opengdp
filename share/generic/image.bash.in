@@ -645,6 +645,96 @@ EOF
 
 }
 
+
+###############################################################################
+# function to build a 3 band vrt out of a 1 band image with a gradient
+###############################################################################
+
+###############################################################################
+# function to write a vrt to rescale with a lut
+###############################################################################
+
+function mk_gradient_vrt {
+    local infile="$1"
+    local outvrt="$2"
+    local gradient="$3"
+    
+    local xs
+    local ys
+    read xs ys < <(get_size "$infile")
+    
+    local xo
+    local yo
+    read xo yo < <(get_origin "$infile")
+    
+    local xd
+    local yd
+    read xd yd < <(get_pixelsize "$infile")
+    
+    local srs
+    read srs < <(get_srs "$infile")
+    
+    local r
+    local g
+    local b
+    local src
+    local lut_r
+    local lut_g
+    local lut_b
+    
+    while read r g b src
+    do
+        if [ -n "$lut_r" ]
+        then
+            lut_r="${src}:${r}"
+            lut_g="${src}:${g}"
+            lut_b="${src}:${b}"
+        else
+            lut_r="${lut_r},${src}:${r}"
+            lut_g="${lut_g},${src}:${g}"
+            lut_b="${lut_b},${src}:${b}"
+        fi
+    done
+    
+    cat > "$outvrt" << EOF
+<VRTDataset rasterXSize="$xs" rasterYSize="$ys">
+  <SRS>$srs</SRS>
+  <GeoTransform>$xo,  $xd,  0.0,  $yo,  0.0, $yd</GeoTransform>
+  <VRTRasterBand dataType="Byte" band="1">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_r</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_g</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_b</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>
+EOF
+
+}
+
 ###############################################################################
 # function to build a 3 band vrt out of a 1 band image
 ###############################################################################
@@ -729,6 +819,15 @@ function doimg_multiband {
             eval tmp=\"\$lut$sub\"
             local lut="$tmp"
             unset tmp
+            local tmp
+            eval tmp=\"\$msgradient$sub\"
+            local msgradient="$tmp"
+            unset tmp
+            
+            ##### create a new tmp dir to make cleanup easyer #####
+            
+            local newtmpdir
+            newtmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
             
             ##### make an array of the files with tmpdir #####
             ##### prefixed  that match the msbands array #####
@@ -736,6 +835,7 @@ function doimg_multiband {
             local f
             local i
             local bands=( )
+            local myfiles=( )
             for f in "${files[@]}"
             do
                 for msb in "${msbands[@]}"
@@ -743,6 +843,7 @@ function doimg_multiband {
                     if [[ "$f" = *$msb* ]]
                     then
                         bands[i++]="${tmpdir}/$f"
+                        myfiles[i++]="$f"
                     fi
                 done
             done
@@ -759,10 +860,10 @@ function doimg_multiband {
             gdalbuildvrt ${nodata[@]} \
                          -separate \
                          -resolution highest \
-                         "${tmpdir}/${base}.vrt" \
+                         "${newtmpdir}/${base}.vrt" \
                          ${bands[@]} > /dev/null || return
             
-            local type=$(gdalinfo "${tmpdir}/${base}.vrt" |\
+            local type=$(gdalinfo "${newtmpdir}/${base}.vrt" |\
                           grep "Type=" |\
                           sed 's/.*Type=\(\w*\).*/\1/' |\
                           head -n 1)
@@ -782,23 +883,23 @@ function doimg_multiband {
                 ##### loop over the bands and fill them #####
                 
                 local i=0
-                for f in "${files[@]}"
+                for f in "${myfiles[@]}"
                 do
                     
-                    bands[i++]="${tmpdir}/${base}_$(($i + 1))_filled.tif"
+                    bands[i++]="${newtmpdir}/${base}_$(($i + 1))_filled.tif"
                     export CPL_TMPDIR="$tmpdir"
                     
                     gdal_fillnodata.py -md $fillnodata_md \
                                        -b $i \
-                                       "${tmpdir}/${base}.vrt" \
-                                       "${tmpdir}/${base}_${i}_filled.tif" > /dev/null || { printerror ; return; }
+                                       "${newtmpdir}/${base}.vrt" \
+                                       "${newtmpdir}/${base}_${i}_filled.tif" > /dev/null || { printerror ; return; }
 
                 done
                 
                 ##### make a vrt of the filled ms bands #####
                 
                 gdalbuildvrt -srcnodata 0 -separate -resolution highest \
-                             "${tmpdir}/${base}.vrt" \
+                             "${newtmpdir}/${base}.vrt" \
                              ${bands[@]} > /dev/null || { printerror ; return; }
                 
                 ##### fixme need to fill the pan band #####
@@ -813,19 +914,26 @@ function doimg_multiband {
                 ###### mixed bands are a pain, lets just translate it to float64 #####
                 
                 gdal_translate -ot Float64 -of VRT \
-                               "${tmpdir}/${base}.vrt" \
-                               "${tmpdir}/${base}_float.vrt" > /dev/null || { printerror ; return; }
+                               "${newtmpdir}/${base}.vrt" \
+                               "${newtmpdir}/${base}_float.vrt" > /dev/null || { printerror ; return; }
 
-                otbCalc "${tmpdir}/${base}_float.vrt" \
-                        "${tmpdir}/${base}.tif" \
+                otbCalc "${newtmpdir}/${base}_float.vrt" \
+                        "${newtmpdir}/${base}.tif" \
                         "$tmpcalc"  > /dev/null || { printerror ; return; }
                 
-                mk_3of1_vrt "${tmpdir}/${base}.tif" \
-                            "${tmpdir}/${base}_3.vrt" || return
+                if [ -n "$ms_gradient" ]
+                then
+                    mk_gradient_vrt "${newtmpdir}/${base}.tif" \
+                                    "${newtmpdir}/${base}_3.vrt" \
+                                    "$ms_gradient" || return
+                else        
+                    mk_3of1_vrt "${newtmpdir}/${base}.tif" \
+                                "${newtmpdir}/${base}_3.vrt" || return
+                    gdal_translate -ot Byte -of VRT \
+                                "${newtmpdir}/${base}_3.vrt" \
+                                "${newtmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
                 
-                gdal_translate -ot Byte -of VRT \
-                               "${tmpdir}/${base}_3.vrt" \
-                               "${tmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
+                fi
             else
                         
                 ##### cloud masking? #####
@@ -840,8 +948,8 @@ function doimg_multiband {
                     
                     "${#cloudmask[@]}"
                     
-                    otbCloudMask "${tmpdir}/${base}.vrt" \
-                                 "${tmpdir}/${base}_cloudmask.tif" \
+                    otbCloudMask "${newtmpdir}/${base}.vrt" \
+                                 "${newtmpdir}/${base}_cloudmask.tif" \
                                  "${#cloudmask[@]}" \
                                  ${cloudmask[@]} \
                                  .2 .75 1
@@ -866,22 +974,22 @@ function doimg_multiband {
                     local pan_xsize
                     local pan_ysize
 
-                    read pan_xsize pan_ysize < <(get_size "${tmpdir}/$panfile")
+                    read pan_xsize pan_ysize < <(get_size "${newtmpdir}/$panfile")
                     
                     gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
-                                   "${tmpdir}/${base}.vrt" \
-                                   "${tmpdir}/${base}_resize.vrt" > /dev/null || { printerror ; return; }
+                                   "${newtmpdir}/${base}.vrt" \
+                                   "${newtmpdir}/${base}_resize.vrt" > /dev/null || { printerror ; return; }
                     
                     otbPanSharp "$type" \
-                                "${tmpdir}/$panfile" \
-                                "${tmpdir}/${base}_resize.vrt" \
-                                "${tmpdir}/${base}_pan.tif" > /dev/null || { printerror ; return; }
+                                "${newtmpdir}/$panfile" \
+                                "${newtmpdir}/${base}_resize.vrt" \
+                                "${newtmpdir}/${base}_pan.tif" > /dev/null || { printerror ; return; }
                     
                     ##### build a vrt just to keep the same filename  for consistency #####
                     
                     gdal_translate -of VRT \
-                                   "${tmpdir}/${base}_pan.tif" \
-                                   "${tmpdir}/${base}.vrt" > /dev/null || return
+                                   "${newtmpdir}/${base}_pan.tif" \
+                                   "${newtmpdir}/${base}.vrt" > /dev/null || return
                     
                 fi
                 
@@ -891,19 +999,19 @@ function doimg_multiband {
                 then
                     ##### rename the source vrt so the output vrt will have the same filename for consistency #####
                     
-                    mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
+                    mv "${newtmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
                     
                     gdal_translate -ot byte -scale $rescale -of VRT \
-                                   "${tmpdir}/${base}_prescale.vrt" \
-                                   "${tmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
+                                   "${newtmpdir}/${base}_prescale.vrt" \
+                                   "${newtmpdir}/${base}.vrt" > /dev/null || { printerror ; return; }
                 elif [ -n "$lut" ]
                 then
                     ##### rename the source vrt so the output vrt will have the same filename for consistency #####
                     
-                    mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
+                    mv "${newtmpdir}/${base}.vrt" "${newtmpdir}/${base}_prescale.vrt"
                     
-                    mk_lut_vrt "${tmpdir}/${base}_prescale.vrt" \
-                               "${tmpdir}/${base}.vrt" "$lut"
+                    mk_lut_vrt "${newtmpdir}/${base}_prescale.vrt" \
+                               "${newtmpdir}/${base}.vrt" "$lut"
 
                 fi
                 
@@ -918,40 +1026,40 @@ function doimg_multiband {
                     nearblack -color 0,0,0 -color 255,0,0 -color 0,255,0 -color 0,0,255 \
                               -color 0,255,255 -color 255,0,255 -color 255,255,0 \
                               -near 0 -nb 0 -setalpha -of gtiff \
-                              "${tmpdir}/${base}_prescale.vrt" \
-                              -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || { printerror ; return; }
+                              "${newtmpdir}/${base}_prescale.vrt" \
+                              -o "${newtmpdir}/${base}_wash.tif" > /dev/null 2>&1 || { printerror ; return; }
                     
                     ##### rename the source vrt so the output vrt will have the same filename for consistency #####
                     
-                    mv "${tmpdir}/${base}.vrt" "${tmpdir}/${base}_prewashout.vrt"
+                    mv "${newtmpdir}/${base}.vrt" "${newtmpdir}/${base}_prewashout.vrt"
                     
                     ##### loop over the ms bands and make a seperate vrt for each one #####
                     
                     local i=0
-                    for f in "${files[@]}"
+                    for f in "${myfiles[@]}"
                     do
-                        bands[i++]="${tmpdir}/${base}_$(($i + 1)).vrt"
+                        bands[i++]="${newtmpdir}/${base}_$(($i + 1)).vrt"
                         gdal_translate -b $i -of VRT \
-                                       "${tmpdir}/${base}_prewashout.vrt" \
-                                       "${tmpdir}/${base}_${i}.vrt" > /dev/null || { printerror ; return; }
+                                       "${newtmpdir}/${base}_prewashout.vrt" \
+                                       "${newtmpdir}/${base}_${i}.vrt" > /dev/null || { printerror ; return; }
                     done
                     
                     ##### make a vrt for the alpha band #####
                     
-                    gdal_translate -b "${#files[@]}" -of VRT \
-                                   "${tmpdir}/${base}_wash.tif" \
-                                   "${tmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
+                    gdal_translate -b "${#myfiles[@]}" -of VRT \
+                                   "${newtmpdir}/${base}_wash.tif" \
+                                   "${newtmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
                     
                     ##### combine all the bands into a single vrt #####
                     
                     gdalbuildvrt -separate \
-                                 "${tmpdir}/${base}_sep.vrt" \
+                                 "${newtmpdir}/${base}_sep.vrt" \
                                  ${bands[@]} \
-                                 "${tmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
+                                 "${newtmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
                     
                     ##### rework the vrt to rgba #####
                     
-                    sed "${tmpdir}/${base}_sep.vrt" \
+                    sed "${newtmpdir}/${base}_sep.vrt" \
                         -e 's,\(band=\"1\".*>\),\1\n    <ColorInterp>Red</ColorInterp>,' \
                         -e 's,\(band=\"2\".*>\),\1\n    <ColorInterp>Green</ColorInterp>,' \
                         -e 's,\(band=\"3\".*>\),\1\n    <ColorInterp>Blue</ColorInterp>,' \
@@ -961,11 +1069,16 @@ function doimg_multiband {
 
             fi
                 
-            doimg "${base}.vrt" \
-                  "$tmpdir" \
+            doimg "${newtmpdir}.vrt" \
+                  "$newtmpdir" \
                   "$ts" \
-                  "$(gdalinfo "${tmpdir}/${base}.vrt")" \
+                  "$(gdalinfo "${newtmpdir}/${base}.vrt")" \
                   "no" || return
+            
+            ##### cleanup #####
+            
+            rm -r "$newtmpdir"
+            
         )
     done
 }

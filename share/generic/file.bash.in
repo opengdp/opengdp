@@ -561,7 +561,23 @@ function dohdf {
     do
         local tmp
         eval tmp=\( \$\{msbands$sub\[\@\]\} \)
-        allmsbands=( ${allmsbands[@]} ${tmp[@]} )
+        for t in "${tmp[@]}"
+        do
+            unset have
+            for a in "${allmsbands[@]}"
+            do
+                if [[ "$t" == "$a" ]]
+                then
+                    have=true
+                    break
+                fi
+            done
+            
+            if ! istrue "$have"
+            then
+                allmsbands=( ${allmsbands[@]} "$t" )
+            fi
+        done
     done
     
     ##### seperate out the geolocation file #####
@@ -814,7 +830,7 @@ function dohdf {
                   --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
         fi
             
-        dfiles=( "${dfiles}" "crefl.${base}.hdf" )
+        dfiles=( ${dfiles[@]} "crefl.${base}.hdf" )
     fi
     
     ##### loop over the bboxes #####
@@ -851,7 +867,8 @@ function dohdf {
         local dfile
         for dfile in "${dfiles[@]}"
         do
-
+            unset sds
+            
             if [[ "$dfile" != "crefl.${base}.hdf" ]]
             then
             
@@ -881,9 +898,15 @@ function dohdf {
                     local bands=( )
                     for msband in "${allmsbands[@]}"
                     do
+                        
+                        ##### is the sds base name equal to the sds name? #####
+                        if [[  "$msband" == "${bandbase}" ]]
+                        then
+                            break
+                        
                         ##### is the sds base name in the msband name? #####
                     
-                        if [[  "$msband" == ${bandbase}* ]]
+                        elif [[  "$msband" == ${bandbase}* ]]
                         then
                             local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
                             bands[$bnum]=1
@@ -916,13 +939,13 @@ function dohdf {
                     elif [[  "$msband" == "${bandbase}" ]]
                     then
                         ##### add the basename and list to the sds list #####
-                        
                         if [ -n "$sds" ]
                         then
                             sds="${sds}; ${bandbase}"
                         else
                             sds="${sds}${bandbase}"
                         fi
+
                      fi
                 done
             fi
@@ -942,8 +965,8 @@ function dohdf {
                            -osst=LAT_LONG \
                            -sds="$sds" > /dev/null || { printerror ; return; }
                 
-            else
-                
+            elif [[ "${dfile}" == "crefl.${base}.hdf" ]]
+            then    
                 swath2grid -if="${tmpdir}/${dfile}" \
                            -of="${tmpdir}/${base}_${ibbox}.tif" \
                            -gf="${tmpdir}/$geoloc" \
@@ -1100,11 +1123,24 @@ function dofile {
             local origdir="$tmpdir"
         fi
         
-
-        if ! [ -d "$outdir/${ts}" ]
+        ##### loop over the subdataset array #####
+    
+        if [[ ${#subdsnames[@]} == 0 ]]
         then
-            mkdir -p "$outdir/${ts}"
+            local subdsnames=( "" )
         fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                if ! [ -d "$outdir/${ts}" ]
+                then
+                    mkdir -p "$outdir/${ts}"
+                fi
+            )
+        done
         
         case "$ext" in
         
