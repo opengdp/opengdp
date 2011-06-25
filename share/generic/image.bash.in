@@ -1069,7 +1069,7 @@ function doimg_multiband {
 
             fi
                 
-            doimg "${newtmpdir}.vrt" \
+            doimg "${base}.vrt" \
                   "$newtmpdir" \
                   "$ts" \
                   "$(gdalinfo "${newtmpdir}/${base}.vrt")" \
