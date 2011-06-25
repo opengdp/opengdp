@@ -827,7 +827,7 @@ function doimg_multiband {
             ##### create a new tmp dir to make cleanup easyer #####
             
             local newtmpdir
-            newtmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
+            newtmpdir=$(mktemp -d -p "$tmpdir" "${dsname}XXXXXXXXXX") || { printerror ; return; }
             
             ##### make an array of the files with tmpdir #####
             ##### prefixed  that match the msbands array #####
@@ -999,7 +999,7 @@ function doimg_multiband {
                 then
                     ##### rename the source vrt so the output vrt will have the same filename for consistency #####
                     
-                    mv "${newtmpdir}/${base}.vrt" "${tmpdir}/${base}_prescale.vrt"
+                    mv "${newtmpdir}/${base}.vrt" "${newtmpdir}/${base}_prescale.vrt"
                     
                     gdal_translate -ot byte -scale $rescale -of VRT \
                                    "${newtmpdir}/${base}_prescale.vrt" \
@@ -1063,7 +1063,7 @@ function doimg_multiband {
                         -e 's,\(band=\"1\".*>\),\1\n    <ColorInterp>Red</ColorInterp>,' \
                         -e 's,\(band=\"2\".*>\),\1\n    <ColorInterp>Green</ColorInterp>,' \
                         -e 's,\(band=\"3\".*>\),\1\n    <ColorInterp>Blue</ColorInterp>,' \
-                        -e 's,\(band=\"4\".*>\),\1\n    <ColorInterp>Alpha</ColorInterp>,' > "${tmpdir}/${base}.vrt"
+                        -e 's,\(band=\"4\".*>\),\1\n    <ColorInterp>Alpha</ColorInterp>,' > "${newtmpdir}/${base}.vrt"
                         
                 fi
 
