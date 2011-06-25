@@ -214,11 +214,26 @@ function sub_main {
             exit
         fi
 
-        if ! mv "$outdir" "${outdir/%\//}.old"
+        ##### loop over the subdataset array #####
+        
+        if [[ ${#subdsnames[@]} == 0 ]]
         then
-            exit
+            local subdsnames=( "" )
         fi
-
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+            
+                if ! mv "$outdir" "${outdir/%\//}.old"
+                then
+                    exit
+                fi
+            )
+        done
+        
         if ! mkdir -p "$indir"
         then
             exit
@@ -290,62 +305,76 @@ function sub_main {
     case "$stage" in
         ##### -reover or before #####
         0|1|2|3|4)
-            if (( stage == 0 ))
+            ##### loop over the subdataset array #####
+            
+            if [[ ${#subdsnames[@]} == 0 ]]
             then
-                grep "${mirrorfile}" -e "^get" |\
-                ${datefunc}
-            else
-                find "${outdir}" -type d -name "[0-9]*" |\
-                sed 's:.*/::g'
-             fi |\
-             sort |\
-             uniq |\
-             while read ts
+                local subdsnames=( "" )
+            fi
+            local sub
+            for sub in "${subdsnames[@]}"
             do
-                
-                ##### add an include line in the main mapfile #####
+                (
+                    outdir="${outdir}${sub}"
+                    dsname="${dsname}${sub}"
+                    if (( stage == 0 ))
+                    then
+                        grep "${mirrorfile}" -e "^get" |\
+                        ${datefunc}
+                    else
+                        find "${outdir}" -type d -name "[0-9]*" |\
+                        sed 's:.*/::g'
+                     fi |\
+                     sort |\
+                     uniq |\
+                     while read ts
+                    do
+                        
 
-                addinclude "$ts"
+                                addinclude "$ts"
 
-                ##### add an include line in the main Newworld mapfile #####
+                                ##### add an include line in the main Newworld mapfile #####
 
-                addinclude_NewWorld "$ts"
+                                addinclude_NewWorld "$ts"
 
-        
-                ##### get the extent of the ds #####
-       
-                extent=$(getextent "$ts")
-                
-                if istrue "$doovr" 1
-                then
+                        
+                                ##### get the extent of the ds #####
+                       
+                                extent=$(getextent "$ts")
+                                
+                                if istrue "$doovr" 1
+                                ##### add an include line in the main mapfile #####
+                                then
 
-                    ##### write a temp map file #####
+                                    ##### write a temp map file #####
 
-                    writemap_noover "$ts" "$extent"
+                                    writemap_noover "$ts" "$extent"
 
-                    ##### create a single file for larger area overviews #####
-                
-                    scale=$(makeoverview "$ts" "$extent")
-                    
-                    ##### write the map file with the correct scale #####
+                                    ##### create a single file for larger area overviews #####
+                                
+                                    scale=$(makeoverview "$ts" "$extent")
+                                    
+                                    ##### write the map file with the correct scale #####
 
-                    writemap_withover "$ts" "$extent" "$scale"
+                                    writemap_withover "$ts" "$extent" "$scale"
 
-                else
-                    
-                    ##### write the map file with no min max layers #####
-                    
-                    writemap_noover "$ts" "$extent"
-                    
-                fi
-                
-                ##### create a map file for new world #####
+                                else
+                                    
+                                    ##### write the map file with no min max layers #####
+                                    
+                                    writemap_noover "$ts" "$extent"
+                                    
+                                fi
+                                
+                                ##### create a map file for new world #####
 
-                writemap_NewWorld "$ts" "$extent"
+                                writemap_NewWorld "$ts" "$extent"
 
+                            done
+                        )
+                    done        
+                )
             done
-        
-
             if ((stop == 1))
             then
                 exit
@@ -355,57 +384,71 @@ function sub_main {
     case "$stage" in
         ##### -remapfile only #####
         5)
-  
-            find "${outdir}" -type d -name "[0-9]*" |\
-             sed 's:.*/::g' |\
-             sort |\
-             uniq |\
-             while read ts
-            do  
-                
-                ##### add an include line in the main mapfile #####
+            ##### loop over the subdataset array #####
+            
+            if [[ ${#subdsnames[@]} == 0 ]]
+            then
+                local subdsnames=( "" )
+            fi
+            local sub
+            for sub in "${subdsnames[@]}"
+            do
+                (
+                    outdir="${outdir}${sub}"
+                    dsname="${dsname}${sub}"
 
-                addinclude "$ts"
-                
-                ##### add an include line in the main Newworld mapfile #####
+                    find "${outdir}" -type d -name "[0-9]*" |\
+                     sed 's:.*/::g' |\
+                     sort |\
+                     uniq |\
+                     while read ts
+                    do  
+                        
+                        ##### add an include line in the main mapfile #####
 
-                if [ -n "$NewWorld_mapfile" ]
-                then
-                    addinclude_NewWorld "$ts"
-                fi
-                
-                ##### get the extent of the ds #####
+                        addinclude "$ts"
+                        
+                        ##### add an include line in the main Newworld mapfile #####
 
-                extent=$(getextent "$ts")
+                        if [ -n "$NewWorld_mapfile" ]
+                        then
+                            addinclude_NewWorld "$ts"
+                        fi
+                        
+                        ##### get the extent of the ds #####
 
-                if istrue "$doovr" 1
-                then
+                        extent=$(getextent "$ts")
 
-                    ##### get the overview scale from the old mapfile #####
+                        if istrue "$doovr" 1
+                        then
 
-                    scale=$(getoverviewscale "$ts")
-                    
-                    ##### write the map file with the correct scale #####
+                            ##### get the overview scale from the old mapfile #####
 
-                    writemap_withover "$ts" "$extent" "$scale"
+                            scale=$(getoverviewscale "$ts")
+                            
+                            ##### write the map file with the correct scale #####
 
-                else
-                    
-                    ##### write the map file with no min max layers #####
-                    
-                    writemap_noover "$ts" "$extent"
-                    
-                fi
-                
-                ##### create a map file for new world #####
+                            writemap_withover "$ts" "$extent" "$scale"
 
-                if [ -n "$NewWorld_mapfile" ]
-                then
-                    writemap_NewWorld "$ts" "$extent"
-                fi
+                        else
+                            
+                            ##### write the map file with no min max layers #####
+                            
+                            writemap_noover "$ts" "$extent"
+                            
+                        fi
+                        
+                        ##### create a map file for new world #####
 
+                        if [ -n "$NewWorld_mapfile" ]
+                        then
+                            writemap_NewWorld "$ts" "$extent"
+                        fi
+
+                    done
+                )
             done
-        
+            
             if ((stop == 1))
             then
                 exit
@@ -414,16 +457,31 @@ function sub_main {
     esac
     case "$stage" in
         0|1|2|3|4|5|6)
+            ##### loop over the subdataset array #####
+            
+            if [[ ${#subdsnames[@]} == 0 ]]
+            then
+                local subdsnames=( "" )
+            fi
+            local sub
+            for sub in "${subdsnames[@]}"
+            do
+                (
+                    outdir="${outdir}${sub}"
+                    dsname="${dsname}${sub}"
 
-            ##### stage 6 and before #####
-            #####  write out a js file for geoext #####
-                
-            dogeoext
-            dogeoext_tc
+                    ##### stage 6 and before #####
+                    #####  write out a js file for geoext #####
+                        
+                    dogeoext
+                    dogeoext_tc
 
-            ##### write out a config section fore tilecache #####
+                    ##### write out a config section fore tilecache #####
 
-            dotc
+                    dotc
+                )
+            done
+            
             if ((stop == 1))
             then
                 exit
@@ -524,19 +582,33 @@ function main {
         exit
     fi
     
-    if ! [ -d "$outdir" ]
-    then
-        if ! mkdir -p "$outdir"
-        then
-            exit
-        fi
-    fi
+    ##### loop over the subdataset array #####
     
-    if ! [ -w "$outdir" ]
+    if [[ ${#subdsnames[@]} == 0 ]]
     then
-        echo "ERROR: no write access to $outdir"
-        exit
+        local subdsnames=( "" )
     fi
+    local sub
+    for sub in "${subdsnames[@]}"
+    do
+        (
+            outdir="${outdir}${sub}"
+            dsname="${dsname}${sub}"
+            if ! [ -d "$outdir" ]
+            then
+                if ! mkdir -p "$outdir"
+                then
+                    exit
+                fi
+            fi
+            
+            if ! [ -w "$outdir" ]
+            then
+                echo "ERROR: no write access to $outdir"
+                exit
+            fi
+        ) || exit
+    done
     
     ##### tmp dir #####
     

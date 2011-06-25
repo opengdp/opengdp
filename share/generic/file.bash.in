@@ -547,6 +547,23 @@ function dohdf {
     local origdir="$4"
     local files=("${@:5}")
     
+    ##### make a complete list of all the msbands of the subdatasets #####
+    
+    ##### loop over the subdataset array #####
+    
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        local subdsnames=( "" )
+    fi
+    local sub
+    local allmsbands=()
+    for sub in "${subdsnames[@]}"
+    do
+        local tmp
+        eval tmp=\( \"\$msbands$sub\[\@\]\" \)
+        allmsbands=( "$allmsbands[@]}" "$tmp[@]}" )
+    done
+    
     ##### seperate out the geolocation file #####
     
     local dfiles=()
@@ -797,7 +814,7 @@ function dohdf {
                   --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
         fi
             
-        dfiles=( "crefl.${base}.hdf" )
+        dfiles=( "${dfiles}" "crefl.${base}.hdf" )
     fi
     
     ##### loop over the bboxes #####
@@ -808,7 +825,7 @@ function dohdf {
 
         ##### check if the msbands have landmask #####
     
-        for msband in "${msbands[@]}"
+        for msband in "${allmsbands[@]}"
         do
             if [[ "$msband" == *LandSeaMask* ]]
             then
@@ -835,7 +852,7 @@ function dohdf {
         for dfile in "${dfiles[@]}"
         do
 
-            if ! [ -n "$creflfiles" ]
+            if [[ "$dfile" != "crefl.${base}.hdf" ]]
             then
             
                 ##### figure out what bands to extract #####
@@ -862,7 +879,7 @@ function dohdf {
                 do
                     ##### loop over the msbands #####
                     local bands=( )
-                    for msband in "${msbands[@]}"
+                    for msband in "${allmsbands[@]}"
                     do
                         ##### is the sds base name in the msband name? #####
                     
@@ -948,7 +965,7 @@ function dohdf {
         local flisting=$(find "${tmpdir}/" -name "${base}_${ibbox}*.tif")
         local msband
         local ofiles=()
-        for msband in "${msbands[@]}"
+        for msband in "${allmsbands[@]}"
         do
             local regex="${msband//./[.]}"
             local regex="${regex//\*/.*}"
