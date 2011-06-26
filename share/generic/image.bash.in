@@ -686,15 +686,15 @@ function mk_gradient_vrt {
     do
         if [ -n "$lut_r" ]
         then
-            lut_r="${src}:${r}"
-            lut_g="${src}:${g}"
-            lut_b="${src}:${b}"
-        else
             lut_r="${lut_r},${src}:${r}"
             lut_g="${lut_g},${src}:${g}"
             lut_b="${lut_b},${src}:${b}"
+        else
+            lut_r="${src}:${r}"
+            lut_g="${src}:${g}"
+            lut_b="${src}:${b}"
         fi
-    done
+    done <<<"$gradient"
     
     cat > "$outvrt" << EOF
 <VRTDataset rasterXSize="$xs" rasterYSize="$ys">
@@ -836,14 +836,15 @@ function doimg_multiband {
             local i
             local bands=( )
             local myfiles=( )
-            for f in "${files[@]}"
+            for msb in "${msbands[@]}"
             do
-                for msb in "${msbands[@]}"
+                for f in "${files[@]}"
                 do
                     if [[ "$f" = *$msb* ]]
                     then
                         bands[i++]="${tmpdir}/$f"
                         myfiles[i++]="$f"
+                        break
                     fi
                 done
             done
@@ -921,11 +922,14 @@ function doimg_multiband {
                         "${newtmpdir}/${base}.tif" \
                         "$tmpcalc"  > /dev/null || { printerror ; return; }
                 
-                if [ -n "$ms_gradient" ]
+                mv "${newtmpdir}/${base}.vrt" "${newtmpdir}/${base}_precalc.vrt"
+                
+                if [ -n "$msgradient" ]
                 then
+                    
                     mk_gradient_vrt "${newtmpdir}/${base}.tif" \
-                                    "${newtmpdir}/${base}_3.vrt" \
-                                    "$ms_gradient" || return
+                                    "${newtmpdir}/${base}.vrt" \
+                                    "$msgradient" || return
                 else        
                     mk_3of1_vrt "${newtmpdir}/${base}.tif" \
                                 "${newtmpdir}/${base}_3.vrt" || return
