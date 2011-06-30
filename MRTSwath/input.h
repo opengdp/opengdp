@@ -78,6 +78,8 @@ typedef struct {
   } buf;  
   int fill_value;       /* Fill value for the current SDS (even floats will
                            be an "int" value) */
+  float64 factor;
+  float64 offset;
 } Input_t;
 
 /* Prototypes */
