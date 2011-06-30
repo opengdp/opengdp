@@ -144,6 +144,9 @@ Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
     int ir, ir1;
     char tmperrstr[M_MSG_LEN+1];
     double fill[MYHDF_MAX_NATTR_VAL];
+    double scale[MYHDF_MAX_NATTR_VAL];
+    double offset[MYHDF_MAX_NATTR_VAL];
+    
     Myhdf_attr_t attr;
 
     /* Check parameters */
@@ -278,6 +281,34 @@ Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
         }
     }
 
+    /***** get the scale factor *****/
+
+    this->factor = 1;
+    attr.name = "reflectance_scales";
+    if (GetAttrDouble(this->sds.id, &attr, scale)) {
+        this->factor = scale[0];
+    }
+    else {
+        attr_name = "scale_factor";
+        if (GetAttrDouble(this->sds.id, &attr, scale)) {
+            this->factor = scale[0];
+        }
+    }
+
+    /***** get the offset *****/
+
+    this->offset = 0;
+    attr.name = "reflectance_offsets";
+    if (GetAttrDouble(this->sds.id, &attr, offset)) {
+        this->offset = offset[0];
+    }
+    else {
+        attr_name = "add_offset";
+        if (GetAttrDouble(this->sds.id, &attr, offset)) {
+            this->offset = offset[0];
+        }
+    }
+    
     /* Set up the band offset */
 
     if (iband >= 0)
