@@ -78,8 +78,6 @@
 /* Constants */
 #define FILL_ATTR_NAME "_FillValue"
 
-Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
-                   int *dim, char *errstr)
 /* 
 !C******************************************************************************
 
@@ -136,276 +134,276 @@ Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
 
 !END****************************************************************************
 */
+
+Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
+                   int *dim, char *errstr)
+
 {
-  Input_t *this;
-  char *error_string = (char *)NULL;
-  int ir, ir1;
-  char tmperrstr[M_MSG_LEN+1];
-  double fill[MYHDF_MAX_NATTR_VAL];
-  Myhdf_attr_t attr;
+    Input_t *this;
+    char *error_string = (char *)NULL;
+    int ir, ir1;
+    char tmperrstr[M_MSG_LEN+1];
+    double fill[MYHDF_MAX_NATTR_VAL];
+    Myhdf_attr_t attr;
 
-  /* Check parameters */
-  
-  if (rank < 2  ||  rank > MYHDF_MAX_RANK) {
-    strcpy (errstr, "OpenInput: invalid rank");
-    return (Input_t *)NULL;
-  }
-  
-  if (iband < -1  ||  iband >= NBAND_OFFSET) {
-    strcpy (errstr, "OpenInput: invalid band");
-    return (Input_t *)NULL;
-  }
+    /* Check parameters */
 
-  /* Create the Input data structure */
-
-  this = (Input_t *)malloc(sizeof(Input_t));
-  if (this == (Input_t *)NULL) {
-    strcpy (errstr, "OpenInput: allocating Input data structure");
-    return (Input_t *)NULL;
-  }
-
-  /* Populate the data structure */
-
-  this->file_name = DupString(file_name);
-  if (this->file_name == (char *)NULL) {
-    free(this);
-    strcpy (errstr, "OpenInput: duplicating file name");
-    return (Input_t *)NULL;
-  }
-
-  this->sds.name = DupString(sds_name);
-  if (this->sds.name == (char *)NULL) {
-    free(this->file_name);
-    free(this);
-    strcpy (errstr, "OpenInput: duplicating sds name");
-    return (Input_t *)NULL;
-  }
-
-  /* Open file for SD access */
-
-  this->sds_file_id = SDstart((char *)file_name, DFACC_RDONLY);
-  if (this->sds_file_id == HDF_ERROR) {
-    free(this->sds.name);
-    free(this->file_name);
-    free(this);  
-    strcpy (errstr, "OpenInput: opening input file");
-    return (Input_t *)NULL;
-  }
-  this->open = true;
-
-  /* Get SDS information and start SDS access */
-
-  if (!GetSDSInfo(this->sds_file_id, &this->sds)) {
-    SDend(this->sds_file_id);
-    free(this->sds.name);
-    free(this->file_name);
-    free(this);
-    strcpy (errstr, "OpenInput: getting sds info");
-    return (Input_t *)NULL;
-  }
-
-  /* Get dimensions */
-
-  for (ir = 0; ir < this->sds.rank; ir++) {
-    if (!GetSDSDimInfo(this->sds.id, &this->sds.dim[ir], ir)) {
-      for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
-      SDendaccess(this->sds.id);
-      SDend(this->sds_file_id);
-      free(this->sds.name);
-      free(this->file_name);
-      free(this);
-      strcpy (errstr, "OpenInput: getting dimension");
-      return (Input_t *)NULL;
+    if (rank < 2  ||  rank > MYHDF_MAX_RANK) {
+        strcpy (errstr, "OpenInput: invalid rank");
+        return (Input_t *)NULL;
     }
-  }
 
-  /* Check the rank and dimensions */
-
-  if (this->sds.rank != rank) 
-    error_string = "expected rank does not match";
-    
-  if (error_string == (char *)NULL)
-  {
-    if (!FindInputDim(rank, dim, this->sds.dim, this->extra_dim, &this->dim,
-        tmperrstr)) {
-      for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
-      SDendaccess(this->sds.id);
-      SDend(this->sds_file_id);
-      free(this->sds.name);
-      free(this->file_name);
-      free(this);
-      sprintf (errstr, "%s\nOpenInput: unable to determine input line and "
-        "sample dimensions", tmperrstr);
-      return (Input_t *)NULL;
+    if (iband < -1  ||  iband >= NBAND_OFFSET) {
+        strcpy (errstr, "OpenInput: invalid band");
+        return (Input_t *)NULL;
     }
-  }
 
-  /* Check the line and sample dimensions */
+    /* Create the Input data structure */
 
-  if (error_string == (char *)NULL) {
-
-    this->size.l = this->sds.dim[this->dim.l].nval;
-    this->size.s = this->sds.dim[this->dim.s].nval;
-    
-    this->ires = -1;
-    this->ires = (int)((this->size.s / (double)NFRAME_1KM_MODIS) + 0.5);
-
-    if (this->ires != 1  && 
-        this->ires != 2  &&  
-        this->ires != 4) {
-      for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
-      SDendaccess(this->sds.id);
-      SDend(this->sds_file_id);
-      free(this->sds.name);
-      free(this->file_name);
-      free(this);
-      strcpy (errstr, "OpenInput: invalid resolution");
-      return (Input_t *)NULL;
+    this = (Input_t *)malloc(sizeof(Input_t));
+    if (this == (Input_t *)NULL) {
+        strcpy (errstr, "OpenInput: allocating Input data structure");
+        return (Input_t *)NULL;
     }
-  }
 
-  /* Get fill value or use 0.0 as the fill */
+    /* Populate the data structure */
 
-  if (error_string == (char *)NULL) {
-    attr.name = FILL_ATTR_NAME;
-    if (!GetAttrDouble(this->sds.id, &attr, fill)) {
-      this->fill_value = (int) 0.0;
+    this->file_name = DupString(file_name);
+    if (this->file_name == (char *)NULL) {
+        free(this);
+        strcpy (errstr, "OpenInput: duplicating file name");
+        return (Input_t *)NULL;
     }
+
+    this->sds.name = DupString(sds_name);
+    if (this->sds.name == (char *)NULL) {
+        free(this->file_name);
+        free(this);
+        strcpy (errstr, "OpenInput: duplicating sds name");
+        return (Input_t *)NULL;
+    }
+
+    /* Open file for SD access */
+
+    this->sds_file_id = SDstart((char *)file_name, DFACC_RDONLY);
+    if (this->sds_file_id == HDF_ERROR) {
+        free(this->sds.name);
+        free(this->file_name);
+        free(this);  
+        strcpy (errstr, "OpenInput: opening input file");
+        return (Input_t *)NULL;
+    }
+    this->open = true;
+
+    /* Get SDS information and start SDS access */
+
+    if (!GetSDSInfo(this->sds_file_id, &this->sds)) {
+        SDend(this->sds_file_id);
+        free(this->sds.name);
+        free(this->file_name);
+        free(this);
+        strcpy (errstr, "OpenInput: getting sds info");
+        return (Input_t *)NULL;
+    }
+
+    /* Get dimensions */
+
+    for (ir = 0; ir < this->sds.rank; ir++) {
+        if (!GetSDSDimInfo(this->sds.id, &this->sds.dim[ir], ir)) {
+            for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
+            SDendaccess(this->sds.id);
+            SDend(this->sds_file_id);
+            free(this->sds.name);
+            free(this->file_name);
+            free(this);
+            strcpy (errstr, "OpenInput: getting dimension");
+            return (Input_t *)NULL;
+        }
+    }
+
+    /* Check the rank and dimensions */
+
+    if (this->sds.rank != rank) 
+        error_string = "expected rank does not match";
+
+    if (error_string == (char *)NULL)
+    {
+        if (!FindInputDim(rank, dim, this->sds.dim, this->extra_dim, &this->dim,
+                          tmperrstr)) {
+                              for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
+                              SDendaccess(this->sds.id);
+                              SDend(this->sds_file_id);
+                              free(this->sds.name);
+                              free(this->file_name);
+                              free(this);
+                              sprintf (errstr, "%s\nOpenInput: unable to determine input line and "
+                                       "sample dimensions", tmperrstr);
+                              return (Input_t *)NULL;
+                          }
+    }
+
+    /* Check the line and sample dimensions */
+
+    if (error_string == (char *)NULL) {
+
+        this->size.l = this->sds.dim[this->dim.l].nval;
+        this->size.s = this->sds.dim[this->dim.s].nval;
+
+        this->ires = -1;
+        this->ires = (int)((this->size.s / (double)NFRAME_1KM_MODIS) + 0.5);
+
+        if (this->ires != 1  && 
+            this->ires != 2  &&  
+            this->ires != 4) {
+                for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
+                SDendaccess(this->sds.id);
+                SDend(this->sds_file_id);
+                free(this->sds.name);
+                free(this->file_name);
+                free(this);
+                strcpy (errstr, "OpenInput: invalid resolution");
+                return (Input_t *)NULL;
+            }
+    }
+
+    /* Get fill value or use 0.0 as the fill */
+
+    if (error_string == (char *)NULL) {
+        attr.name = FILL_ATTR_NAME;
+        if (!GetAttrDouble(this->sds.id, &attr, fill)) {
+            this->fill_value = (int) 0.0;
+        }
+        else {
+            this->fill_value = (int) fill[0];
+        }
+    }
+
+    /* Set up the band offset */
+
+    if (iband >= 0)
+        this->iband = iband;
     else {
-      this->fill_value = (int) fill[0];
+        switch (this->ires) {
+            case -1:  this->iband = BAND_GEN_NONE;  break;
+            case  1:  this->iband = BAND_GEN_1KM;   break;
+            case  2:  this->iband = BAND_GEN_500M;  break;
+            case  4:  this->iband = BAND_GEN_250M;  break;
+        }
     }
-  }
-  
-  /* Set up the band offset */
 
-  if (iband >= 0)
-    this->iband = iband;
-  else {
-    switch (this->ires) {
-      case -1:  this->iband = BAND_GEN_NONE;  break;
-      case  1:  this->iband = BAND_GEN_1KM;   break;
-      case  2:  this->iband = BAND_GEN_500M;  break;
-      case  4:  this->iband = BAND_GEN_250M;  break;
+    /* Check other dimensions */
+
+    for (ir = 0; ir < rank; ir++) {
+        if (this->extra_dim[ir] >= this->sds.dim[ir].nval) {
+            for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
+            SDendaccess(this->sds.id);
+            SDend(this->sds_file_id);
+            free(this->sds.name);
+            free(this->file_name);
+            free(this);
+            strcpy (errstr, "OpenInput: invalid dimension");
+            return (Input_t *)NULL;
+        }
     }
-  }
 
-  /* Check other dimensions */
-
-  for (ir = 0; ir < rank; ir++) {
-    if (this->extra_dim[ir] >= this->sds.dim[ir].nval) {
-      for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
-      SDendaccess(this->sds.id);
-      SDend(this->sds_file_id);
-      free(this->sds.name);
-      free(this->file_name);
-      free(this);
-      strcpy (errstr, "OpenInput: invalid dimension");
-      return (Input_t *)NULL;
-    }
-  }
-
-  /* Calculate number of scans, and for swath space, check for 
+    /* Calculate number of scans, and for swath space, check for 
      an integral number of scans */
 
-  this->scan_size.l = NDET_1KM_MODIS;
-  this->scan_size.l *= this->ires;
-  this->scan_size.s = this->size.s;
-  this->nscan = (this->size.l - 1) / this->scan_size.l + 1;
-  if ((this->nscan * this->scan_size.l) != this->size.l) {
-    for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
-    SDendaccess(this->sds.id);
-    SDend(this->sds_file_id);
-    free(this->sds.name);
-    free(this->file_name);
-    free(this);
-    strcpy (errstr, "OpenInput: not an integral number of scans");
-    return (Input_t *)NULL;
-  }
+    this->scan_size.l = NDET_1KM_MODIS;
+    this->scan_size.l *= this->ires;
+    this->scan_size.s = this->size.s;
+    this->nscan = (this->size.l - 1) / this->scan_size.l + 1;
+    if ((this->nscan * this->scan_size.l) != this->size.l) {
+        for (ir1 = 0; ir1 < ir; ir1++) free(this->sds.dim[ir1].name);
+        SDendaccess(this->sds.id);
+        SDend(this->sds_file_id);
+        free(this->sds.name);
+        free(this->file_name);
+        free(this);
+        strcpy (errstr, "OpenInput: not an integral number of scans");
+        return (Input_t *)NULL;
+    }
 
-  /* Allocate input buffer */
+    /* Allocate input buffer */
 
-  switch (this->sds.type) {
-    case DFNT_CHAR8:
-      this->data_type_size = sizeof(char8);
-      this->buf.val_char8 = (char8 *)calloc(this->size.s, 
-                                     this->data_type_size);
-      if (this->buf.val_char8 == (char8 *)NULL) 
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_UINT8:
-      this->data_type_size = sizeof(uint8);
-      this->buf.val_uint8 = (uint8 *)calloc(this->size.s, 
-                                     this->data_type_size);
-      if (this->buf.val_uint8 == (uint8 *)NULL) 
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_INT8:
-      this->data_type_size = sizeof(int8);
-      this->buf.val_int8 = (int8 *)calloc(this->size.s, 
-                                    this->data_type_size);
-      if (this->buf.val_int8 == (int8 *)NULL) 
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_INT16:
-      this->data_type_size = sizeof(int16);
-      this->buf.val_int16 = (int16 *)calloc(this->size.s, 
-                                     this->data_type_size);
-      if (this->buf.val_int16 == (int16 *)NULL) 
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_UINT16:
-      this->data_type_size = sizeof(uint16);
-      this->buf.val_uint16 = (uint16 *)calloc(this->size.s, 
-                                       this->data_type_size);
-      if (this->buf.val_uint16 == (uint16 *)NULL) 
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_INT32:
-      this->data_type_size = sizeof(int32);
-      this->buf.val_int32 = (int32 *)calloc(this->size.s,
-                                            this->data_type_size);
-      if (this->buf.val_int32 == (int32 *)NULL)
-        error_string = "allocating input i/o buffer";
-      break;
-    case DFNT_UINT32:
-      this->data_type_size = sizeof(uint32);
-      this->buf.val_uint32 = (uint32 *)calloc(this->size.s,
-                                              this->data_type_size);
-      if (this->buf.val_uint32 == (uint32 *)NULL)
-        error_string = "allocating input i/o buffer";
-      break;
-    default:
-      error_string = "unsupported data type";
-  }
+    switch (this->sds.type) {
+        case DFNT_CHAR8:
+            this->data_type_size = sizeof(char8);
+            this->buf.val_char8 = (char8 *)calloc(this->size.s, 
+                                                  this->data_type_size);
+            if (this->buf.val_char8 == (char8 *)NULL) 
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_UINT8:
+            this->data_type_size = sizeof(uint8);
+            this->buf.val_uint8 = (uint8 *)calloc(this->size.s, 
+                                                  this->data_type_size);
+            if (this->buf.val_uint8 == (uint8 *)NULL) 
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_INT8:
+            this->data_type_size = sizeof(int8);
+            this->buf.val_int8 = (int8 *)calloc(this->size.s, 
+                                                this->data_type_size);
+            if (this->buf.val_int8 == (int8 *)NULL) 
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_INT16:
+            this->data_type_size = sizeof(int16);
+            this->buf.val_int16 = (int16 *)calloc(this->size.s, 
+                                                  this->data_type_size);
+            if (this->buf.val_int16 == (int16 *)NULL) 
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_UINT16:
+            this->data_type_size = sizeof(uint16);
+            this->buf.val_uint16 = (uint16 *)calloc(this->size.s, 
+                                                    this->data_type_size);
+            if (this->buf.val_uint16 == (uint16 *)NULL) 
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_INT32:
+            this->data_type_size = sizeof(int32);
+            this->buf.val_int32 = (int32 *)calloc(this->size.s,
+                                                  this->data_type_size);
+            if (this->buf.val_int32 == (int32 *)NULL)
+                error_string = "allocating input i/o buffer";
+            break;
+        case DFNT_UINT32:
+            this->data_type_size = sizeof(uint32);
+            this->buf.val_uint32 = (uint32 *)calloc(this->size.s,
+                                                    this->data_type_size);
+            if (this->buf.val_uint32 == (uint32 *)NULL)
+                error_string = "allocating input i/o buffer";
+            break;
+        default:
+            error_string = "unsupported data type";
+    }
 
-  if (error_string != (char *)NULL) {
-    for (ir = 0; ir < this->sds.rank; ir++)
-      free(this->sds.dim[ir].name);
-    SDendaccess(this->sds.id);
-    SDend(this->sds_file_id);
-    free(this->sds.name);
-    free(this->file_name);
-    free(this);
-    sprintf (errstr, "OpenInput: %s", error_string);
-    return (Input_t *)NULL;
-  }
+    if (error_string != (char *)NULL) {
+        for (ir = 0; ir < this->sds.rank; ir++)
+            free(this->sds.dim[ir].name);
+        SDendaccess(this->sds.id);
+        SDend(this->sds_file_id);
+        free(this->sds.name);
+        free(this->file_name);
+        free(this);
+        sprintf (errstr, "OpenInput: %s", error_string);
+        return (Input_t *)NULL;
+    }
 
-  return this;
+    return this;
 }
 
 
-#define MIN_LS_DIM_SIZE (250)
-
-bool FindInputDim(int rank, int *param_dim, Myhdf_dim_t *sds_dim, 
-                  int *extra_dim, Img_coord_int_t *dim, char *errstr)
 /* 
 !C******************************************************************************
 
 !Description: 'FindInputDim' distinguishes between the line/sample and other 
               dimensions from the user parameters and the size of the
 	      dimensions.
- 
-!Input Parameters:
+
+ !Input Parameters:
  rank           rank of the input SDS
  param_dim      dimension flags from the user parameters; the line and 
                 sample dimensions are 
@@ -436,81 +434,84 @@ bool FindInputDim(int rank, int *param_dim, Myhdf_dim_t *sds_dim,
 
 !END****************************************************************************
 */
+
+#define MIN_LS_DIM_SIZE (250)
+
+bool FindInputDim(int rank, int *param_dim, Myhdf_dim_t *sds_dim, 
+                  int *extra_dim, Img_coord_int_t *dim, char *errstr)
 {
-  int ir, ils, iextra;
-  int temp_dim[MYHDF_MAX_RANK];
+    int ir, ils, iextra;
+    int temp_dim[MYHDF_MAX_RANK];
 
-  /* Set up the default values to be returned */
+    /* Set up the default values to be returned */
 
-  for (ir = 0; ir < rank; ir++) extra_dim[ir] = 0;
-  dim->l = dim->s = -1;
+    for (ir = 0; ir < rank; ir++) extra_dim[ir] = 0;
+    dim->l = dim->s = -1;
 
-  /* Check to make sure the line/sample dimensions from the user parameters 
+    /* Check to make sure the line/sample dimensions from the user parameters 
      are the first two dimesions */
 
-  if (param_dim[0] >= 0  ||  
-      param_dim[1] >= 0  ||
-      (param_dim[0] * param_dim[1]) != 2) {
-    strcpy (errstr, "FindInputDim: invalid line/sample dimensions");
-    return false;
-  }
+    if (param_dim[0] >= 0  ||  
+        param_dim[1] >= 0  ||
+        (param_dim[0] * param_dim[1]) != 2) {
+            strcpy (errstr, "FindInputDim: invalid line/sample dimensions");
+            return false;
+        }
 
-  /* Check to make sure that the remaining dimensions from the user parameters
+    /* Check to make sure that the remaining dimensions from the user parameters
      are valid */
 
-  for (ir = 2; ir < rank; ir++) {
-    if (param_dim[ir] < 0) {
-      strcpy (errstr, "FindInputDim: invalid remaining dimesions");
-      return false;
+    for (ir = 2; ir < rank; ir++) {
+        if (param_dim[ir] < 0) {
+            strcpy (errstr, "FindInputDim: invalid remaining dimesions");
+            return false;
+        }
     }
-  }
 
-  /* Figure out which are the line/sample dimensions and which are the
+    /* Figure out which are the line/sample dimensions and which are the
      extra dimensions.  The line and sample dimensions are expected to be
      greater than MIN_LS_DIM_SIZE.  If too many dimensions are "line/sample"
      dimensions, then it is an error.  If not enough dimensions are
      available for "line/sample" dimensions, then it is also an error. */
 
-  ils = 0;
-  iextra = 2;
+    ils = 0;
+    iextra = 2;
 
-  for (ir = 0; ir < rank; ir++) {
-    if (sds_dim[ir].nval > MIN_LS_DIM_SIZE) {
-      if (ils > 1) {
-        sprintf (errstr, "FindInputDim: too many large dimensions. Only "
-          "the line and sample dimensions can be larger than %d.",
-          MIN_LS_DIM_SIZE);
-        return false;
-      }
-      temp_dim[ir] = param_dim[ils];
-      extra_dim[ir] = 0;
-      if (temp_dim[ir] == -1) dim->l = ir;
-      else dim->s = ir;
-      ils++;
+    for (ir = 0; ir < rank; ir++) {
+        if (sds_dim[ir].nval > MIN_LS_DIM_SIZE) {
+            if (ils > 1) {
+                sprintf (errstr, "FindInputDim: too many large dimensions. Only "
+                         "the line and sample dimensions can be larger than %d.",
+                         MIN_LS_DIM_SIZE);
+                return false;
+            }
+            temp_dim[ir] = param_dim[ils];
+            extra_dim[ir] = 0;
+            if (temp_dim[ir] == -1) dim->l = ir;
+            else dim->s = ir;
+            ils++;
 
-    } else {
-      if (iextra >= MYHDF_MAX_RANK) {
-        sprintf (errstr, "FindInputDim: too many small dimensions. The "
-          "line and sample dimensions need to be larger than %d.",
-          MIN_LS_DIM_SIZE);
-        return false;
-      }
-      temp_dim[ir] = param_dim[iextra];
-      extra_dim[ir] = param_dim[iextra];
-      iextra++;
+        } else {
+            if (iextra >= MYHDF_MAX_RANK) {
+                sprintf (errstr, "FindInputDim: too many small dimensions. The "
+                         "line and sample dimensions need to be larger than %d.",
+                         MIN_LS_DIM_SIZE);
+                return false;
+            }
+            temp_dim[ir] = param_dim[iextra];
+            extra_dim[ir] = param_dim[iextra];
+            iextra++;
+        }
     }
-  }
 
-  /* Update the user parameters */
+    /* Update the user parameters */
 
-  for (ir = 0; ir < rank; ir++)
-    param_dim[ir] = temp_dim[ir];
-  
-  return true;
+    for (ir = 0; ir < rank; ir++)
+        param_dim[ir] = temp_dim[ir];
+
+    return true;
 }
 
-
-bool CloseInput(Input_t *this)
 /* 
 !C******************************************************************************
 
@@ -540,22 +541,22 @@ bool CloseInput(Input_t *this)
 
 !END****************************************************************************
 */
+
+bool CloseInput(Input_t *this)
 {
 
- if (!this->open)
-    LOG_RETURN_ERROR("file not open", "CloseInput", false);
+    if (!this->open)
+        LOG_RETURN_ERROR("file not open", "CloseInput", false);
 
-  if (SDendaccess(this->sds.id) == HDF_ERROR) 
-    LOG_RETURN_ERROR("ending sds access", "CloseInput", false);
+    if (SDendaccess(this->sds.id) == HDF_ERROR) 
+        LOG_RETURN_ERROR("ending sds access", "CloseInput", false);
 
-  SDend(this->sds_file_id);
-  this->open = false;
+    SDend(this->sds_file_id);
+    this->open = false;
 
-  return true;
+    return true;
 }
 
-
-bool FreeInput(Input_t *this)
 /* 
 !C******************************************************************************
 
@@ -577,19 +578,21 @@ bool FreeInput(Input_t *this)
 
 !END****************************************************************************
 */
+
+bool FreeInput(Input_t *this)
 {
-  int ir;
+    int ir;
 
-  if (this != (Input_t *)NULL) {
-    for (ir = 0; ir < this->sds.rank; ir++) {
-      if (this->sds.dim[ir].name != (char *)NULL) 
-        free(this->sds.dim[ir].name);
+    if (this != (Input_t *)NULL) {
+        for (ir = 0; ir < this->sds.rank; ir++) {
+            if (this->sds.dim[ir].name != (char *)NULL) 
+                free(this->sds.dim[ir].name);
+        }
+        if (this->sds.name != (char *)NULL) free(this->sds.name);
+        if (this->file_name != (char *)NULL) free(this->file_name);
+        free(this);
     }
-    if (this->sds.name != (char *)NULL) free(this->sds.name);
-    if (this->file_name != (char *)NULL) free(this->file_name);
-    free(this);
-  }
 
-  return true;
+    return true;
 }
 
