@@ -144,7 +144,7 @@ typedef struct {
 /* Prototypes */
 
 Patches_t *SetupPatches(Img_coord_int_t *img_size, char *file_name,
-                        int32 input_data_type, int input_fill_value);
+                        int32 input_data_type, int input_fill_value, int factor, int offset);
 bool FreePatchesInMem(Patches_t *this);
 bool FreePatches(Patches_t *this);
 bool InitPatchInMem(Patches_t *this, int il_patch, int is_patch);

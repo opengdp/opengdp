@@ -424,7 +424,7 @@ int main (int argc, const char **argv)
       /* Setup intermediate patches. Setup as the input data type. Then we
          will convert to the output data type later. */
       patches = SetupPatches(&param->output_space_def.img_size, 
-        param->patches_file_name, input->sds.type, input->fill_value);
+        param->patches_file_name, input->sds.type, input->fill_value, input->factor, input->offset);
       if (patches == (Patches_t *)NULL) 
         LOG_ERROR("setting up intermediate patches data structure","main");
 
@@ -433,6 +433,10 @@ int main (int argc, const char **argv)
 
       sprintf(msg, "  input lines/samples: %d %d\n", input->size.l,
         input->size.s);
+      LogInfomsg(msg);
+      sprintf(msg, "  input scale factor: %g\n", input->factor);
+      LogInfomsg(msg);
+      sprintf(msg, "  input offset: %lg\n", input->offset);
       LogInfomsg(msg);
       switch (input->ires)
       {

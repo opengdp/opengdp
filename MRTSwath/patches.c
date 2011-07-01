@@ -297,7 +297,7 @@ bool CreatePatches(Patches_t *this)
 */
 
 Patches_t *SetupPatches(Img_coord_int_t *img_size, char *file_name,
-                        int32 input_data_type, int input_fill_value)
+                        int32 input_data_type, int input_fill_value, int factor, int offset)
 {
     Patches_t *this;
     Patches_loc_t *loc_p;
