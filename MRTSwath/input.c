@@ -289,7 +289,7 @@ Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
         this->factor = scale[0];
     }
     else {
-        attr_name = "scale_factor";
+        attr.name = "scale_factor";
         if (GetAttrDouble(this->sds.id, &attr, scale)) {
             this->factor = scale[0];
         }
@@ -303,7 +303,7 @@ Input_t *OpenInput(char *file_name, char *sds_name, int iband, int rank,
         this->offset = offset[0];
     }
     else {
-        attr_name = "add_offset";
+        attr.name = "add_offset";
         if (GetAttrDouble(this->sds.id, &attr, offset)) {
             this->offset = offset[0];
         }
