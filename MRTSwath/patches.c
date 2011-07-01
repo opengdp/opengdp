@@ -311,6 +311,7 @@ Patches_t *SetupPatches(Img_coord_int_t *img_size, char *file_name,
     uint16 *val_uint16_p;
     int32 *val_int32_p;
     uint32 *val_uint32_p;
+    float32 *val_float32_p;
 
     char *error_string = (char *)NULL;
 
@@ -445,6 +446,15 @@ Patches_t *SetupPatches(Img_coord_int_t *img_size, char *file_name,
             for (il = 0; il < NLINE_PATCH; il++) {
                 this->buf.val_int32[il] = val_int32_p;
                 val_int32_p += NSAMPLE_PATCH;
+            }
+        case DFNT_FLOAT32:
+            this->data_type_size = sizeof(float32);
+            val_float32_p = (float32 *)calloc(n, this->data_type_size);
+            if (val_float32_p == (float32 *)NULL)
+                error_string = "allocating patches i/o buffer";
+            for (il = 0; il < NLINE_PATCH; il++) {
+                this->buf.val_float32[il] = val_float32_p;
+                val_float32_p += NSAMPLE_PATCH;
             }
             break;
         default:
@@ -1243,6 +1253,7 @@ bool TossPatches(Patches_t *this, int32 output_data_type)
     uint16 fill_uint16 = 0;
     int32 fill_int32 = 0;
     uint32 fill_uint32 = 0;
+    float32 fill_float32 = 0;
     int il, is;
     double w;
     bool same_data_type;
@@ -1348,6 +1359,9 @@ bool TossPatches(Patches_t *this, int32 output_data_type)
                 case DFNT_INT32:
                     input_diff = RANGE_INT32H - RANGE_INT32L;
                     break;
+                case DFNT_FLOAT32:
+                    input_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
+                    break;
             }
 
             /* determine the difference between the output image's high and low
@@ -1374,6 +1388,9 @@ bool TossPatches(Patches_t *this, int32 output_data_type)
                     break;
                 case DFNT_INT32:
                     output_diff = RANGE_INT32H - RANGE_INT32L;
+                    break;
+                case DFNT_FLOAT32:
+                    output_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
                     break;
             }
 
@@ -1459,6 +1476,17 @@ bool TossPatches(Patches_t *this, int32 output_data_type)
                         this->buf.val_uint32[il][is] = (w > MIN_WEIGHT) ?
                             ConvertToUint32(mem_p->sum[il][is] / w, slope, same_data_type) :
                             fill_uint32;
+                    }
+                }
+                break;
+            case DFNT_FLOAT32:
+                fill_float32 = ConvertToFloat32(this->fill_value, slope, same_data_type);
+                for (il = 0; il < NLINE_PATCH; il++) {
+                    for (is = 0; is < NSAMPLE_PATCH; is++) {
+                        w = mem_p->weight[il][is];
+                        this->buf.val_float32[il][is] = (w > MIN_WEIGHT) ?
+                            ConvertToFloat32(mem_p->sum[il][is] / w, slope, same_data_type) :
+                            fill_float32;
                     }
                 }
                 break;
@@ -1580,6 +1608,7 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
         uint16 *val_uint16[NLINE_PATCH];    
         int32 *val_int32[NLINE_PATCH];
         uint32 *val_uint32[NLINE_PATCH];
+        float32 *val_float32[NLINE_PATCH];
     } buf;
     size_t n;
     char8 *val_char8_p;
@@ -1589,6 +1618,8 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
     uint16 *val_uint16_p;
     int32 *val_int32_p;
     uint32 *val_uint32_p;
+    float32 *val_float32_p;
+    
     char8 fill_char8 = 0;
     uint8 fill_uint8 = 0;
     int8 fill_int8 = 0;
@@ -1596,6 +1627,8 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
     uint16 fill_uint16 = 0;
     int32 fill_int32 = 0;
     uint32 fill_uint32 = 0;
+    float32 fill_float32 = 0;
+    
     int il, is;
     int il_patch, is_patch;
     int il1, il2;
@@ -1653,6 +1686,9 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
             case DFNT_INT32:
                 input_diff = RANGE_INT32H - RANGE_INT32L;
                 break;
+            case DFNT_FLOAT32:
+                input_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
+                break;
         }
 
         /* Determine the difference between the output image's high and low
@@ -1679,6 +1715,9 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
                 break;
             case DFNT_INT32:
                 output_diff = RANGE_INT32H - RANGE_INT32L;
+                break;
+            case DFNT_FLOAT32:
+                output_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
                 break;
         }
 
@@ -1768,6 +1807,17 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
             for (il = 0; il < NLINE_PATCH; il++) {
                 buf.val_uint32[il] = val_uint32_p;
                 val_uint32_p += output->size.s;
+            }
+            break;
+        case DFNT_FLOAT32:
+            fill_float32 = ConvertToFloat32(this->fill_value, slope, same_data_type);
+            val_float32_p = (float32 *)calloc(n, sizeof(float32));
+            if (val_float32_p == (float32 *)NULL)
+                LOG_RETURN_ERROR("allocating output product i/o buffer",
+                                 "UnscramblePatches", false);
+            for (il = 0; il < NLINE_PATCH; il++) {
+                buf.val_float32[il] = val_float32_p;
+                val_float32_p += output->size.s;
             }
             break;
         default:
@@ -2133,6 +2183,48 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
                         il_rel++;
                     }
                         break;
+                    case DFNT_FLOAT32:
+                        il_rel = 0;
+                        for (il = il1; il < il2; il++)
+                    {
+                        is_rel = 0;
+                        for (is = is1; is < is2; is++)
+                        {
+                            switch (this->data_type)
+                            {
+                                case DFNT_CHAR8:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_char8[il_rel][is_rel++];
+                                    break;
+                                case DFNT_UINT8:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_uint8[il_rel][is_rel++];
+                                    break;
+                                case DFNT_INT8:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_int8[il_rel][is_rel++];
+                                    break;
+                                case DFNT_UINT16:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_uint16[il_rel][is_rel++];
+                                    break;
+                                case DFNT_INT16:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_int16[il_rel][is_rel++];
+                                    break;
+                                case DFNT_UINT32:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_uint32[il_rel][is_rel++];
+                                    break;
+                                case DFNT_INT32:
+                                    buf.val_float32[il_rel][is] =
+                                        this->buf.val_int32[il_rel][is_rel++];
+                                    break;
+                            }
+                        }
+                        il_rel++;
+                    }
+                        break;
                     default:
                         free(buf.val_void[0]);
                         LOG_RETURN_ERROR("invalid data type (b)","UnscramblePatches",false);
@@ -2196,6 +2288,14 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
                         for (il = il1; il < il2; il++) {
                             for (is = is1; is < is2; is++)
                                 buf.val_uint32[il_rel][is] = fill_uint32;
+                            il_rel++;
+                        }
+                        break;
+                    case DFNT_FLOAT32:
+                        il_rel = 0;
+                        for (il = il1; il < il2; il++) {
+                            for (is = is1; is < is2; is++)
+                                buf.val_float32[il_rel][is] = fill_float32;
                             il_rel++;
                         }
                         break;
@@ -2342,6 +2442,8 @@ bool FillOutput(void *void_buf[NLINE_PATCH], int nlines, int nsamps,
     int16 *val_int16_p[NLINE_PATCH];
     uint32 *val_uint32_p[NLINE_PATCH];
     int32 *val_int32_p[NLINE_PATCH];
+    float32 *val_float32_p[NLINE_PATCH];
+    
     char8 fill_char8 = 0;
     uint8 fill_uint8 = 0;
     int8 fill_int8 = 0;
@@ -2349,6 +2451,8 @@ bool FillOutput(void *void_buf[NLINE_PATCH], int nlines, int nsamps,
     int16 fill_int16 = 0;
     uint32 fill_uint32 = 0;
     int32 fill_int32 = 0;
+    float32 fill_float32 = 0;
+    
     int i, il, is;           /* looping variables for lines and samples */
     int neighbor_array[8];   /* eight neighbor pixels to use for filling */
     int neighbor_count;      /* count of the actual number of valid neighbors */
@@ -2390,6 +2494,11 @@ bool FillOutput(void *void_buf[NLINE_PATCH], int nlines, int nsamps,
             fill_int32 = ConvertToInt32(fill_value, slope, same_data_type);
             for (i = 0; i < nlines; i++)
                 val_int32_p[i] = void_buf[i];
+            break;
+        case DFNT_FLOAT32:
+            fill_float32 = ConvertToFloat32(fill_value, slope, same_data_type);
+            for (i = 0; i < nlines; i++)
+                val_float32_p[i] = void_buf[i];
             break;
         default:
             LOG_RETURN_ERROR("invalid data type (a)", "FillOutput", false);
@@ -2783,7 +2892,60 @@ bool FillOutput(void *void_buf[NLINE_PATCH], int nlines, int nsamps,
                     val_int32_p[il][is] = (int32) median;
                 }
                     break;
-            }
+                case DFNT_FLOAT32:
+                    if (val_float32_p[il][is] == fill_float32)
+                {
+                    /* Check the surrounding neighbors.  If any of the top or bottom
+                     are fill then we won't fill this pixel. Fill pixels to the left
+                     and right are ok and even likely. */
+                    /* Top row */
+                    if (il-1 >= 0 && is-1 >= 0 &&
+                        val_float32_p[il-1][is-1] == fill_float32)
+                        break;
+                    if (il-1 >= 0 && val_float32_p[il-1][is] == fill_float32)
+                        break;
+                    if (il-1 >= 0 && is+1 < nsamps &&
+                        val_float32_p[il-1][is+1] == fill_float32)
+                        break;
+
+                    /* Bottom row */
+                    if (il+1 < nlines && is-1 >= 0 &&
+                        val_float32_p[il+1][is-1] == fill_float32)
+                        break;
+                    if (il+1 < nlines && val_float32_p[il+1][is] == fill_float32)
+                        break;
+                    if (il+1 < nlines && is+1 < nsamps &&
+                        val_float32_p[il+1][is+1] == fill_float32)
+                        break;
+
+                    /* All top and bottom neighbor pixels must be non-fill, so we'll
+                     grab the non-fill neighbor pixels to use for filling */
+                    neighbor_count = 0;
+                    if (il-1 >= 0 && is-1 >= 0)  /* ul */
+                        neighbor_array[neighbor_count++] = val_float32_p[il-1][is-1];
+                    if (il-1 >= 0)  /* top */
+                        neighbor_array[neighbor_count++] = val_float32_p[il-1][is];
+                    if (il-1 >= 0 && is+1 < nsamps)  /* ur */
+                        neighbor_array[neighbor_count++] = val_float32_p[il-1][is+1];
+                    if (is-1 >= 0 && val_float32_p[il][is-1] != fill_float32)  /* left */
+                        neighbor_array[neighbor_count++] = val_int32_p[il][is-1];
+                    if (is+1 < nsamps && val_float32_p[il][is+1] != fill_float32)/* right */
+                        neighbor_array[neighbor_count++] = val_float32_p[il][is+1];
+                    if (il+1 < nlines && is-1 >= 0)  /* ll */
+                        neighbor_array[neighbor_count++] = val_float32_p[il+1][is-1];
+                    if (il+1 < nlines)  /* bottom */
+                        neighbor_array[neighbor_count++] = val_float32_p[il+1][is];
+                    if (il+1 < nlines && is+1 < nsamps)  /* lr */
+                        neighbor_array[neighbor_count++] = val_float32_p[il+1][is+1];
+
+                    /* Find the median */
+                    median = FindMedian (neighbor_array, neighbor_count);
+
+                    /* Fill the current pixel with the median value */
+                    val_float32_p[il][is] = (float32) median;
+                }
+                    break;
+                }
         }
     }
 
