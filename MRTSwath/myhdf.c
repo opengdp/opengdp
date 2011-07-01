@@ -314,7 +314,7 @@ bool GetAttrDouble(int32 sds_id, Myhdf_attr_t *attr, double *val)
   int32 val_int32[MYHDF_MAX_NATTR_VAL];
   uint32 val_uint32[MYHDF_MAX_NATTR_VAL];
   float32 val_float32[MYHDF_MAX_NATTR_VAL];
-  float32 val_float64[MYHDF_MAX_NATTR_VAL];
+  float64 val_float64[MYHDF_MAX_NATTR_VAL];
   int i;
   char z_name[80];
   char errmsg[M_MSG_LEN+1];
