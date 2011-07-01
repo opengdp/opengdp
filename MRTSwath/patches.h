@@ -121,6 +121,8 @@ typedef struct {
                            (uninitialized) */
   int32 data_type;      /* Input product data type */
   double fill_value;    /* Output product fill value */
+  double factor;        /* Output product scale factor */
+  double offset;        /* Output product offset */
   size_t data_type_size;  /* Size of input product data type (bytes) */
   size_t patch_size;    /* Size of a patch (bytes) */
   long file_size;       /* Current temporary patch file size (bytes) */
@@ -135,6 +137,7 @@ typedef struct {
     uint16 *val_uint16[NLINE_PATCH];
     int32 *val_int32[NLINE_PATCH];
     uint32 *val_uint32[NLINE_PATCH];
+    float32 *val_float32[NLINE_PATCH];
   } buf;
   Patches_loc_t **loc;  /* Array containing location of each patch */
   Patches_mem_t **mem;  /* Array containing pointer to patch in memory
