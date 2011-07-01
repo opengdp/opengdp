@@ -1004,6 +1004,8 @@ bool ReadParamFile(FILE *file, Param_t *this)
           this->output_data_type = DFNT_INT32;
         else if (strcmp(arg_val, "UINT32") == 0) 
           this->output_data_type = DFNT_UINT32;
+        else if (strcmp(arg_val, "FLOAT32") == 0) 
+          this->output_data_type = DFNT_FLOAT32;
         else {
           sprintf(msg, "resamp: output data type (%s).\n", arg_val);
 	  LogInfomsg(msg);
