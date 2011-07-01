@@ -1138,6 +1138,56 @@ int32 ConvertToInt32(double v, double slope, bool same_data_type)
     else return((int32)vi);
 }
 
+/*
+!C******************************************************************************
+
+!Description: 'ConvertToFloat32' converts a float to an geotiff float32 data type.
+
+!Input Parameters:
+ v              floating point number
+ slope          slope of the conversion from one data type to another
+                (input_max - input_min) / (output_max - output_min)
+ same_data_type flag to specify if the input data type and output data type
+                are the same
+
+!Output Parameters:
+ (returns)      input value converted to geotiff float32 data type
+
+!Team Unique Header:
+
+ ! Design Notes:
+   1. If the value is rounded to the nearest integer.
+   2. If the value is outside of the range 'RANGE_INT32L' to 'RANGE_INT32H' a
+      value within the range is returned.
+
+!END****************************************************************************
+*/
+
+float32 ConvertToFloat32(double v, double slope, bool same_data_type)
+{
+    double out_value, vi;
+
+    /* if the input and output data types are the same then use the data
+     value as is */
+    if (same_data_type)
+        out_value = v;
+    else
+        /* output value is data type low range value + the slope * floating
+         point number */
+        out_value = (double)RANGE_FLOAT32L + slope * v;
+
+    /* vi = floor((double)(out_value + 0.5)); */
+    /*vi = out_value < 0.0 ? out_value - 0.5 : out_value + 0.5;*/
+    vi = out_value;
+    
+    if (vi < (double)RANGE_FLOAT32L)
+        return((float32)RANGE_FLOAT32L);
+    else if (vi > (double)RANGE_FLOAT32H)
+        return((float32)RANGE_FLOAT32H);
+    else 
+        return((float32)vi);
+}
+
 /* 
 !C******************************************************************************
 
