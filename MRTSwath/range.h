@@ -64,31 +64,13 @@
 #define RANGE_FLOAT32L   (   -1.0e+37  )
 #endif
 
-#define range_diff(type, diff) {\
-    switch (type) { \
-        case DFNT_CHAR8:\
-            diff = RANGE_CHAR8H - RANGE_CHAR8L;\
-            break;\
-        case DFNT_UINT8:\
-            diff = RANGE_UINT8H - RANGE_UINT8L;\
-            break;\
-        case DFNT_INT8:\
-            diff = RANGE_INT8H - RANGE_INT8L;\
-            break;\
-        case DFNT_UINT16:\
-            diff = RANGE_UINT16H - RANGE_UINT16L;\
-            break;\
-        case DFNT_INT16:\
-            diff = RANGE_INT16H - RANGE_INT16L;\
-            break;\
-        case DFNT_UINT32:\
-            diff = RANGE_UINT32H - RANGE_UINT32L;\
-            break;\
-        case DFNT_INT32:\
-            diff = RANGE_INT32H - RANGE_INT32L;\
-            break;\
-        case DFNT_FLOAT32:\
-            diff = RANGE_FLOAT32H - RANGE_FLOAT32L;\
-            break;\
-    }\
-}
+#define range_diff(type) \
+    (type == DFNT_CHAR8)   ? RANGE_CHAR8H - RANGE_CHAR8L :\
+    (type == DFNT_UINT8)   ? RANGE_UINT8H - RANGE_UINT8L :\
+    (type == DFNT_INT8)    ? RANGE_INT8H - RANGE_INT8L :\
+    (type == DFNT_UINT16)  ? RANGE_UINT16H - RANGE_UINT16L :\
+    (type == DFNT_INT16)   ? RANGE_INT16H - RANGE_INT16L :\
+    (type == DFNT_UINT32)  ? RANGE_UINT32H - RANGE_UINT32L :\
+    (type == DFNT_INT32)   ? RANGE_INT32H - RANGE_INT32L :\
+    (type == DFNT_FLOAT32) ? RANGE_FLOAT32H - RANGE_FLOAT32L :\
+        0
