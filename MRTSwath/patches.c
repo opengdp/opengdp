@@ -130,6 +130,53 @@
 
 #define MAX2(a, b) (((a) >= (b)) ? (a) : (b))
 
+/******************************************************************************
+ macro to read a buffer from a union based on type
+******************************************************************************/
+
+#define readbuf(type, union, x, y) \
+    (type == DFNT_CHAR8)   ? union.val_char8[x][y] :\
+    (type == DFNT_UINT8)   ? union.val_uint8[x][y] :\
+    (type == DFNT_INT8)    ? union.val_int8[x][y] :\
+    (type == DFNT_UINT16)  ? union.val_uint16[x][y] :\
+    (type == DFNT_INT16)   ? union.val_int16[x][y] :\
+    (type == DFNT_UINT32)  ? union.val_uint32[x][y] :\
+    (type == DFNT_INT32)   ? union.val_int32[x][y] :\
+    (type == DFNT_FLOAT32) ? union.val_float32[x][y] :\
+        0
+
+/******************************************************************************
+ macro to write to a buffer from a union based on type
+******************************************************************************/
+#define writebuf(type, union, x, y, val, offset, factor) {\
+    switch (type) {\
+        case DFNT_CHAR8:\
+            union.val_char8[x][y] = (char8) val;\
+            break;\
+        case DFNT_UINT8:\
+            union.val_uint8[x][y] = (uint8) val;\
+            break;\
+        case DFNT_INT8:\
+            union.val_int8[x][y] = (int8) val;\
+            break;\
+        case DFNT_UINT16:\
+            union.val_uint16[x][y] = (uint16) val;\
+            break;\
+        case DFNT_INT16:\
+            union.val_int16[x][y] = (int16) val;\
+            break;\
+        case DFNT_UINT32:\
+            union.val_uint32[x][y] = (uint32) val;\
+            break;\
+        case DFNT_INT32:\
+            union.val_int32[x][y] = (int32) val;\
+            break;\
+        case DFNT_FLOAT32:\
+            union.val_float32[x][y] = (float32) val;\
+            break;\
+    }\
+}
+
 /* Constants */
 
 #define NPATCH_MEM_INIT (4)  /* Initial number of sets of patches in memory */
@@ -1086,7 +1133,7 @@ uint16 ConvertToUint16(double v, double slope, bool same_data_type)
 uint32 ConvertToUint32(double v, double slope, bool same_data_type)
 {
     double out_value, vi;
-
+    
     /* if the input and output data types are the same then use the data
      value as is */
     if (same_data_type)
@@ -1333,69 +1380,18 @@ bool TossPatches(Patches_t *this, int32 output_data_type)
             slope = 1.0;
         }
         else
-        {
-            /* determine the difference between the input image's high and low
-             range values */
-            switch (this->data_type)
-            {
-                case DFNT_CHAR8:
-                    input_diff = RANGE_CHAR8H - RANGE_CHAR8L;
-                    break;
-                case DFNT_UINT8:
-                    input_diff = RANGE_UINT8H - RANGE_UINT8L;
-                    break;
-                case DFNT_INT8:
-                    input_diff = RANGE_INT8H - RANGE_INT8L;
-                    break;
-                case DFNT_UINT16:
-                    input_diff = RANGE_UINT16H - RANGE_UINT16L;
-                    break;
-                case DFNT_INT16:
-                    input_diff = RANGE_INT16H - RANGE_INT16L;
-                    break;
-                case DFNT_UINT32:
-                    input_diff = RANGE_UINT32H - RANGE_UINT32L;
-                    break;
-                case DFNT_INT32:
-                    input_diff = RANGE_INT32H - RANGE_INT32L;
-                    break;
-                case DFNT_FLOAT32:
-                    input_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
-                    break;
-            }
+        {        /* determine the difference between the input image's high and low
+           range values */
 
-            /* determine the difference between the output image's high and low
-             range values */
-            switch (output_data_type)
-            {
-                case DFNT_CHAR8:
-                    output_diff = RANGE_CHAR8H - RANGE_CHAR8L;
-                    break;
-                case DFNT_UINT8:
-                    output_diff = RANGE_UINT8H - RANGE_UINT8L;
-                    break;
-                case DFNT_INT8:
-                    output_diff = RANGE_INT8H - RANGE_INT8L;
-                    break;
-                case DFNT_UINT16:
-                    output_diff = RANGE_UINT16H - RANGE_UINT16L;
-                    break;
-                case DFNT_INT16:
-                    output_diff = RANGE_INT16H - RANGE_INT16L;
-                    break;
-                case DFNT_UINT32:
-                    output_diff = RANGE_UINT32H - RANGE_UINT32L;
-                    break;
-                case DFNT_INT32:
-                    output_diff = RANGE_INT32H - RANGE_INT32L;
-                    break;
-                case DFNT_FLOAT32:
-                    output_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
-                    break;
-            }
+        input_diff = range_diff(this->data_type);
+
+        /* determine the difference between the output image's high and low
+           range values */
+
+         output_diff = range_diff(output_data_type);
 
             /* determine the slope */
-            if (input_diff != 0)
+            if (output_data_type != DFNT_FLOAT32 && input_diff != 0)
                 slope = (double) output_diff / (double) input_diff;
             else
                 slope = 1.0;
@@ -1660,66 +1656,15 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
         slope = 1.0;
     }
     else
-    {
-        /* Determine the difference between the input image's high and low
-         range values */
-        switch (this->data_type)
-        {
-            case DFNT_CHAR8:
-                input_diff = RANGE_CHAR8H - RANGE_CHAR8L;
-                break;
-            case DFNT_UINT8:
-                input_diff = RANGE_UINT8H - RANGE_UINT8L;
-                break;
-            case DFNT_INT8:
-                input_diff = RANGE_INT8H - RANGE_INT8L;
-                break;
-            case DFNT_UINT16:
-                input_diff = RANGE_UINT16H - RANGE_UINT16L;
-                break;
-            case DFNT_INT16:
-                input_diff = RANGE_INT16H - RANGE_INT16L;
-                break;
-            case DFNT_UINT32:
-                input_diff = RANGE_UINT32H - RANGE_UINT32L;
-                break;
-            case DFNT_INT32:
-                input_diff = RANGE_INT32H - RANGE_INT32L;
-                break;
-            case DFNT_FLOAT32:
-                input_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
-                break;
-        }
+    {        /* determine the difference between the input image's high and low
+           range values */
 
-        /* Determine the difference between the output image's high and low
-         range values */
-        switch (output_data_type)
-        {
-            case DFNT_CHAR8:
-                output_diff = RANGE_CHAR8H - RANGE_CHAR8L;
-                break;
-            case DFNT_UINT8:
-                output_diff = RANGE_UINT8H - RANGE_UINT8L;
-                break;
-            case DFNT_INT8:
-                output_diff = RANGE_INT8H - RANGE_INT8L;
-                break;
-            case DFNT_UINT16:
-                output_diff = RANGE_UINT16H - RANGE_UINT16L;
-                break;
-            case DFNT_INT16:
-                output_diff = RANGE_INT16H - RANGE_INT16L;
-                break;
-            case DFNT_UINT32:
-                output_diff = RANGE_UINT32H - RANGE_UINT32L;
-                break;
-            case DFNT_INT32:
-                output_diff = RANGE_INT32H - RANGE_INT32L;
-                break;
-            case DFNT_FLOAT32:
-                output_diff = RANGE_FLOAT32H - RANGE_FLOAT32L;
-                break;
-        }
+        input_diff = range_diff(this->data_type);
+
+        /* determine the difference between the output image's high and low
+           range values */
+
+        output_diff = range_diff(output_data_type);
 
         /* Determine the slope */
         if (input_diff != 0)
@@ -1887,347 +1832,13 @@ bool UnscramblePatches(Patches_t *this, Output_t *output,
 
                 /* Store the patch in the output buffer */
 
-                switch (output_data_type)
-                {
-                    case DFNT_CHAR8:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_char8[il_rel][is] = 
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_char8[il_rel][is] = 
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_char8[il_rel][is] = 
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_char8[il_rel][is] = (char8)
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_char8[il_rel][is] = (char8)
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_char8[il_rel][is] = (char8)
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_char8[il_rel][is] = (char8)
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
+                for (il = il1, il_rel = 0; il < il2; il++, il_rel++) {
+                    for (is = is1, is_rel = 0; is < is2; is++, is_rel++) {
+                        writebuf(output_data_type, buf, il_rel, is,
+                                 readbuf(this->data_type, this->buf,
+                                         il_rel, is_rel),
+                                 this->offset, this->factor);
                     }
-                        break;
-                    case DFNT_UINT8:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_uint8[il_rel][is] = 
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_uint8[il_rel][is] = 
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_uint8[il_rel][is] = 
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_uint8[il_rel][is] = (uint8)
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_uint8[il_rel][is] = (uint8)
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_uint8[il_rel][is] = (uint8)
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_uint8[il_rel][is] = (uint8)
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_INT8:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_int8[il_rel][is] = 
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_int8[il_rel][is] = 
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_int8[il_rel][is] = 
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_int8[il_rel][is] = (int8)
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_int8[il_rel][is] = (int8)
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_int8[il_rel][is] = (int8)
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_int8[il_rel][is] = (int8)
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_UINT16:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_uint16[il_rel][is] = 
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_uint16[il_rel][is] = 
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_uint16[il_rel][is] = 
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_uint16[il_rel][is] = 
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_uint16[il_rel][is] = 
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_uint16[il_rel][is] = (uint16)
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_uint16[il_rel][is] = (uint16)
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_INT16:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_int16[il_rel][is] = 
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_int16[il_rel][is] = 
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_int16[il_rel][is] = 
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_int16[il_rel][is] = 
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_int16[il_rel][is] = 
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_int16[il_rel][is] = (int16)
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_int16[il_rel][is] = (int16)
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_UINT32:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_uint32[il_rel][is] =
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_INT32:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_int32[il_rel][is] =
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    case DFNT_FLOAT32:
-                        il_rel = 0;
-                        for (il = il1; il < il2; il++)
-                    {
-                        is_rel = 0;
-                        for (is = is1; is < is2; is++)
-                        {
-                            switch (this->data_type)
-                            {
-                                case DFNT_CHAR8:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_char8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT8:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_uint8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT8:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_int8[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT16:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_uint16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT16:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_int16[il_rel][is_rel++];
-                                    break;
-                                case DFNT_UINT32:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_uint32[il_rel][is_rel++];
-                                    break;
-                                case DFNT_INT32:
-                                    buf.val_float32[il_rel][is] =
-                                        this->buf.val_int32[il_rel][is_rel++];
-                                    break;
-                            }
-                        }
-                        il_rel++;
-                    }
-                        break;
-                    default:
-                        free(buf.val_void[0]);
-                        LOG_RETURN_ERROR("invalid data type (b)","UnscramblePatches",false);
                 }
 
             } else {
