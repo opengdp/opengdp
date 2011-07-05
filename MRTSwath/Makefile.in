@@ -47,24 +47,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__dumpmeta_SOURCES_DIST = input.c output.c space.c geoloc.c myhdf.c \
-	mystring.c myerror.c deg2dms.c degdms.c metadata.c geo_trans.c \
-	logh.c geowrpr.c myendian.c dumpmeta.c
-@HAVE_HDF_TRUE@am_dumpmeta_OBJECTS = dumpmeta-input.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-output.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-space.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-geoloc.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-myhdf.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-mystring.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-myerror.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-deg2dms.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-degdms.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-metadata.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-geo_trans.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-logh.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-geowrpr.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-myendian.$(OBJEXT) \
-@HAVE_HDF_TRUE@	dumpmeta-dumpmeta.$(OBJEXT)
+am__dumpmeta_SOURCES_DIST = dumpmeta.c
+@HAVE_HDF_TRUE@am_dumpmeta_OBJECTS = dumpmeta-dumpmeta.$(OBJEXT)
 dumpmeta_OBJECTS = $(am_dumpmeta_OBJECTS)
 dumpmeta_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_$(V))
@@ -350,11 +334,7 @@ top_srcdir = @top_srcdir@
 @HAVE_HDF_TRUE@    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
 @HAVE_HDF_TRUE@dumpmeta_SOURCES = \
-@HAVE_HDF_TRUE@	input.c output.c space.c geoloc.c\
-@HAVE_HDF_TRUE@	myhdf.c mystring.c myerror.c \
-@HAVE_HDF_TRUE@	deg2dms.c degdms.c  metadata.c \
-@HAVE_HDF_TRUE@	geo_trans.c logh.c geowrpr.c \
-@HAVE_HDF_TRUE@	myendian.c dumpmeta.c
+@HAVE_HDF_TRUE@	dumpmeta.c
 
 @HAVE_HDF_TRUE@dumpmeta_CFLAGS = \
 @HAVE_HDF_TRUE@    -DH4_HAVE_NETCDF -DHAVE_INT8 \
@@ -458,21 +438,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-deg2dms.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-degdms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-dumpmeta.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-geo_trans.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-geoloc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-geowrpr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-input.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-logh.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-metadata.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-myendian.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-myerror.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-myhdf.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-mystring.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-output.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dumpmeta-space.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-InitGeoTiff.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-addmeta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-convert_corners.Po@am__quote@
@@ -523,230 +489,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-dumpmeta-input.o: input.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-input.o -MD -MP -MF $(DEPDIR)/dumpmeta-input.Tpo -c -o dumpmeta-input.o `test -f 'input.c' || echo '$(srcdir)/'`input.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-input.Tpo $(DEPDIR)/dumpmeta-input.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='input.c' object='dumpmeta-input.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-input.o `test -f 'input.c' || echo '$(srcdir)/'`input.c
-
-dumpmeta-input.obj: input.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-input.obj -MD -MP -MF $(DEPDIR)/dumpmeta-input.Tpo -c -o dumpmeta-input.obj `if test -f 'input.c'; then $(CYGPATH_W) 'input.c'; else $(CYGPATH_W) '$(srcdir)/input.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-input.Tpo $(DEPDIR)/dumpmeta-input.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='input.c' object='dumpmeta-input.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-input.obj `if test -f 'input.c'; then $(CYGPATH_W) 'input.c'; else $(CYGPATH_W) '$(srcdir)/input.c'; fi`
-
-dumpmeta-output.o: output.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-output.o -MD -MP -MF $(DEPDIR)/dumpmeta-output.Tpo -c -o dumpmeta-output.o `test -f 'output.c' || echo '$(srcdir)/'`output.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-output.Tpo $(DEPDIR)/dumpmeta-output.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='output.c' object='dumpmeta-output.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-output.o `test -f 'output.c' || echo '$(srcdir)/'`output.c
-
-dumpmeta-output.obj: output.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-output.obj -MD -MP -MF $(DEPDIR)/dumpmeta-output.Tpo -c -o dumpmeta-output.obj `if test -f 'output.c'; then $(CYGPATH_W) 'output.c'; else $(CYGPATH_W) '$(srcdir)/output.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-output.Tpo $(DEPDIR)/dumpmeta-output.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='output.c' object='dumpmeta-output.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-output.obj `if test -f 'output.c'; then $(CYGPATH_W) 'output.c'; else $(CYGPATH_W) '$(srcdir)/output.c'; fi`
-
-dumpmeta-space.o: space.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-space.o -MD -MP -MF $(DEPDIR)/dumpmeta-space.Tpo -c -o dumpmeta-space.o `test -f 'space.c' || echo '$(srcdir)/'`space.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-space.Tpo $(DEPDIR)/dumpmeta-space.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='space.c' object='dumpmeta-space.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-space.o `test -f 'space.c' || echo '$(srcdir)/'`space.c
-
-dumpmeta-space.obj: space.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-space.obj -MD -MP -MF $(DEPDIR)/dumpmeta-space.Tpo -c -o dumpmeta-space.obj `if test -f 'space.c'; then $(CYGPATH_W) 'space.c'; else $(CYGPATH_W) '$(srcdir)/space.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-space.Tpo $(DEPDIR)/dumpmeta-space.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='space.c' object='dumpmeta-space.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-space.obj `if test -f 'space.c'; then $(CYGPATH_W) 'space.c'; else $(CYGPATH_W) '$(srcdir)/space.c'; fi`
-
-dumpmeta-geoloc.o: geoloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geoloc.o -MD -MP -MF $(DEPDIR)/dumpmeta-geoloc.Tpo -c -o dumpmeta-geoloc.o `test -f 'geoloc.c' || echo '$(srcdir)/'`geoloc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geoloc.Tpo $(DEPDIR)/dumpmeta-geoloc.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geoloc.c' object='dumpmeta-geoloc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geoloc.o `test -f 'geoloc.c' || echo '$(srcdir)/'`geoloc.c
-
-dumpmeta-geoloc.obj: geoloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geoloc.obj -MD -MP -MF $(DEPDIR)/dumpmeta-geoloc.Tpo -c -o dumpmeta-geoloc.obj `if test -f 'geoloc.c'; then $(CYGPATH_W) 'geoloc.c'; else $(CYGPATH_W) '$(srcdir)/geoloc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geoloc.Tpo $(DEPDIR)/dumpmeta-geoloc.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geoloc.c' object='dumpmeta-geoloc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geoloc.obj `if test -f 'geoloc.c'; then $(CYGPATH_W) 'geoloc.c'; else $(CYGPATH_W) '$(srcdir)/geoloc.c'; fi`
-
-dumpmeta-myhdf.o: myhdf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myhdf.o -MD -MP -MF $(DEPDIR)/dumpmeta-myhdf.Tpo -c -o dumpmeta-myhdf.o `test -f 'myhdf.c' || echo '$(srcdir)/'`myhdf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myhdf.Tpo $(DEPDIR)/dumpmeta-myhdf.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myhdf.c' object='dumpmeta-myhdf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myhdf.o `test -f 'myhdf.c' || echo '$(srcdir)/'`myhdf.c
-
-dumpmeta-myhdf.obj: myhdf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myhdf.obj -MD -MP -MF $(DEPDIR)/dumpmeta-myhdf.Tpo -c -o dumpmeta-myhdf.obj `if test -f 'myhdf.c'; then $(CYGPATH_W) 'myhdf.c'; else $(CYGPATH_W) '$(srcdir)/myhdf.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myhdf.Tpo $(DEPDIR)/dumpmeta-myhdf.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myhdf.c' object='dumpmeta-myhdf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myhdf.obj `if test -f 'myhdf.c'; then $(CYGPATH_W) 'myhdf.c'; else $(CYGPATH_W) '$(srcdir)/myhdf.c'; fi`
-
-dumpmeta-mystring.o: mystring.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-mystring.o -MD -MP -MF $(DEPDIR)/dumpmeta-mystring.Tpo -c -o dumpmeta-mystring.o `test -f 'mystring.c' || echo '$(srcdir)/'`mystring.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-mystring.Tpo $(DEPDIR)/dumpmeta-mystring.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mystring.c' object='dumpmeta-mystring.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-mystring.o `test -f 'mystring.c' || echo '$(srcdir)/'`mystring.c
-
-dumpmeta-mystring.obj: mystring.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-mystring.obj -MD -MP -MF $(DEPDIR)/dumpmeta-mystring.Tpo -c -o dumpmeta-mystring.obj `if test -f 'mystring.c'; then $(CYGPATH_W) 'mystring.c'; else $(CYGPATH_W) '$(srcdir)/mystring.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-mystring.Tpo $(DEPDIR)/dumpmeta-mystring.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mystring.c' object='dumpmeta-mystring.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-mystring.obj `if test -f 'mystring.c'; then $(CYGPATH_W) 'mystring.c'; else $(CYGPATH_W) '$(srcdir)/mystring.c'; fi`
-
-dumpmeta-myerror.o: myerror.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myerror.o -MD -MP -MF $(DEPDIR)/dumpmeta-myerror.Tpo -c -o dumpmeta-myerror.o `test -f 'myerror.c' || echo '$(srcdir)/'`myerror.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myerror.Tpo $(DEPDIR)/dumpmeta-myerror.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myerror.c' object='dumpmeta-myerror.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myerror.o `test -f 'myerror.c' || echo '$(srcdir)/'`myerror.c
-
-dumpmeta-myerror.obj: myerror.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myerror.obj -MD -MP -MF $(DEPDIR)/dumpmeta-myerror.Tpo -c -o dumpmeta-myerror.obj `if test -f 'myerror.c'; then $(CYGPATH_W) 'myerror.c'; else $(CYGPATH_W) '$(srcdir)/myerror.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myerror.Tpo $(DEPDIR)/dumpmeta-myerror.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myerror.c' object='dumpmeta-myerror.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myerror.obj `if test -f 'myerror.c'; then $(CYGPATH_W) 'myerror.c'; else $(CYGPATH_W) '$(srcdir)/myerror.c'; fi`
-
-dumpmeta-deg2dms.o: deg2dms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-deg2dms.o -MD -MP -MF $(DEPDIR)/dumpmeta-deg2dms.Tpo -c -o dumpmeta-deg2dms.o `test -f 'deg2dms.c' || echo '$(srcdir)/'`deg2dms.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-deg2dms.Tpo $(DEPDIR)/dumpmeta-deg2dms.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='deg2dms.c' object='dumpmeta-deg2dms.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-deg2dms.o `test -f 'deg2dms.c' || echo '$(srcdir)/'`deg2dms.c
-
-dumpmeta-deg2dms.obj: deg2dms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-deg2dms.obj -MD -MP -MF $(DEPDIR)/dumpmeta-deg2dms.Tpo -c -o dumpmeta-deg2dms.obj `if test -f 'deg2dms.c'; then $(CYGPATH_W) 'deg2dms.c'; else $(CYGPATH_W) '$(srcdir)/deg2dms.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-deg2dms.Tpo $(DEPDIR)/dumpmeta-deg2dms.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='deg2dms.c' object='dumpmeta-deg2dms.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-deg2dms.obj `if test -f 'deg2dms.c'; then $(CYGPATH_W) 'deg2dms.c'; else $(CYGPATH_W) '$(srcdir)/deg2dms.c'; fi`
-
-dumpmeta-degdms.o: degdms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-degdms.o -MD -MP -MF $(DEPDIR)/dumpmeta-degdms.Tpo -c -o dumpmeta-degdms.o `test -f 'degdms.c' || echo '$(srcdir)/'`degdms.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-degdms.Tpo $(DEPDIR)/dumpmeta-degdms.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='degdms.c' object='dumpmeta-degdms.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-degdms.o `test -f 'degdms.c' || echo '$(srcdir)/'`degdms.c
-
-dumpmeta-degdms.obj: degdms.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-degdms.obj -MD -MP -MF $(DEPDIR)/dumpmeta-degdms.Tpo -c -o dumpmeta-degdms.obj `if test -f 'degdms.c'; then $(CYGPATH_W) 'degdms.c'; else $(CYGPATH_W) '$(srcdir)/degdms.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-degdms.Tpo $(DEPDIR)/dumpmeta-degdms.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='degdms.c' object='dumpmeta-degdms.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-degdms.obj `if test -f 'degdms.c'; then $(CYGPATH_W) 'degdms.c'; else $(CYGPATH_W) '$(srcdir)/degdms.c'; fi`
-
-dumpmeta-metadata.o: metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-metadata.o -MD -MP -MF $(DEPDIR)/dumpmeta-metadata.Tpo -c -o dumpmeta-metadata.o `test -f 'metadata.c' || echo '$(srcdir)/'`metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-metadata.Tpo $(DEPDIR)/dumpmeta-metadata.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='metadata.c' object='dumpmeta-metadata.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-metadata.o `test -f 'metadata.c' || echo '$(srcdir)/'`metadata.c
-
-dumpmeta-metadata.obj: metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-metadata.obj -MD -MP -MF $(DEPDIR)/dumpmeta-metadata.Tpo -c -o dumpmeta-metadata.obj `if test -f 'metadata.c'; then $(CYGPATH_W) 'metadata.c'; else $(CYGPATH_W) '$(srcdir)/metadata.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-metadata.Tpo $(DEPDIR)/dumpmeta-metadata.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='metadata.c' object='dumpmeta-metadata.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-metadata.obj `if test -f 'metadata.c'; then $(CYGPATH_W) 'metadata.c'; else $(CYGPATH_W) '$(srcdir)/metadata.c'; fi`
-
-dumpmeta-geo_trans.o: geo_trans.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geo_trans.o -MD -MP -MF $(DEPDIR)/dumpmeta-geo_trans.Tpo -c -o dumpmeta-geo_trans.o `test -f 'geo_trans.c' || echo '$(srcdir)/'`geo_trans.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geo_trans.Tpo $(DEPDIR)/dumpmeta-geo_trans.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geo_trans.c' object='dumpmeta-geo_trans.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geo_trans.o `test -f 'geo_trans.c' || echo '$(srcdir)/'`geo_trans.c
-
-dumpmeta-geo_trans.obj: geo_trans.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geo_trans.obj -MD -MP -MF $(DEPDIR)/dumpmeta-geo_trans.Tpo -c -o dumpmeta-geo_trans.obj `if test -f 'geo_trans.c'; then $(CYGPATH_W) 'geo_trans.c'; else $(CYGPATH_W) '$(srcdir)/geo_trans.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geo_trans.Tpo $(DEPDIR)/dumpmeta-geo_trans.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geo_trans.c' object='dumpmeta-geo_trans.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geo_trans.obj `if test -f 'geo_trans.c'; then $(CYGPATH_W) 'geo_trans.c'; else $(CYGPATH_W) '$(srcdir)/geo_trans.c'; fi`
-
-dumpmeta-logh.o: logh.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-logh.o -MD -MP -MF $(DEPDIR)/dumpmeta-logh.Tpo -c -o dumpmeta-logh.o `test -f 'logh.c' || echo '$(srcdir)/'`logh.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-logh.Tpo $(DEPDIR)/dumpmeta-logh.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='logh.c' object='dumpmeta-logh.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-logh.o `test -f 'logh.c' || echo '$(srcdir)/'`logh.c
-
-dumpmeta-logh.obj: logh.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-logh.obj -MD -MP -MF $(DEPDIR)/dumpmeta-logh.Tpo -c -o dumpmeta-logh.obj `if test -f 'logh.c'; then $(CYGPATH_W) 'logh.c'; else $(CYGPATH_W) '$(srcdir)/logh.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-logh.Tpo $(DEPDIR)/dumpmeta-logh.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='logh.c' object='dumpmeta-logh.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-logh.obj `if test -f 'logh.c'; then $(CYGPATH_W) 'logh.c'; else $(CYGPATH_W) '$(srcdir)/logh.c'; fi`
-
-dumpmeta-geowrpr.o: geowrpr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geowrpr.o -MD -MP -MF $(DEPDIR)/dumpmeta-geowrpr.Tpo -c -o dumpmeta-geowrpr.o `test -f 'geowrpr.c' || echo '$(srcdir)/'`geowrpr.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geowrpr.Tpo $(DEPDIR)/dumpmeta-geowrpr.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geowrpr.c' object='dumpmeta-geowrpr.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geowrpr.o `test -f 'geowrpr.c' || echo '$(srcdir)/'`geowrpr.c
-
-dumpmeta-geowrpr.obj: geowrpr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-geowrpr.obj -MD -MP -MF $(DEPDIR)/dumpmeta-geowrpr.Tpo -c -o dumpmeta-geowrpr.obj `if test -f 'geowrpr.c'; then $(CYGPATH_W) 'geowrpr.c'; else $(CYGPATH_W) '$(srcdir)/geowrpr.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-geowrpr.Tpo $(DEPDIR)/dumpmeta-geowrpr.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geowrpr.c' object='dumpmeta-geowrpr.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-geowrpr.obj `if test -f 'geowrpr.c'; then $(CYGPATH_W) 'geowrpr.c'; else $(CYGPATH_W) '$(srcdir)/geowrpr.c'; fi`
-
-dumpmeta-myendian.o: myendian.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myendian.o -MD -MP -MF $(DEPDIR)/dumpmeta-myendian.Tpo -c -o dumpmeta-myendian.o `test -f 'myendian.c' || echo '$(srcdir)/'`myendian.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myendian.Tpo $(DEPDIR)/dumpmeta-myendian.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myendian.c' object='dumpmeta-myendian.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myendian.o `test -f 'myendian.c' || echo '$(srcdir)/'`myendian.c
-
-dumpmeta-myendian.obj: myendian.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-myendian.obj -MD -MP -MF $(DEPDIR)/dumpmeta-myendian.Tpo -c -o dumpmeta-myendian.obj `if test -f 'myendian.c'; then $(CYGPATH_W) 'myendian.c'; else $(CYGPATH_W) '$(srcdir)/myendian.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dumpmeta-myendian.Tpo $(DEPDIR)/dumpmeta-myendian.Po
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='myendian.c' object='dumpmeta-myendian.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -c -o dumpmeta-myendian.obj `if test -f 'myendian.c'; then $(CYGPATH_W) 'myendian.c'; else $(CYGPATH_W) '$(srcdir)/myendian.c'; fi`
 
 dumpmeta-dumpmeta.o: dumpmeta.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dumpmeta_CFLAGS) $(CFLAGS) -MT dumpmeta-dumpmeta.o -MD -MP -MF $(DEPDIR)/dumpmeta-dumpmeta.Tpo -c -o dumpmeta-dumpmeta.o `test -f 'dumpmeta.c' || echo '$(srcdir)/'`dumpmeta.c
