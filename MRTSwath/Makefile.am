@@ -27,11 +27,11 @@ swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
     @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
 dumpmeta_SOURCES = \
-	param.c geoloc.c input.c scan.c output.c space.c kernel.c \
-	patches.c myhdf.c mystring.c parser.c myerror.c \
-	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
-	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
-	filegeo.c myendian.c dumpmeta.c
+	input.c output.c space.c geoloc.c\
+	myhdf.c mystring.c myerror.c \
+	deg2dms.c degdms.c  metadata.c \
+	geo_trans.c logh.c geowrpr.c \
+	myendian.c dumpmeta.c
 
 dumpmeta_CFLAGS = \
     -DH4_HAVE_NETCDF -DHAVE_INT8 \

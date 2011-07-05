@@ -20,10 +20,12 @@ The original hmr.c software was pulled from the HDF web site.
 
 *************************************************************************/
 
-#include "mfhdf.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "mfhdf.h"
+#include "myproj_const.h"
 
 /* Read metadata from hdfName and write temp file. */
 int readMetadata(char *hdfName, FILE *metadataFile, char *attr);
