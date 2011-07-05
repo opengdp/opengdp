@@ -978,14 +978,14 @@ function doimg_multiband {
                     local pan_xsize
                     local pan_ysize
 
-                    read pan_xsize pan_ysize < <(get_size "${newtmpdir}/$panfile")
+                    read pan_xsize pan_ysize < <(get_size "${tmpdir}/$panfile")
                     
                     gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
                                    "${newtmpdir}/${base}.vrt" \
                                    "${newtmpdir}/${base}_resize.vrt" > /dev/null || { printerror ; return; }
                     
                     otbPanSharp "$type" \
-                                "${newtmpdir}/$panfile" \
+                                "${tmpdir}/$panfile" \
                                 "${newtmpdir}/${base}_resize.vrt" \
                                 "${newtmpdir}/${base}_pan.tif" > /dev/null || { printerror ; return; }
                     
