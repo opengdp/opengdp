@@ -494,6 +494,7 @@ bool ReadCmdLine(int argc, const char **argv, Param_t *this)
       else if (strcmp(tmp, "UINT16") == 0) this->output_data_type = DFNT_UINT16;
       else if (strcmp(tmp, "INT32") == 0) this->output_data_type = DFNT_INT32;
       else if (strcmp(tmp, "UINT32") == 0) this->output_data_type = DFNT_UINT32;
+      else if (strcmp(tmp, "FLOAT32") == 0) this->output_data_type = DFNT_FLOAT32;
       else {
         sprintf(msg, "resamp: invalid output data type (%s).\n", 
 	        argv[iarg]);
