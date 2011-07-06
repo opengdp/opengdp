@@ -248,6 +248,72 @@ END {
 }
 
 ###############################################################################
+# function to process a gzip file
+###############################################################################
+
+function dogzip {
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    
+    local base="${zipfile%.*}"
+    local base2="${base%.*}"
+    
+    #### extract the files #####
+    
+    zcat "${origdir}/${zipfile}" > "${tmpdir}/${base}" || { printerror ; return; }
+
+    ##### check if it is suposed to be multiband #####
+    
+    if [ -n "$msbands" ]
+    then
+        local files=( "$base" )
+        doimg_multiband "$base2" "$tmpdir" \
+                        "$ts" "no" "${panfiles[0]}" \
+                        ${files[@]}
+        
+    else
+        doimg "$base" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}")" "no"
+    
+    fi
+
+}
+
+################################################################################
+# function to process a gzip file
+###############################################################################
+
+function dobzip {
+    local zipfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    
+    local base="${zipfile%.*}"
+    local base2="${base%.*}"
+    
+    #### extract the files #####
+    
+    bzcat "${origdir}/${zipfile}" > "${tmpdir}/${base}" || { printerror ; return; }
+
+    ##### check if it is suposed to be multiband #####
+    
+    if [ -n "$msbands" ]
+    then
+        local files=( "$base" )
+        doimg_multiband "$base2" "$tmpdir" \
+                        "$ts" "no" "${panfiles[0]}" \
+                        ${files[@]}
+        
+    else
+        doimg "$base" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${base}")" "no"
+    
+    fi
+
+}
+
+###############################################################################
 # function to process a zip file
 ###############################################################################
 
@@ -1158,6 +1224,14 @@ function dofile {
             
             *tar.bz2)
                 dotar "${file}" "$tmpdir" "$ts" "$origdir"
+                ;;
+            
+            bz2)
+                dobzip "${file}" "$tmpdir" "$ts" "$origdir"
+                ;;
+            
+            gz)
+                dogzip "${file}" "$tmpdir" "$ts" "$origdir"
                 ;;
             
             *zip)
