@@ -327,7 +327,7 @@ function myrescale {
                 local rescale="0 65535"
             ;;
             UInt32)
-                local rescale="-2147483,648 2147483647"
+                local rescale="-2147483648 2147483647"
             ;;
             Int32)
                 local rescale="0 4294967295"
@@ -1093,6 +1093,7 @@ function doimg_multiband {
                     
                     ##### loop over the ms bands and make a seperate vrt for each one #####
                     
+                    local bands=()
                     local i=0
                     for f in "${myfiles[@]}"
                     do
@@ -1122,7 +1123,7 @@ function doimg_multiband {
                         -e 's,\(band=\"2\".*>\),\1\n    <ColorInterp>Green</ColorInterp>,' \
                         -e 's,\(band=\"3\".*>\),\1\n    <ColorInterp>Blue</ColorInterp>,' \
                         -e 's,\(band=\"4\".*>\),\1\n    <ColorInterp>Alpha</ColorInterp>,' > "${newtmpdir}/${base}.vrt"
-                        
+
                 fi
 
             fi
