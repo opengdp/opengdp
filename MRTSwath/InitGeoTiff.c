@@ -2,6 +2,7 @@
 #include "hntdefs.h"
 #include "space.h"
 #include "myerror.h"
+#include "myproj.h"
 #include <string.h>
 #include <stdlib.h>
 #include "const.h"

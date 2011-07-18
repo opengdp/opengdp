@@ -53,7 +53,8 @@
 #include "myerror.h"
 #include "mydtype.h"
 #include "deg2dms.h"
-#include "cproj.h"
+//#include "cproj.h"
+#include "gctp_wrap.h"
 #include "const.h"
 
 /* Functions */

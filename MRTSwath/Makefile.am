@@ -15,16 +15,16 @@ swath2grid_SOURCES = \
 	patches.c myhdf.c mystring.c parser.c myerror.c \
 	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
 	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
-	filegeo.c myendian.c resamp.c
+	filegeo.c myendian.c resamp.c \
+	gctp_wrap.c
 
 swath2grid_CFLAGS = \
     -DH4_HAVE_NETCDF -DHAVE_INT8 \
     -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
-    -I ../gctpc \
-    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
+    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@ @GDAL_CFLAGS@
   
-swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
-    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
+swath2grid_LDFLAGS = \
+    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ @GDAL_LIBS@
 
 dumpmeta_SOURCES = \
 	dumpmeta.c

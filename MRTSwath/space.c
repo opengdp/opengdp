@@ -67,8 +67,9 @@
 #include "hdf.h"
 #include "mfhdf.h"
 #include "HdfEosDef.h"
-#include "proj.h"
-#include "cproj.h"
+#include "gctp_wrap.h"
+//#include "proj.h"
+//#include "cproj.h"
 #include "bool.h"
 #include "myerror.h"
 
@@ -79,13 +80,13 @@
 
 /* Prototypes for initializing the GCTP projections */
 
-void for_init(long proj_num, long zone, double *proj_param, long sphere,
+/*void for_init(long proj_num, long zone, double *proj_param, long sphere,
               char *file27, char *file83, long *iflag, 
 	      long (*for_trans[MAX_PROJ + 1])());
 void inv_init(long proj_num, long zone, double *proj_param, long sphere,
               char *file27, char *file83, long *iflag, 
 	      long (*inv_trans[MAX_PROJ + 1])());
-
+*/
 /* Functions */
 
 Space_t *SetupSpace(Space_def_t *space_def)
@@ -125,10 +126,10 @@ Space_t *SetupSpace(Space_def_t *space_def)
   char file83[1024];          /* name of NAD 1983 parameter file */
   char mrttables[1024];       /* storage for mrttables */
   char *ptr;                  /* point to mrttables */
-  long (*for_trans[MAX_PROJ + 1])();
-  long (*inv_trans[MAX_PROJ + 1])();
+  int32 (*for_trans[MAX_PROJ + 1])();
+  int32 (*inv_trans[MAX_PROJ + 1])();
   int ip;
-  long iflag;
+  int32 iflag;
 
   /* Place State Plane directory in file27, file83 */
   ptr = (char *)getenv("MRTSWATH_DATA_DIR");
@@ -186,6 +187,7 @@ Space_t *SetupSpace(Space_def_t *space_def)
   for_init(this->def.proj_num, this->def.zone, this->def.proj_param, 
            this->def.sphere, file27, file83, &iflag, for_trans);
   if (this->def.proj_num != GEO) {
+    printf ("iflag=%i\n", iflag);
     if (iflag) {
       free(this);
       LOG_RETURN_ERROR("bad return from for_init", "SetupSpace",

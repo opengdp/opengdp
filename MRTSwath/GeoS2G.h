@@ -9,7 +9,7 @@
 
 /* Swath2Grid */
 #include "param.h"
-#include "myproj.h"
+//#include "myproj.h"
 
 #include <ctype.h>
 

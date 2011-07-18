@@ -61,7 +61,7 @@ am__swath2grid_SOURCES_DIST = param.c geoloc.c input.c scan.c output.c \
 	space.c kernel.c patches.c myhdf.c mystring.c parser.c \
 	myerror.c InitGeoTiff.c deg2dms.c degdms.c convert_corners.c \
 	metadata.c geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c \
-	geowrpr.c filegeo.c myendian.c resamp.c
+	geowrpr.c filegeo.c myendian.c resamp.c gctp_wrap.c
 @HAVE_HDF_TRUE@am_swath2grid_OBJECTS = swath2grid-param.$(OBJEXT) \
 @HAVE_HDF_TRUE@	swath2grid-geoloc.$(OBJEXT) \
 @HAVE_HDF_TRUE@	swath2grid-input.$(OBJEXT) \
@@ -87,7 +87,8 @@ am__swath2grid_SOURCES_DIST = param.c geoloc.c input.c scan.c output.c \
 @HAVE_HDF_TRUE@	swath2grid-geowrpr.$(OBJEXT) \
 @HAVE_HDF_TRUE@	swath2grid-filegeo.$(OBJEXT) \
 @HAVE_HDF_TRUE@	swath2grid-myendian.$(OBJEXT) \
-@HAVE_HDF_TRUE@	swath2grid-resamp.$(OBJEXT)
+@HAVE_HDF_TRUE@	swath2grid-resamp.$(OBJEXT) \
+@HAVE_HDF_TRUE@	swath2grid-gctp_wrap.$(OBJEXT)
 swath2grid_OBJECTS = $(am_swath2grid_OBJECTS)
 swath2grid_LDADD = $(LDADD)
 swath2grid_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -322,16 +323,16 @@ top_srcdir = @top_srcdir@
 @HAVE_HDF_TRUE@	patches.c myhdf.c mystring.c parser.c myerror.c \
 @HAVE_HDF_TRUE@	InitGeoTiff.c deg2dms.c degdms.c convert_corners.c metadata.c \
 @HAVE_HDF_TRUE@	geo_trans.c write_hdr.c write_rb.c addmeta.c logh.c geowrpr.c \
-@HAVE_HDF_TRUE@	filegeo.c myendian.c resamp.c
+@HAVE_HDF_TRUE@	filegeo.c myendian.c resamp.c \
+@HAVE_HDF_TRUE@	gctp_wrap.c
 
 @HAVE_HDF_TRUE@swath2grid_CFLAGS = \
 @HAVE_HDF_TRUE@    -DH4_HAVE_NETCDF -DHAVE_INT8 \
 @HAVE_HDF_TRUE@    -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
-@HAVE_HDF_TRUE@    -I ../gctpc \
-@HAVE_HDF_TRUE@    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
+@HAVE_HDF_TRUE@    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@ @GDAL_CFLAGS@
 
-@HAVE_HDF_TRUE@swath2grid_LDFLAGS = -L../gctpc/ -lgctp \
-@HAVE_HDF_TRUE@    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
+@HAVE_HDF_TRUE@swath2grid_LDFLAGS = \
+@HAVE_HDF_TRUE@    @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ @GDAL_LIBS@
 
 @HAVE_HDF_TRUE@dumpmeta_SOURCES = \
 @HAVE_HDF_TRUE@	dumpmeta.c
@@ -445,6 +446,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-deg2dms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-degdms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-filegeo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-gctp_wrap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-geo_trans.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-geoloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swath2grid-geowrpr.Po@am__quote@
@@ -921,6 +923,22 @@ swath2grid-resamp.obj: resamp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='resamp.c' object='swath2grid-resamp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swath2grid_CFLAGS) $(CFLAGS) -c -o swath2grid-resamp.obj `if test -f 'resamp.c'; then $(CYGPATH_W) 'resamp.c'; else $(CYGPATH_W) '$(srcdir)/resamp.c'; fi`
+
+swath2grid-gctp_wrap.o: gctp_wrap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swath2grid_CFLAGS) $(CFLAGS) -MT swath2grid-gctp_wrap.o -MD -MP -MF $(DEPDIR)/swath2grid-gctp_wrap.Tpo -c -o swath2grid-gctp_wrap.o `test -f 'gctp_wrap.c' || echo '$(srcdir)/'`gctp_wrap.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/swath2grid-gctp_wrap.Tpo $(DEPDIR)/swath2grid-gctp_wrap.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gctp_wrap.c' object='swath2grid-gctp_wrap.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swath2grid_CFLAGS) $(CFLAGS) -c -o swath2grid-gctp_wrap.o `test -f 'gctp_wrap.c' || echo '$(srcdir)/'`gctp_wrap.c
+
+swath2grid-gctp_wrap.obj: gctp_wrap.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swath2grid_CFLAGS) $(CFLAGS) -MT swath2grid-gctp_wrap.obj -MD -MP -MF $(DEPDIR)/swath2grid-gctp_wrap.Tpo -c -o swath2grid-gctp_wrap.obj `if test -f 'gctp_wrap.c'; then $(CYGPATH_W) 'gctp_wrap.c'; else $(CYGPATH_W) '$(srcdir)/gctp_wrap.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/swath2grid-gctp_wrap.Tpo $(DEPDIR)/swath2grid-gctp_wrap.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gctp_wrap.c' object='swath2grid-gctp_wrap.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swath2grid_CFLAGS) $(CFLAGS) -c -o swath2grid-gctp_wrap.obj `if test -f 'gctp_wrap.c'; then $(CYGPATH_W) 'gctp_wrap.c'; else $(CYGPATH_W) '$(srcdir)/gctp_wrap.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
