@@ -3,7 +3,6 @@
 SUBDIRS = src \
 	share\
 	scripts\
-	gctpc\
 	MRTSwath \
 	crefl
 

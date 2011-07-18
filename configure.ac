@@ -583,7 +583,6 @@ share/web/Makefile
 src/Makefile
 MRTSwath/Makefile
 MRTSwath/data/Makefile
-gctpc/Makefile
 crefl/Makefile
 crefl/data/Makefile
 ])

@@ -17406,7 +17406,7 @@ fi
 CFLAGS="$cflagsold"
 LDFLAGS="$ldflagsold"
 
-ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile gctpc/Makefile crefl/Makefile crefl/data/Makefile"
+ac_config_files="$ac_config_files Makefile scripts/Makefile share/Makefile share/cgibin/Makefile share/examples/Makefile share/examples/floods_austrailia/Makefile share/examples/haiti/Makefile share/examples/jp_earthquake/Makefile share/examples/naip/Makefile share/generic/Makefile share/map/Makefile share/scripts/Makefile share/web/Makefile src/Makefile MRTSwath/Makefile MRTSwath/data/Makefile crefl/Makefile crefl/data/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -18525,7 +18525,6 @@ do
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "MRTSwath/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/Makefile" ;;
     "MRTSwath/data/Makefile") CONFIG_FILES="$CONFIG_FILES MRTSwath/data/Makefile" ;;
-    "gctpc/Makefile") CONFIG_FILES="$CONFIG_FILES gctpc/Makefile" ;;
     "crefl/Makefile") CONFIG_FILES="$CONFIG_FILES crefl/Makefile" ;;
     "crefl/data/Makefile") CONFIG_FILES="$CONFIG_FILES crefl/data/Makefile" ;;
 

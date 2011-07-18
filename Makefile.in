@@ -283,7 +283,6 @@ top_srcdir = @top_srcdir@
 SUBDIRS = src \
 	share\
 	scripts\
-	gctpc\
 	MRTSwath \
 	crefl
 
