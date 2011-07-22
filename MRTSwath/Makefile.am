@@ -32,10 +32,9 @@ dumpmeta_SOURCES = \
 dumpmeta_CFLAGS = \
     -DH4_HAVE_NETCDF -DHAVE_INT8 \
     -DMRTSWATH_DATA_DIR=\"$(pkgdatadir)/MRTSwath\" \
-    -I ../gctpc \
     @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@ @TIFFINC@ @GEOTIFFINC@
   
-dumpmeta_LDFLAGS = -L../gctpc/ -lgctp \
+dumpmeta_LDFLAGS = \
     @HDFEOSLIB@ @HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ @TIFFLIB@ @GEOTIFFLIB@ 
 
 SUBDIRS = \
