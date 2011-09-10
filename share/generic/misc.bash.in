@@ -198,7 +198,7 @@ do
 
     while read c
     do
-        RX_LM="${RX_LM}[${c^}${c}]"
+        RX_LM="${RX_LM}[$(tr [a-z] [A-Z] <<<"$c")${c}]"
     done < <(fold -w1 <<<"$m")
     
 done
