@@ -24,7 +24,6 @@
 # function to create a js with the layers for openlayers and a geoext folder
 ###############################################################################
 
-
 function dogeoext {
 
     if [ -n attribution ]
@@ -44,64 +43,42 @@ Ext.onReady(function() {
 
 EOF
 
-    ##### loop over the map files and look for layer names #####
-
-    for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
+    ##### loop over the layers in the index #####
+    
+    IFS="|"
+    while read lid junk ts lname extent gextent
     do
-        if istrue "$doovr" 1
-        then
-            layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
-        else
-            layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
-        fi 
-        
-        ##### get the layers extent #####
-
-        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
-
-        ##### make sure north and south arent out of bounds for 900913 #####
-	
-        if fcmp "$n > 86"
-        then
-            n=86
-        fi
-        if fcmp "$s < -86"
-        then
-            s="-86"
-        fi
-
-        ##### convert the extent to 900913 #####
-
-        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
-        
+        unset IFS
+        read gw gs ge gn <<<"$gextent"
+        IFS="|"
         cat << EOF
     
-  ${layer} = new OpenLayers.Layer.WMS(
-    "${layer}",
+  ${lname} = new OpenLayers.Layer.WMS(
+    "${lname}",
     "$urlcgibin",
     {
-      layers: '${layer}',
+      layers: '${lname}',
       format: 'image/png',
       transparency: 'TRUE'
     },
     {
       isBaseLayer: false,
       visibility: false,
-      'perm': true,
-      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})${attrib}
+      perm: false,
+      myExtent: new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn}),
+      lid: '${project}${lid}'${attrib}
     }
   );
 
-  ${dsname}_layers.push( ${layer} );
+  ${dsname}_layers.push( ${lname} );
 
 EOF
 
-    done
+    done < <(index_get_layers)
 
     cat << EOF
     
-  map.addLayers(${dsname}_layers);
+  //map.addLayers(${dsname}_layers);
   
   ${dsname}_store = new GeoExt.data.LayerStore(
     {
@@ -116,7 +93,7 @@ EOF
       layerStore: ${dsname}_store,
       leaf: false,
       nodeType: "gx_overlaylayercontainer",
-      expanded: false,
+      expanded: true,
       applyLoader: false
     }
   );
@@ -163,103 +140,92 @@ EOF
 
 }
 
-###############################################################################
+##############################################################################
 # function to create a js with the layers for openlayers and a geoext folder for tilecache
 ###############################################################################
 
 function dogeoext_tc {
+
+    if [ -n attribution ]
+    then
+        attrib=",
+      attribution: '${attribution}'"
+    else
+        attrib=""
+    fi
 
 (
     cat << EOF
 
 Ext.onReady(function() {
 
-  var ${dsname}_tc_layers = [];
+  var ${dsname}_layers_tc = [];
 
 EOF
 
-    ##### loop over the map files and look for layer names #####
-
-    for map in $(find $outdir -maxdepth 1 -name "*.map" | grep -v "NewWorld_" | sort )
+    ##### loop over the layers in the index #####
+    
+    IFS="|"
+    while read lid junk ts lname extent gextent
     do
-        if istrue "$doovr" 1
-        then
-            layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
-        else
-            layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
-        fi
-
-        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
-
-        ##### make sure north and south arent out of bounds for 900913 #####
-	
-        if fcmp "$n > 86"
-        then
-            n=86
-        fi
-        if fcmp "$s < -86"
-        then
-            s="-86"
-        fi
-        
-        ##### convert the extent to 900913 #####
-
-        read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-        read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
-        
+        unset IFS
+        read gw gs ge gn <<<"$gextent"
+        IFS="|"
         cat << EOF
-
-  ${layer}_tc = new OpenLayers.Layer.WMS(
-    "${layer}",
-    "$urlcgibin_tc",
+    
+  ${lname}_tc = new OpenLayers.Layer.WMS(
+    "${lname}",
+    "$urlcgibin",
     {
-      layers: '${layer}',
+      layers: '${project}_${lname}',
       format: 'image/png',
       transparency: 'TRUE'
     },
     {
       isBaseLayer: false,
       visibility: false,
-      'perm': true,
-      'myExtent': new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn})${attrib}
+      perm: false,
+      myExtent: new OpenLayers.Bounds(${gw}, ${gs}, ${ge}, ${gn}),
+      lid: '${project}${lid}'${attrib}
     }
   );
 
-  ${dsname}_tc_layers.push( ${layer}_tc );
+  ${dsname}_layers_tc.push( ${lname}_tc );
 
 EOF
-    done
+
+    done < <(index_get_layers)
 
     cat << EOF
+    
+  //map.addLayers(${dsname}_layers);
   
-  map.addLayers(${dsname}_tc_layers);
-
-  ${dsname}_tc_store = new GeoExt.data.LayerStore(
+  ${dsname}_store_tc = new GeoExt.data.LayerStore(
     {
       initDir: 0,
-      layers: ${dsname}_tc_layers
+      layers: ${dsname}_layers_tc
     }
   );
 
-  ${dsname}_tc_list = new GeoExt.tree.OverlayLayerContainer(
+  ${dsname}_list_tc = new GeoExt.tree.OverlayLayerContainer(
     {
       text: '${dsname}',
-      layerStore: ${dsname}_tc_store,
+      layerStore: ${dsname}_store_tc,
       leaf: false,
       nodeType: "gx_overlaylayercontainer",
-      expanded: false,
+      expanded: true,
       applyLoader: false
     }
   );
 
-  layerRoot.appendChild(${dsname}_tc_list);
+  layerRoot.appendChild(${dsname}_list_tc);
 
 });
 
 EOF
 
 
-) > ${htmlbase}/${dsname}_tc.js
+) > "${htmlbase}/${dsname}_tc.js"
 
 #    ##### make sure the js is loaded by index.html
 #    

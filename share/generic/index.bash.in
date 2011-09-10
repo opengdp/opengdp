@@ -1,0 +1,136 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+###############################################################################
+# function to add a layer to the projects layer index
+###############################################################################
+
+function index_add_layer {
+    ts="$1"
+    extent="$2"
+    
+    ##### does the db exist? #####
+    
+    if ! [ -f "${basedir}/${project}.db" ]
+    then
+        sqlite3 "${basedir}/${project}.db" << EOF || printerror "creating db" ; return
+
+CREATE TABLE layers
+             (
+                          lid INTEGER PRIMARY KEY ASC,
+                          dsname TEXT                ,
+                          ts INTEGER                 ,
+                          lname TEXT UNIQUE          ,
+                          extent TEXT                ,
+                          gextent TEXT
+             );
+
+EOF
+
+        sqlite3 "${basedir}/${project}.db" << EOF || printerror "creating index" ; return
+
+CREATE INDEX lname
+ON layers
+                    (
+                                        lname,
+                                        dsname
+                    );
+
+EOF
+
+    echo "gotcha"
+    fi
+    
+    local w s e n
+    read w s e n <<<"$extent"
+    ##### make sure north and south arent out of bounds for 900913 #####
+	
+    if fcmp "$n > 86"
+    then
+        n=86
+    fi
+    if fcmp "$s < -86"
+    then
+        s="-86"
+    fi
+
+    ##### convert the extent to 900913 #####
+
+    read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
+    read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
+        
+    ##### add the layer to the db #####
+    
+    sqlite3 "${basedir}/${project}.db" << EOF || printerror "adding layer to db" ; return
+INSERT OR REPLACE
+INTO   layers
+       (
+              dsname ,
+              ts     ,
+              lname  ,
+              extent ,
+              gextent
+       )
+       VALUES
+       (
+              '$dsname'         ,
+              $ts               ,
+              '${dsname}_${ts}' ,
+              '$extent'         ,
+              '$gw $gs $ge $gn'
+       );
+EOF
+
+}
+
+###############################################################################
+# function to reteve a list of layers for the ds from the projects layer index
+###############################################################################
+
+function index_get_layers {
+
+    sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
+
+SELECT *
+FROM   layers
+WHERE  dsname = '${dsname}';
+
+EOF
+
+}
+
+###############################################################################
+# function to drop all the layers for a ds from the projects layer index
+###############################################################################
+
+function index_drop_ds {
+
+    if [ -f "${basedir}/${project}.db" ]
+    then
+        sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_drop_ds" ; return
+DELETE
+FROM  layers
+WHERE dsname = '${dsname}';
+EOF
+
+    fi
+    
+}

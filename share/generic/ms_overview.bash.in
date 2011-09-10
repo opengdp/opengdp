@@ -27,24 +27,34 @@ function getoverviewscale {
 
 (
 cd "$outdir"
-    local ts="$1"
-    
-    local blocksize=256
 
     local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
 
-    local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
-                       grep "  location (String) = " |\
-                       head -n 1 |\
-                       sed 's/  location (String) = //')
+    ##### do we have image data? #####
     
-    GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
-                 "${tmpdir}/${dsname}${ts}.vrt" \
-                 "${outdir}/${firstfile}" > /dev/null
+    if ! istrue "$vector"
+    then
 
-    read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
-                    grep -e "Pixel Size" |\
-                    sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+        local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
+                           grep "  location (String) = " |\
+                           head -n 1 |\
+                           sed 's/  location (String) = //')
+        
+        GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
+                     "${tmpdir}/${dsname}${ts}.vrt" \
+                     "${outdir}/${firstfile}" > /dev/null
+
+        read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
+                        grep -e "Pixel Size" |\
+                        sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+
+
+    ##### do we have vector data? #####
+
+    else 
+        xr="$vectorres"
+        yr="$vectorres"
+    fi
 
     local orig=$(fcalc "$(fmin $xr $yr) * 72 * 4374754")
     local scale=$(fcalc "$orig + 150000")
@@ -70,18 +80,30 @@ cd "$outdir"
 
     local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
 
-    local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
-                       grep "  location (String) = " |\
-                       head -n 1 |\
-                       sed 's/  location (String) = //')
+    ##### do we have image data? #####
     
-    GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
-                 "${tmpdir}/${dsname}${ts}.vrt" \
-                 "${outdir}/${firstfile}" > /dev/null
+    if ! istrue "$vector"
+    then
+        local firstfile=$(ogrinfo -al "${outdir}/${dsname}${ts}.shp" |\
+                           grep "  location (String) = " |\
+                           head -n 1 |\
+                           sed 's/  location (String) = //')
+        
+        GDAL_DISABLE_READDIR_ON_OPEN=TRUE gdalbuildvrt -overwrite \
+                     "${tmpdir}/${dsname}${ts}.vrt" \
+                     "${outdir}/${firstfile}" > /dev/null
 
-    read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
-                    grep -e "Pixel Size" |\
-                    sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+        read xr yr < <(gdalinfo "${tmpdir}/${dsname}${ts}.vrt" |\
+                        grep -e "Pixel Size" |\
+                        sed 's/.*Pixel Size = ([-]*\([.0-9]*\),[-]*\([.0-9]*\)).*/\1 \2/')
+
+
+    ##### do we have vector data? #####
+
+    else 
+        xr="$vectorres"
+        yr="$vectorres"
+    fi
 
     local orig=$(fcalc "$(fmin $xr $yr) * 72 * 4374754")
     local scale=$(fcalc "$orig + 150000")

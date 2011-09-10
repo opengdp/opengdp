@@ -34,7 +34,9 @@ function getlist {
         ##### loop while 
         
         while d=$(wget "${baseurl}/?subset=${sd}$( [ -n "$startdate" ] && echo ".${year}$(printf "%03d\n" $i )" )" -O /dev/stdout 2> /dev/null |\
-                  sed 's|.*Date: \([0-9]\{4\}\)/\([0-9]\{3\}\).*|\1\2|' |\
+                  grep "Date: [0-9]\{4\}/[0-9]\{3\}" |\
+                  head -n 1 |\
+                  sed 's|.* \([0-9]\{4\}\)/\([0-9]\{3\}\).*|\1\2|' |\
                   grep -e "^[0-9]\{7\}$" )
         do
             if [ -n "$startdate" ]
@@ -44,9 +46,9 @@ function getlist {
 
             ##### if we aLREADY HAVE THE FILE, SKIP IT #####
 
-            if ! [ -f "${indir}/${sd}.${d}.${sat}${bandext}.250m.tif" ]
+            if ! [ -f "${indir}/${sd}.${d}.${sat}.250m.tif" ]
             then
-                echo "get -O ${indir} http://rapidfire.sci.gsfc.nasa.gov/subsets/?subset=${sd}.${d}.${sat}${bandext}.250m.tif -o ${sd}.${d}.${sat}.250m.tif"
+                echo "get -O ${indir} ${baseurl}/?subset=${sd}.${d}.${sat}${bandext}.250m.tif -o ${sd}.${d}.${sat}.250m.tif"
             fi
         done
     done
@@ -55,7 +57,8 @@ function getlist {
 }
 
 
-offsite="OFFSITE 255 255 255"
+#offsite="OFFSITE 255 255 255"
+nearwhite=true
 
 ###############################################################################
 # function to get a ts from a lftp command

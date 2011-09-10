@@ -20,7 +20,8 @@
 # DEALINGS IN THE SOFTWARE.
 
 function print_res {
-    maxResolution=156543.0339 
+    local maxResolution=156543.0339
+    local zoom
     for (( zoom=0; zoom<=24; ++zoom ))
     do
         fcalc "$maxResolution / 2^${zoom}"
@@ -29,31 +30,44 @@ function print_res {
 
 function dotc {
 
+    echo "" > "${basedir}/${dsname}.tilecache.conf"
+    
+    local res=$(print_res | tr "\n" "," | sed -r 's/,$//')
 
-    res=$(print_res | tr "\n" "," | sed -r 's/,$//')
-(
-    for map in $(find $outdir -name "*.map" | sort )
+    ##### loop over the layers in the index #####
+    
+    IFS="|"
+    local lid
+    local ts
+    local lname
+    local extent
+    local gextent
+    while read lid junk ts lname extent gextent
     do
-        if istrue "$doovr" 1
-        then
-            layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
-        else
-            layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
-        fi
+        unset IFS
         
-        read w s e n < <(getextent $(echo "$layer" | sed 's:.*_\([0-9]*\):\1:'))
-	
+        local gw
+        local gs
+        local ge
+        local gn
+        read gw gs ge gn <<<"$gextent"
+        
+        local w
+        local s
+        local e
+        local n
+        read w s e n <<<"$extent"
+	    
+	    IFS="|"
         if fcmp "$n < 86" && fcmp "$s > -86"
         then
-            read gw gs junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$w $s")
-            read ge gn junk < <(gdaltransform -s_srs EPSG:4326 -t_srs EPSG:900913 <<< "$e $n")
-        
-            cat << EOF
+            
+            cat << EOF >> ${basedir}/${dsname}.tilecache.conf
 
-[${layer}]
+[${project}_${lname}]
 type=WMS
 url=${urlcgibin}?
-layers=${layer}
+layers=${lname}
 extension=png
 tms_type=google
 levels=24
@@ -63,9 +77,9 @@ bbox=${gw},${gs},${ge},${gn}
 EOF
 
         else    
-            cat << EOF
+            cat << EOF >> ${basedir}/${dsname}.tilecache.conf
 
-[${layer}]
+[${project}_${lname}]
 type=WMS
 url=${urlcgibin}?
 layers=${layer}
@@ -78,7 +92,6 @@ EOF
 
 
 
-    done
-) > ${basedir}/${dsname}.tilecache.conf
+    done < <(index_get_layers)
 
 }

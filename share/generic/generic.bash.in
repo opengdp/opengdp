@@ -24,7 +24,9 @@
 
 source @GENERICDIR@/misc.bash
 source @GENERICDIR@/addo.bash
+source @GENERICDIR@/index.bash
 source @GENERICDIR@/image.bash
+source @GENERICDIR@/vector.bash
 source @GENERICDIR@/file.bash
 source @GENERICDIR@/mapfile.bash
 source @GENERICDIR@/ms_overview.bash
@@ -130,9 +132,20 @@ echo "                            [ -reover ] || [ -remapfile || [ -regeoext ]"
 # sub main function
 ###############################################################################
 
-function sub_main {
+opt_none=0
+opt_rebuild=1
+opt_readdo=2
+opt_retindex=3
+opt_reindex=4
+opt_reover=5
+opt_remapfile=6
+opt_regeoext=7
+opt_none=0
 
-    ((stage = 0))
+function sub_main {
+    local ts
+    
+    ((stage = opt_none))
     ((stop = 0))
 
     while [[ $1 == -* ]]; do
@@ -146,27 +159,32 @@ function sub_main {
                 shift
                 ;;
             -rebuild|--rebuild)
-                ((stage=1))
+                ((stage=opt_rebuild))
                 shift
                 ;;
+            
             -readdo|--readdo)
-                ((stage=2))
+                ((stage=opt_readdo))
                 shift
                 ;;
             -retindex|--retindex)
-                ((stage=3))
+                ((stage=opt_retindex))
+                shift
+                ;;
+            -reindex|--reindex)
+                ((stage=opt_reindex))
                 shift
                 ;;
             -reover|--reover)
-                ((stage=4))
+                ((stage=opt_reover))
                 shift
                 ;;
             -remapfile|--remapfile)
-                ((stage=5))
+                ((stage=opt_remapfile))
                 shift
                 ;;
             -regeoext|--regeoext)
-                ((stage=6))
+                ((stage=opt_regeoext))
                 shift
                 ;;
             -stop|--stop)
@@ -187,7 +205,7 @@ function sub_main {
         esac
     done
 
-    if ((stage == 0)) && ((stop == 1))
+    if ((stage == opt_none)) && ((stop == 1))
     then
         echo "Ignoreing -stop switch, no rebuild stage specified"
         ((stop = 0))
@@ -205,7 +223,7 @@ function sub_main {
 
     ##### check if called for a rebuild #####
     
-    if (( stage == 1 ))
+    if (( stage == opt_rebuild ))
     then
         echo "rebuilding"
         DWH_REBUILD="rebuild"
@@ -244,249 +262,273 @@ function sub_main {
         baseurl="file://${indir/%\//}.old"
 
     fi
-
-    case "$stage" in
-        
-        ##### normal op or -rebuild #####
-        0|1)   
-
-            ##### get the list of new files to fetch #####
-                
-            if ! getlist "$mirrorfile" "$fetchpattern"
-            then
-                exit
-            fi
-        
-            ##### loop over the commands in the mirrorfile #####
-        
-            if ! mainloop "$mirrorfile"
-            then
-                exit
-            fi
     
-            if ((stop == 1))
+    ##### normal op or -rebuild #####
+    
+    if (( stage <= opt_rebuild ))
+    then
+    
+        ##### get the list of new files to fetch #####
+        
+        if ! getlist "$mirrorfile" "$fetchpattern"
+        then
+            exit
+        fi
+        
+        ##### loop over the commands in the mirrorfile #####
+        
+        if ! mainloop "$mirrorfile"
+        then
+            exit
+        fi
+
+        if istrue $stop
+        then
+            
+            ##### clean up after a -rebuild #####
+            
+            if (( stage == $opt_rebuild ))
             then
-                ##### clean up after a -rebuild #####
+                echo "rebuilding"
+                rm -r "$indir"
 
-                if (( stage == 1 ))
-                then
-                    echo "rebuilding"
-                    rm -r "$indir"
+                mv "${indir/%\//}.old" "$indir"
 
-                    mv "${indir/%\//}.old" "$indir"
+            fi
+            exit
+        fi
+    fi
+
+    ##### -readdo only #####
+    
+    if (( stage == opt_readdo ))
+    then
+    
+        readdo
+
+        istrue $stop && exit
+    fi
+    
+    ##### -retindex only #####
+    
+    if (( stage == opt_retindex ))
+    then
+        rebuildtindexs
+    
+        istrue $stop && exit
+    fi
+    
+    ##### -reindex only #####
+    
+    if (( stage == opt_reindex )) || (( stage == opt_rebuild ))
+    then
+    
+        index_drop_ds
+        
+        while read ts
+        do
+            index_add_layer "$ts" "$(getextent "$ts")"
+        
+        done < <( find "${outdir}" -mindepth 1 -maxdepth 1 -type d -name "[0-9]*" |\
+                   sed 's:.*/::g')
+        
+        istrue $stop && exit
+    fi
+    
+    ##### -reover or before #####
+            
+    if (( stage <= opt_reover))
+    then
+        
+        ##### loop over the subdatasets if any #####
+            
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
                 
-                fi
-                exit
-            fi
-        ;;
-    esac
-    case "$stage" in
-        ##### -readdo only #####
-        2)
-            readdo
-            
-            if ((stop == 1))
-            then
-                exit
-            fi
-        ;;
-    esac
-    case "$stage" in
-        ##### -retindex only #####
-        3)
-            rebuildtindexs
-            
-            if ((stop == 1))
-            then
-                exit
-            fi
-        ;;
-    esac
-    case "$stage" in
-        ##### -reover or before #####
-        0|1|2|3|4)
-            ##### loop over the subdataset array #####
-            
-            if [[ ${#subdsnames[@]} == 0 ]]
-            then
-                local subdsnames=( "" )
-            fi
-            local sub
-            for sub in "${subdsnames[@]}"
-            do
-                (
-                    outdir="${outdir}${sub}"
-                    dsname="${dsname}${sub}"
+                ##### if stage is 0 only do the layers we built #####
+                
+                if (( stage == 0 ))
+                then
+                    grep "${mirrorfile}" -e "^get" |\
+                     dodate |\
+                     grep -v -e "^get" |\
+                     sort |\
+                     uniq
+                
+                ##### redo all the layers #####
+                
+                else
+                    index_get_layers | cut -d "|" -f 3
+                fi |\
+                 while read ts
+                do
+                
+                    ##### get the extent of the ds #####
+
+                    extent=$(getextent "$ts")
+                
+                    ##### if stage is 0 add to the index #####
+                
                     if (( stage == 0 ))
                     then
-                        grep "${mirrorfile}" -e "^get" |\
-                        ${datefunc}
+                        index_add_layer "$ts" "$extent" 
+                    fi
+
+                    addinclude "$ts"
+
+                    ##### add an include line in the main Newworld mapfile #####
+
+                    addinclude_NewWorld "$ts"
+
+                    if istrue "$doovr" 1
+                    then
+
+                        ##### write a temp map file #####
+
+                        writemap_noover "$ts" "$extent"
+
+                        ##### create a single file for larger area overviews #####
+
+                        scale=$(makeoverview "$ts" "$extent")
+
+                        ##### write the map file with the correct scale #####
+
+                        writemap_withover "$ts" "$extent" "$scale"
+
                     else
-                        find "${outdir}" -type d -name "[0-9]*" |\
-                        sed 's:.*/::g'
-                     fi |\
-                     sort |\
-                     uniq |\
-                     while read ts
-                    do
-                        
-                        addinclude "$ts"
 
-                        ##### add an include line in the main Newworld mapfile #####
+                        ##### write the map file with no min max layers #####
 
+                        writemap_noover "$ts" "$extent"
+
+                    fi
+
+                    ##### create a map file for new world #####
+                    
+                    writemap_NewWorld "$ts" "$extent"
+
+                done
+            )
+        done
+        
+        istrue $stop && exit
+    fi
+    
+    ##### -remapfile only #####
+    
+    if (( stage == opt_remapfile ))
+    then
+    
+        ##### loop over the subdatasets if any #####
+
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+
+                index_get_layers | cut -d "|" -f 3 | 
+                 while read ts
+                do  
+
+                    ##### add an include line in the main mapfile #####
+
+                    addinclude "$ts"
+
+                    ##### add an include line in the main Newworld mapfile #####
+
+                    if [ -n "$NewWorld_mapfile" ]
+                    then
                         addinclude_NewWorld "$ts"
+                    fi
 
-                        ##### get the extent of the ds #####
+                    ##### get the extent of the ds #####
 
-                        extent=$(getextent "$ts")
+                    extent=$(getextent "$ts")
 
-                        if istrue "$doovr" 1
-                        then
+                    if istrue "$doovr" 1
+                    then
 
-                            ##### write a temp map file #####
+                        ##### get the overview scale from the old mapfile #####
 
-                            writemap_noover "$ts" "$extent"
+                        scale=$(getoverviewscale "$ts")
+ 
+                        ##### write the map file with the correct scale #####
 
-                            ##### create a single file for larger area overviews #####
+                        writemap_withover "$ts" "$extent" "$scale"
 
-                            scale=$(makeoverview "$ts" "$extent")
+                    else
 
-                            ##### write the map file with the correct scale #####
+                        ##### write the map file with no min max layers #####
 
-                            writemap_withover "$ts" "$extent" "$scale"
+                        writemap_noover "$ts" "$extent"
 
-                        else
+                    fi
 
-                            ##### write the map file with no min max layers #####
+                    ##### create a map file for new world #####
 
-                            writemap_noover "$ts" "$extent"
-
-                        fi
-
-                        ##### create a map file for new world #####
-                        
+                    if [ -n "$NewWorld_mapfile" ]
+                    then
                         writemap_NewWorld "$ts" "$extent"
+                    fi
 
-                    done
-                )
-            done
-            if ((stop == 1))
-            then
-                exit
-            fi
-        ;;
-    esac
-    case "$stage" in
-        ##### -remapfile only #####
-        5)
-            ##### loop over the subdataset array #####
-            
-            if [[ ${#subdsnames[@]} == 0 ]]
-            then
-                local subdsnames=( "" )
-            fi
-            local sub
-            for sub in "${subdsnames[@]}"
-            do
-                (
-                    outdir="${outdir}${sub}"
-                    dsname="${dsname}${sub}"
+                done
+            )
+        done
 
-                    find "${outdir}" -type d -name "[0-9]*" |\
-                     sed 's:.*/::g' |\
-                     sort |\
-                     uniq |\
-                     while read ts
-                    do  
-                        
-                        ##### add an include line in the main mapfile #####
+        istrue $stop && exit
+    fi
+    
+    ##### stage regeoext and before #####
+    #####  write out a js file for geoext #####
+    
+    if (( stage <= opt_regeoext))
+    then        
+        
+        ##### loop over the subdatasets if any #####
+        
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
 
-                        addinclude "$ts"
-                        
-                        ##### add an include line in the main Newworld mapfile #####
+                dogeoext
+                
+                dogeoext_tc
 
-                        if [ -n "$NewWorld_mapfile" ]
-                        then
-                            addinclude_NewWorld "$ts"
-                        fi
-                        
-                        ##### get the extent of the ds #####
+                ##### write out a config section for tilecache #####
 
-                        extent=$(getextent "$ts")
-
-                        if istrue "$doovr" 1
-                        then
-
-                            ##### get the overview scale from the old mapfile #####
-
-                            scale=$(getoverviewscale "$ts")
-                            
-                            ##### write the map file with the correct scale #####
-
-                            writemap_withover "$ts" "$extent" "$scale"
-
-                        else
-                            
-                            ##### write the map file with no min max layers #####
-                            
-                            writemap_noover "$ts" "$extent"
-                            
-                        fi
-                        
-                        ##### create a map file for new world #####
-
-                        if [ -n "$NewWorld_mapfile" ]
-                        then
-                            writemap_NewWorld "$ts" "$extent"
-                        fi
-
-                    done
-                )
-            done
-            
-            if ((stop == 1))
-            then
-                exit
-            fi
-        ;;
-    esac
-    case "$stage" in
-        0|1|2|3|4|5|6)
-            ##### loop over the subdataset array #####
-            
-            if [[ ${#subdsnames[@]} == 0 ]]
-            then
-                local subdsnames=( "" )
-            fi
-            local sub
-            for sub in "${subdsnames[@]}"
-            do
-                (
-                    outdir="${outdir}${sub}"
-                    dsname="${dsname}${sub}"
-
-                    ##### stage 6 and before #####
-                    #####  write out a js file for geoext #####
-                        
-                    dogeoext
-                    dogeoext_tc
-
-                    ##### write out a config section fore tilecache #####
-
-                    dotc
-                )
-            done
-            
-            if ((stop == 1))
-            then
-                exit
-            fi
-        ;;
-    esac
-
+                dotc
+                
+            )
+        done
+        
+        istrue $stop && exit
+    fi
+    
     ##### clean up after a -rebuild #####
 
-    if (( stage == 1 ))
+    if (( stage == opt_rebuild ))
     then
         echo "rebuilding"
         rm -r "$indir"
@@ -495,6 +537,7 @@ function sub_main {
     fi
 
 }
+
 ###############################################################################
 # main
 ###############################################################################

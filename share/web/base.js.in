@@ -11,7 +11,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "osm_google_tc"
     }
   );
 
@@ -28,7 +29,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "NewWorld"
     }
   );
   
@@ -45,7 +47,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "OnEarth_PAN_321_20030801_tc"
     }
   );
 
@@ -63,7 +66,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "NAIP_ALL_tc"
     }
   );
 
@@ -78,7 +82,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "google_terrain"
     }
 
   );
@@ -93,7 +98,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "google_streets"
     }
   );
   
@@ -109,7 +115,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "google_hybrid"
     }
   );
   
@@ -124,7 +131,8 @@ Ext.onReady(function() {
     {
       displayInLayerSwitcher: true,
       isBaseLayer: true,
-      visibility: false
+      visibility: false,
+      lid: "google_sat"
     }
   );
 

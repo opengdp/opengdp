@@ -1,0 +1,178 @@
+###############################################################################
+# function to transform a vector
+#
+# returns the dest vector
+###############################################################################
+
+function vector_warp {
+    local img="$1"
+    local tmpram="$2"
+    local info="$3"
+    local isoriginal="$4"
+    
+    ##### test the projection #####
+       
+    if echo $info | grep -v -e "PROJCS" | grep -q 'GEOGCS."GCS_WGS_1984", DATUM."WGS_1984", SPHEROID."WGS[ _]84",6378137,298.257223563\]\]' ||\
+       echo $info | grep -v -e "PROJCS" | grep -q 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]'
+    then
+        echo "${img}"
+        return
+    
+    else
+        
+        ogr2ogr "${tmpram}/translated_${imgbase}.shp" \
+                "${img}" \
+                > /dev/null || { printerror ; return; }
+    fi
+        
+    if ! istrue "$isoriginal" 1
+    then
+        rm "${img}"
+    fi
+    
+    echo "${tmpram}/translated_${imgbase}.shp"
+    
+    return
+}
+
+###############################################################################
+# function to proccess a single vector file
+###############################################################################
+
+function dovector {
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
+    local isoriginal="$5"
+
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    local imgext="${imgfile##*.}"
+    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
+    
+    local imgdir="${img%/*}"
+    if [[ "$imgdir" = "$imgfile" ]]
+    then
+        local imgdir=""
+    else
+        local imgdir="${imgdir}/"
+    fi
+    
+    ##### if we need a debug do it and return #####
+
+    if [ -n "$DEBUG_dosubimg" ]
+    then            
+        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n islossy=%s\n isoriginal=%s\n " \
+              "$img" \
+              "$tmpdir "\
+              "$ts" \
+              "$imgfile" \
+              "$imgbase" \
+              "$imgext" \
+              "$imgdir" \
+              "$islossy" \
+              "$isoriginal"
+        return
+    fi
+
+    ##### double check the info #####
+    
+    if [ -n "$info" ]
+    then
+        info="$(ogrinfo "${tmpdir}/${img}")"
+    fi
+    ###### RAMDISK? #####
+
+    if [ -n "$ramdisk" ]
+    then
+        local tmpram=$(mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX")
+    else
+        local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
+    fi
+    
+    ##### do we need to add a srs to the vector #####
+    
+    if  [ -n "$s_srs" ]
+    then
+    
+        ##### translate to a shape file to do this #####
+        
+        ogr2ogr -a_srs "$s_srs" \
+                "${tmpdir}/${imgdir}${imgbase}_srs.shp" \
+                "${tmpdir}/${img}" \
+                > /dev/null || { printerror ; return; }
+
+        img="${tmpdir}/${imgdir}${imgbase}_srs.shp"
+        imgfile="${img##*/}"
+        imgbase="${imgfile%.*}"
+        imgext="${imgfile##*.}"
+        info="$(ogrinfo -so -al "${tmpdir}/${imgdir}${imgbase}_srs.shp")"
+        
+    fi
+    
+    ##### transform the vectors #####
+    
+    local warped
+    warped=$(vector_warp "$img" "${tmpram}" \
+                        "$info" "$isoriginal" ) || return
+    
+    if istrue "$isoriginal" 1 && [[ "$warped" != "${tmpdir}/${img}" ]]
+    then
+        isoriginal="no"
+    fi
+    
+    ogr2ogr "${tmpram}/final_${imgbase}.shp" \
+            "$warped" \
+            > /dev/null || { printerror ; return; }
+
+    if ! istrue "$isoriginal" 1
+    then
+        rm "$warped"
+    fi    
+    
+    ##### add overviews #####
+    
+    ##### add a timestamp for indexers #####
+    
+    ##### move the output to the outdir #####
+    
+    local final
+    for final in ${tmpram}/final_${imgbase}.*
+    do
+        local finalfile="${final##*/}"
+        local finalext="${finalfile##*.}"
+        mv "$final" "$outdir/${ts}/${imgbase}.${finalext}" || { printerror ; return; }
+    done
+    
+    rm -rf "${tmpram}"
+    
+    ##### add the file to the tile index #####
+    
+    ##### lock! #####
+    
+    local lock="${outdir}/${dsname}${ts}.shp"
+    lock="${lock//\//.}"
+    
+    while ! mkdir "${lock}" 2> /dev/null
+	do
+		sleep 1
+	done
+    
+    ##### make the tileindex in a subshell so we can cd with no adverse effect #####
+    ##### this costs like 2s of system time per 4000 calls #####
+
+    ##### fixme mapserver does not do reletive paths right on vector layers #####
+    (
+        cd ${outdir}
+        ogrtindex -write_absolute_path \
+                  -accept_different_schemas \
+                  "${dsname}${ts}.shp" \
+                  "${ts}/${imgbase}.shp"  > /dev/null
+    )
+
+    ##### unlock #####
+    
+    rmdir "${lock}"
+    
+}

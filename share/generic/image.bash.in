@@ -36,8 +36,9 @@ function image_colar {
     local isoriginal="$5"
     
     ##### does the image already have a alpha band? #####
+    ##### and ignorealpha is not set true #####
     
-    if echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
+    if ! istrue "$ignorealpha" && echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
     then
         echo "${img}"
         return
@@ -610,25 +611,58 @@ function rebuildtindexs {
         done
     done
     
-    ##### make the new tindexs #####
-    
-    for img in $(find ${outdir} -iname "*.tif")
-    do
-        local imgfile="${img##*/}"
-        local ts=$( sed 's:.*/\([0-9]\{8\}\).*:\1:' <<<"$img")
-        local imgfile=$( sed "s:.*/$ts/\(.*\):\1:" <<<"$img")
-        if [[ "$imgfile" != overview* ]]
-        then
-            
-            ##### make the tileindex in a subshell so we can cd with no adverse effect #####
-            ##### this costs like 2s of system time per 4000 calls #####
+    ##### do we have image data? #####
 
-           (
-               cd ${outdir}
-               gdaltindex "${dsname}${ts}.shp" "${ts}/${imgfile}"  > /dev/null
-           )
-        fi
-    done
+    if ! istrue "$vector"
+    then
+
+        ##### make the new tindexs #####
+        
+        for img in $(find ${outdir} -mindepth 2 -iname "*.tif")
+        do
+            local imgfile="${img##*/}"
+            local ts=$( sed 's:.*/\([0-9]\{8\}\).*:\1:' <<<"$img")
+            local imgfile=$( sed "s:.*/$ts/\(.*\):\1:" <<<"$img")
+            if [[ "$imgfile" != overview* ]]
+            then
+                
+                ##### make the tileindex in a subshell so we can cd with no adverse effect #####
+                ##### this costs like 2s of system time per 4000 calls #####
+
+               (
+                   cd ${outdir}
+                   gdaltindex "${dsname}${ts}.shp" "${ts}/${imgfile}"  > /dev/null
+               )
+            fi
+        done
+
+    ##### do we have vector data? #####
+
+    else
+        for img in $(find ${outdir} -mindepth 2 -iname "*.shp")
+        do
+            local imgfile="${img##*/}"
+            local ts=$( sed 's:.*/\([0-9]\{8\}\).*:\1:' <<<"$img")
+            local imgfile=$( sed "s:.*/$ts/\(.*\):\1:" <<<"$img")
+            if [[ "$imgfile" != overview* ]]
+            then
+                
+                ##### make the tileindex in a subshell so we can cd with no adverse effect #####
+                ##### this costs like 2s of system time per 4000 calls #####
+
+               (
+                   cd ${outdir}
+
+                   ogrtindex -write_absolute_path \
+                             -accept_different_schemas \
+                             "${dsname}${ts}.shp" \
+                             "${ts}/${imgfile}" > /dev/null
+
+               )
+            fi
+        done
+    
+    fi
 }
 
 ###############################################################################

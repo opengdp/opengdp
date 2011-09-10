@@ -4,11 +4,11 @@
         <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
         <title>@fullproject@"</title>
         
-        <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.0.0/adapter/ext/ext-base.js"></script>
-        <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.0.0/ext-all.js"></script>
+        <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.3.1/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="http://extjs.cachefly.net/ext-3.3.1/ext-all.js"></script>
 
-        <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.0.0/resources/css/ext-all.css" />
-        <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.0.0/examples/shared/examples.css" />
+        <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.3.1/resources/css/ext-all.css" />
+        <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.3.1/examples/shared/examples.css" />
 
         <script type="text/javascript" src="http://www.openlayers.org/api/2.9/OpenLayers.js"></script>
         <script type="text/javascript" src="../GeoExt/lib/GeoExt.js"></script>
