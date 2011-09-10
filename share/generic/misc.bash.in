@@ -220,6 +220,8 @@ function dodate {
         -e "s:.*/.*[.][A-Z]${RX_YDJ}[.].*:jan 1 \1 \2 days - 1 day:g" \
         -e "s:.*/${RX_MLD}.*:\1 \2:g" \
         -e "s:.*/.*[.]${RX_YDJ}[.]\(aqua\|terra\).*:jan 1 \1 \2 days - 1 day:g" \
+        -e "s:.*/EO1[AH]${RX_PATHROW}${RX_YDJ}.*:jan 1 \1 \2 days - 1 day:g" \
+        -e "s:.*/LT[0-9]${RX_PATHROW}${RX_YDJ}.*:jan 1 \1 \2 days - 1 day:g" \
      | date -f /dev/stdin "+%Y%m%d" | sed 's:^get.*::g'
      
 }
