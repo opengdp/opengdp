@@ -111,7 +111,8 @@ function index_get_layers {
 
 SELECT *
 FROM   layers
-WHERE  dsname = '${dsname}';
+WHERE  dsname = '${dsname}'
+ORDER BY ts;
 
 EOF
 
