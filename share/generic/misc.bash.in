@@ -19,6 +19,15 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+
+function myline {
+
+    local line
+    
+    IFS= read -r line && printf '%s\n' "$line"
+    
+}
+
 ###############################################################################
 # function to print an error msg
 #

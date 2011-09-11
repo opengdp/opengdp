@@ -427,20 +427,36 @@ function sub_main {
                     then
                         index_add_layer "$ts" "$extent" 
                     fi
-
+                    
+                    ##### get the last 2 layers from the index #####
+                    
+                    local latest prev
+                    {
+                        latest=$(line)
+                        prev=$(line)
+                    } < <( index_get_latest_layers | cut -d "|" -f 3 )
+                    
+                    ##### add includes in the main mapfile #####
+                    
                     addinclude "$ts"
+                    addinclude "latest"
+                    
+                    if [ -n "$prev" ]
+                    then
+                        addinclude "previous"
+                    fi
 
                     ##### add an include line in the main Newworld mapfile #####
 
                     addinclude_NewWorld "$ts"
-
+                    
                     if istrue "$doovr" 1
                     then
 
                         ##### write a temp map file #####
 
-                        writemap_noover "$ts" "$extent"
-
+                        writemap_noover "$ts" "$extent" ""
+                        
                         ##### create a single file for larger area overviews #####
 
                         scale=$(makeoverview "$ts" "$extent")
@@ -448,13 +464,33 @@ function sub_main {
                         ##### write the map file with the correct scale #####
 
                         writemap_withover "$ts" "$extent" "$scale"
-
+                        
+                        ##### build latest and prev mapfiles
+                        
+                        if [[ "$latest" == "$ts" ]]
+                        then
+                            writemap_withover "$ts" "$extent" "$scale" "latest"
+                        elif  [[ "$prev" == "$ts" ]]
+                        then
+                            writemap_withover "$ts" "$extent" "$scale" "previous"
+                        fi
+                        
                     else
 
                         ##### write the map file with no min max layers #####
 
                         writemap_noover "$ts" "$extent"
 
+                        ##### build latest and prev mapfiles
+                        
+                        if [[ "$latest" == "$ts" ]]
+                        then
+                            writemap_noover "$ts" "$extent" "latest"
+                        elif  [[ "$prev" == "$ts" ]]
+                        then
+                            writemap_noover "$ts" "$extent" "previous"
+                        fi
+                        
                     fi
 
                     ##### create a map file for new world #####
@@ -474,7 +510,7 @@ function sub_main {
     then
     
         ##### loop over the subdatasets if any #####
-
+            
         if [[ ${#subdsnames[@]} == 0 ]]
         then
             local subdsnames=( "" )
@@ -485,14 +521,28 @@ function sub_main {
             (
                 outdir="${outdir}${sub}"
                 dsname="${dsname}${sub}"
-
-                index_get_layers | cut -d "|" -f 3 | 
+                
+                index_get_layers | cut -d "|" -f 3 |\
                  while read ts
-                do  
+                do
 
-                    ##### add an include line in the main mapfile #####
-
+                    ##### get the last 2 layers from the index #####
+                    
+                    local latest prev
+                    {
+                        latest=$(myline)
+                        prev=$(myline)
+                    } < <( index_get_latest_layers | cut -d "|" -f 3 )
+                    
+                    ##### add includes in the main mapfile #####
+                    
                     addinclude "$ts"
+                    addinclude "latest"
+                    
+                    if [ -n "$prev" ]
+                    then
+                        addinclude "previous"
+                    fi
 
                     ##### add an include line in the main Newworld mapfile #####
 
@@ -516,12 +566,31 @@ function sub_main {
 
                         writemap_withover "$ts" "$extent" "$scale"
 
+                        ##### build latest and prev mapfiles
+                        
+                        if [[ "$latest" == "$ts" ]]
+                        then
+                            writemap_withover "$ts" "$extent" "$scale" "latest"
+                        elif  [[ "$prev" == "$ts" ]]
+                        then
+                            writemap_withover "$ts" "$extent" "$scale" "previous"
+                        fi
+                        
                     else
 
                         ##### write the map file with no min max layers #####
 
                         writemap_noover "$ts" "$extent"
-
+                        
+                        ##### build latest and prev mapfiles
+                        
+                        if [[ "$latest" == "$ts" ]]
+                        then
+                            writemap_noover "$ts" "$extent" "latest"
+                        elif  [[ "$prev" == "$ts" ]]
+                        then
+                            writemap_noover "$ts" "$extent" "previous"
+                        fi
                     fi
 
                     ##### create a map file for new world #####

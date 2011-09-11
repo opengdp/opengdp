@@ -19,25 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-###############################################################################
-# function to write out a map file with no min max
-###############################################################################
-
-function writemap_nominmax {
-    local ts="$1"
-    local extent="$2"
-
-    ##### do we have image data? #####
-    
-    if ! istrue "$vector"
-    then
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
-        
-  LAYER
-    NAME '${dsname}_${ts}_nominmax'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
+wms_srs='EPSG:900913 EPSG:4326 EPSG:3857'
+myprojection=$(cat <<EOF
 
     PROJECTION
      'init=epsg:4326'
@@ -47,9 +30,51 @@ function writemap_nominmax {
      'no_defs'
      ''
     END
+
+EOF
+)
+
+###############################################################################
+# function to write out a map file with no min max
+###############################################################################
+
+function writemap_nominmax {
+    local ts="$1"
+    local extent="$2"
+    local latest="$3"
+    
+    if [[ "$latest" == "latest" ]]
+    then
+        local lname="${dsname}_latest"
+        local mapfile="${outdir}/${dsname}latest.map"
+
+    elif [[ "$latest" == "previous" ]]
+    then
+        local lname="${dsname}_previous"
+        local mapfile="${outdir}/${dsname}previous.map"
+        
+    else
+        local lname="${dsname}_${ts}"
+        local mapfile="${outdir}/${dsname}${ts}.map"
+
+    fi
+    ##### do we have image data? #####
+    
+    if ! istrue "$vector"
+    then
+        cat > "${outdir}/${dsname}latest.map" << EOF
+        
+  LAYER
+    NAME '${lname}_nominmax'
+    TYPE RASTER
+    STATUS ON
+    DUMP TRUE
+
+    ${myprojection}
+    
     METADATA
-      'wms_title'        '${dsname}_${ts}_nominmax'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}_nominmax'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'	 '$extent'
     END
 
@@ -62,31 +87,22 @@ EOF
     ##### do we have vector data? #####
 
     else 
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        cat > "${outdir}/${dsname}latest.map" << EOF
         
   LAYER
-    NAME '${dsname}_${ts}_nominmax'
+    NAME '${lname}_nominmax'
     STATUS ON
     TYPE POLYGON
     
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
 
     METADATA
-      'wms_title'        '${dsname}_${ts}_nominmax'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}_nominmax'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'       '$extent'
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    GROUP '${dsname}_${ts}'
-    MAXSCALEDENOM $scale
     
     CLASS
       NAME "Countries"
@@ -104,45 +120,53 @@ EOF
 
 }
 
-
 ###############################################################################
-# function to write out a map file
+# function to write out a map file with overview
 ###############################################################################
 
 function writemap_withover {
     local ts="$1"
     local extent="$2"
     local scale="$3"
+    local latest="$4"
     
+    if [[ "$latest" == "latest" ]]
+    then
+        local lname="${dsname}_latest"
+        local mapfile="${outdir}/${dsname}latest.map"
+
+    elif [[ "$latest" == "previous" ]]
+    then
+        local lname="${dsname}_previous"
+        local mapfile="${outdir}/${dsname}previous.map"
+        
+    else
+        local lname="${dsname}_${ts}"
+        local mapfile="${outdir}/${dsname}${ts}.map"
+
+    fi
     ##### do we have image data? #####
     
     if ! istrue "$vector"
     then
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
-    NAME '${dsname}_${ts}_hires'
+    NAME '${lname}_hires'
     TYPE RASTER
     STATUS ON
     DUMP TRUE
 
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
 
     METADATA
-      'wms_title'        '${dsname}_${ts}_hires'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}_hires'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'	 '$extent'
     END
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    GROUP '${dsname}_${ts}'
+    GROUP '${lname}'
     MAXSCALEDENOM $scale
     $offsite
     PROCESSING "RESAMPLE=AVERAGE"
@@ -152,30 +176,23 @@ EOF
     ##### do we have vector data? #####
 
     else 
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
-    NAME '${dsname}_${ts}_hires'
+    NAME '${lname}_hires'
     STATUS ON
     TYPE POLYGON
     
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
 
     METADATA
-      'wms_title'        '${dsname}_${ts}_hires'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}_hires'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'       '$extent'
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    GROUP '${dsname}_${ts}'
+    GROUP '${lname}'
     MAXSCALEDENOM $scale
     
 ${vectorstyle}
@@ -186,31 +203,24 @@ EOF
 
     fi
 
-    cat > "${outdir}/${dsname}${ts}.map" << EOF
+    cat >> "${mapfile}" << EOF
 
   LAYER
-    NAME '${dsname}_${ts}_ovr'
+    NAME '${lname}_ovr'
     TYPE RASTER
     STATUS ON
     DUMP TRUE
 
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
 
     METADATA
-      'wms_title'        '${dsname}_${ts}_ovr'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}_ovr'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'	 '$extent'
     END
 
     TILEINDEX "${outdir}/overview_${dsname}${ts}.shp"
-    GROUP '${dsname}_${ts}'
+    GROUP '${lname}'
     MINSCALEDENOM $scale
     $offsite
     PROCESSING "RESAMPLE=AVERAGE"
@@ -220,6 +230,7 @@ EOF
 
     
 }
+
 ###############################################################################
 # function to write out a map file without a overview layer
 ###############################################################################
@@ -227,32 +238,42 @@ EOF
 function writemap_noover {
     local ts="$1"
     local extent="$2"
+    local latest="$3"
+                
+    if [[ "$latest" == "latest" ]]
+    then
+        local lname="${dsname}_latest"
+        local mapfile="${outdir}/${dsname}latest.map"
 
+    elif [[ "$latest" == "previous" ]]
+    then
+        local lname="${dsname}_previous"
+        local mapfile="${outdir}/${dsname}previous.map"
+        
+    else
+        local lname="${dsname}_${ts}"
+        local mapfile="${outdir}/${dsname}${ts}.map"
+
+    fi
+        
     ##### do we have image data? #####
     
     if ! istrue "$vector"
     then
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
-    NAME '${dsname}_${ts}'
+    NAME '${lname}'
     TYPE RASTER
     STATUS ON
     DUMP TRUE
 
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
 
     METADATA
-      'wms_title'        '${dsname}_${ts}'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
-      'wms_extent'	 '$extent'
+      'wms_title'        '${lname}'
+      'wms_srs'          '${wms_srs}'
+      'wms_extent'	     '$extent'
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -265,25 +286,18 @@ EOF
     ##### do we have vector data? #####
 
     else 
-        cat > "${outdir}/${dsname}${ts}.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
-    NAME '${dsname}_${ts}'
+    NAME '${lname}'
     STATUS ON
     TYPE POLYGON
 
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    ${myprojection}
     
     METADATA
-      'wms_title'        '${dsname}_${ts}'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_title'        '${lname}'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'       '$extent'
     END
     
@@ -296,6 +310,10 @@ ${vectorstyle}
 EOF
     fi
 }
+
+###############################################################################
+# function to write out a map file for newworld
+###############################################################################
 
 function writemap_NewWorld {
     local ts="$1"
@@ -308,17 +326,12 @@ function writemap_NewWorld {
     TYPE RASTER
     STATUS ON
     DUMP TRUE
-    PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
-    END
+    
+    ${myprojection}
+    
     METADATA
       'wms_title'        '${dsname}_${ts}'
-      'wms_srs'          'EPSG:900913 EPSG:4326'
+      'wms_srs'          '${wms_srs}'
       'wms_extent'	 '$extent'
     END
     
@@ -343,7 +356,7 @@ EOF
 ###############################################################################
 
 function addinclude {
-    ts="$1"
+    local ts="$1"
 
     if ! grep $mapfile -e "${outdir}/${dsname}${ts}.map" > /dev/null
     then
@@ -398,14 +411,7 @@ MAP
 
   EXTENT -180.0  -90.0 180.0  90.0
   
-  PROJECTION
-    'init=epsg:4326'
-    'proj=longlat'
-    'ellps=WGS84'
-    'datum=WGS84'
-    'no_defs'
-    ''
-  END
+${myprojection}
 
   # Background color for the map canvas -- change as desired
 #  IMAGECOLOR 0 0 0
@@ -476,7 +482,7 @@ MAP
     METADATA
       'wms_title'           '${project}'
       'wms_onlineresource'  '${urlcgibin}?SERVICE=WMS'
-      'wms_srs'             'EPSG:900913 EPSG:4326'
+      'wms_srs'             '${wms_srs}'
     END
 #   LOG '/var/www/html/mapserver.log'
     #Scale range at which web interface will operate

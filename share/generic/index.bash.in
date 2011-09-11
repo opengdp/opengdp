@@ -102,7 +102,7 @@ EOF
 }
 
 ###############################################################################
-# function to reteve a list of layers for the ds from the projects layer index
+# function to retreve a list of layers for the ds from the projects layer index
 ###############################################################################
 
 function index_get_layers {
@@ -117,6 +117,25 @@ ORDER BY ts;
 EOF
 
 }
+
+###############################################################################
+# function to retreve the last 2 layers for the ds from the projects layer index
+###############################################################################
+
+function index_get_latest_layers {
+
+    sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
+
+SELECT *
+FROM   layers
+WHERE  dsname = '${dsname}'
+ORDER BY ts DESC
+LIMIT 2;
+
+EOF
+
+}
+
 
 ###############################################################################
 # function to drop all the layers for a ds from the projects layer index
