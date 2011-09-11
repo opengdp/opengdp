@@ -432,8 +432,8 @@ function sub_main {
                     
                     local latest prev
                     {
-                        latest=$(line)
-                        prev=$(line)
+                        latest=$(myline)
+                        prev=$(myline)
                     } < <( index_get_latest_layers | cut -d "|" -f 3 )
                     
                     ##### add includes in the main mapfile #####
