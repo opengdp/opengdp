@@ -77,9 +77,7 @@ Ext.onReady(function() {
     "Google Terrain",
     {
       type: G_PHYSICAL_MAP,
-     'sphericalMercator': true
-    },
-    {
+     'sphericalMercator': true,
       displayInLayerSwitcher: true,
       isBaseLayer: true,
       visibility: false,
@@ -93,9 +91,7 @@ Ext.onReady(function() {
   var google_streets = new OpenLayers.Layer.Google(
     "Google Streets",
     {
-      'sphericalMercator': true
-    },
-    {
+      'sphericalMercator': true,
       displayInLayerSwitcher: true,
       isBaseLayer: true,
       visibility: false,
@@ -110,9 +106,7 @@ Ext.onReady(function() {
     "Google Hybrid",
     {
       type: G_HYBRID_MAP,
-      'sphericalMercator': true
-    },
-    {
+      'sphericalMercator': true,
       displayInLayerSwitcher: true,
       isBaseLayer: true,
       visibility: false,
@@ -126,9 +120,7 @@ Ext.onReady(function() {
     "Google Satellite",
     {
       type: G_SATELLITE_MAP,
-      'sphericalMercator': true
-    },
-    {
+      'sphericalMercator': true,
       displayInLayerSwitcher: true,
       isBaseLayer: true,
       visibility: false,

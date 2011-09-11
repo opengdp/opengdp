@@ -13,7 +13,8 @@ Ext.onReady(function() {
     },
     {
       isBaseLayer: false,
-      visibility: false
+      visibility: false,
+      lid: 'osm-google-hybrid'
     }
   );
 
@@ -22,7 +23,6 @@ Ext.onReady(function() {
   map.addLayers(osm_tc_layers);
 
 
-  
   osm_tc_store = new GeoExt.data.LayerStore(
     {
       initDir: 0,
