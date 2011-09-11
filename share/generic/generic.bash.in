@@ -304,7 +304,22 @@ function sub_main {
     if (( stage == opt_readdo ))
     then
     
-        readdo
+                ##### loop over the subdatasets if any #####
+            
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                
+               readdo
+            )
+        done
 
         istrue $stop && exit
     fi
@@ -313,8 +328,23 @@ function sub_main {
     
     if (( stage == opt_retindex ))
     then
-        rebuildtindexs
-    
+        ##### loop over the subdatasets if any #####
+            
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                
+                rebuildtindexs
+            )
+        done
+            
         istrue $stop && exit
     fi
     
@@ -322,15 +352,31 @@ function sub_main {
     
     if (( stage == opt_reindex )) || (( stage == opt_rebuild ))
     then
-    
-        index_drop_ds
         
-        while read ts
+        ##### loop over the subdatasets if any #####
+            
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
         do
-            index_add_layer "$ts" "$(getextent "$ts")"
-        
-        done < <( find "${outdir}" -mindepth 1 -maxdepth 1 -type d -name "[0-9]*" |\
-                   sed 's:.*/::g')
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                
+                index_drop_ds
+                
+                while read ts
+                do
+                    index_add_layer "$ts" "$(getextent "$ts")"
+                
+                done < <( find "${outdir}" -mindepth 1 -maxdepth 1 -type d -name "[0-9]*" |\
+                           sed 's:.*/::g')
+                
+            )
+        done
         
         istrue $stop && exit
     fi
