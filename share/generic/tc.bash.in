@@ -112,7 +112,7 @@ EOF
 [${project}_${lname}]
 type=WMS
 url=${urlcgibin}?
-layers=${layer}
+layers=${lname}
 extension=png
 tms_type=google
 levels=24
