@@ -16,6 +16,7 @@
             ></script>
         <script type="text/javascript" src="proj-def.js"></script>
         <script type="text/javascript" src="setup.js"></script>
+        <script type="text/javascript" src="kml.js"></script>
         <script type="text/javascript" src="base.js"></script>
 
 

@@ -318,6 +318,10 @@ Ext.onReady(function() {
 *******************************************************************************/
 
   var maptbar = [
+    new Ext.Toolbar.Button({
+        text: 'Open in Google Earth',
+        handler: writekml
+	}),
     "->",
     new GeoExt.Action({
       control: new OpenLayers.Control.Navigation(),

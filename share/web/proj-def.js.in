@@ -1,4 +1,6 @@
 title = "@fullproject@";
+project = "@project@";
+urlcgibin_tc = "@urlcgibin_tc@";
 
 document.title = title;
 center={};

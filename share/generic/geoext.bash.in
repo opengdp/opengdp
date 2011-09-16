@@ -174,8 +174,8 @@ EOF
         cat << EOF
     
   ${lname}_tc = new OpenLayers.Layer.WMS(
-    "${lname}",
-    "$urlcgibin",
+    "${project}_${lname}",
+    "$urlcgibin_tc",
     {
       layers: '${project}_${lname}',
       format: 'image/png',

@@ -19,8 +19,17 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-function print_res {
+function print_res_merc {
     local maxResolution=156543.0339
+    local zoom
+    for (( zoom=0; zoom<=24; ++zoom ))
+    do
+        fcalc "$maxResolution / 2^${zoom}"
+    done
+}
+
+function print_res {
+    local maxResolution=1.40625
     local zoom
     for (( zoom=0; zoom<=24; ++zoom ))
     do
@@ -30,9 +39,22 @@ function print_res {
 
 function dotc {
 
-    echo "" > "${basedir}/${dsname}.tilecache.conf"
+    echo "" > "${htmlbase}/${dsname}.tilecache.conf"
     
-    local res=$(print_res | tr "\n" "," | sed -r 's/,$//')
+    local res=$(print_res_merc | tr "\n" "," | sed -r 's/,$//')
+    
+    local lon lat
+    
+    IFS=", " read lon lat <<<"$mapcenter"
+    
+    ##### output the start of a ds kml #####
+    
+    cat > "${htmlbase}/${dsname}.kml" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns:atom="http://www.w3.org/2005/Atom" xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+
+EOF
 
     ##### loop over the layers in the index #####
     
@@ -62,7 +84,7 @@ function dotc {
         if fcmp "$n < 86" && fcmp "$s > -86"
         then
             
-            cat << EOF >> ${basedir}/${dsname}.tilecache.conf
+            cat >> ${htmlbase}/${dsname}.tilecache.conf << EOF
 
 [${project}_${lname}]
 type=WMS
@@ -74,10 +96,18 @@ levels=24
 spherical_mercator=true
 resolutions=${res}
 bbox=${gw},${gs},${ge},${gn}
+
+[${project}_${lname}_4326]
+type=WMS
+url=${urlcgibin}?
+layers=${lname}
+extension=png
+levels=24
+
 EOF
 
         else    
-            cat << EOF >> ${basedir}/${dsname}.tilecache.conf
+            cat >> ${htmlbase}/${dsname}.tilecache.conf << EOF
 
 [${project}_${lname}]
 type=WMS
@@ -87,11 +117,100 @@ extension=png
 tms_type=google
 levels=24
 spherical_mercator=true
+
+[${project}_${lname}_4326]
+type=WMS
+url=${urlcgibin}?
+layers=${layer}
+extension=png
+levels=24
 EOF
        fi
 
+##### kml for the layer #####
+       
+       cat >> "${htmlbase}/${dsname}.kml" << EOF
 
+    <Folder>
+      <name>${lname}</name>
+      <visibility>0</visibility>
+      <open>1</open>
+      <Style>
+        <ListStyle>
+          <listItemType>radioFolder</listItemType>
+          <bgColor>00ffffff</bgColor>
+          <maxSnippetLines>2</maxSnippetLines>
+        </ListStyle>
+      </Style>
+      <Folder>
+        <name>on</name>
+        <visibility>0</visibility>
+        <NetworkLink>
+          <Link>
+            <href>${urlcgibin_tc}/1.0.0/${project}_${lname}_4326/0/0/0.kml</href>
+            <viewRefreshMode>onRegion</viewRefreshMode>
+          </Link>
+        </NetworkLink>
+        <NetworkLink>
+          <Link>
+            <href>${urlcgibin_tc}/1.0.0/${project}_${lname}_4326/0/1/0.kml</href>
+            <viewRefreshMode>onRegion</viewRefreshMode>
+          </Link>
+        </NetworkLink>
+      </Folder>
+      <Folder>
+        <name>off</name>
+        <visibility>1</visibility>
+      </Folder>
+    </Folder>
+EOF
 
     done < <(index_get_layers)
 
+
+
+    ##### output the end of a ds kml #####
+    
+    cat >> "${htmlbase}/${dsname}.kml" << EOF
+  </Document>
+</kml>
+EOF
+
+    ##### check if the ds tileindex.conf is      #####
+    ##### included in the project tileindex.conf #####
+
+    if ! grep -q "${htmlbase}/tilecache.conf" -e "${urlhtmldir}/${dsname}.tilecache.conf"
+    then
+        
+        sed -e 's|^urls=$|urls='"${urlbase}/${project}/${dsname}"'.tilecache.conf\n|' \
+            -e 's|^urls=\(.*\)$|urls='"${urlbase}/${project}/${dsname}"'.tilecache.conf,\n     \1|' \
+          < "${htmlbase}/tilecache.conf" > "${htmlbase}/tilecache.conf.new"
+        mv "${htmlbase}/tilecache.conf.new" "${htmlbase}/tilecache.conf"
+    
+    fi
+
+    ##### check if the ds kml is included in the project kml #####
+    
+    if ! grep -q "${htmlbase}/index.kml" -e "${urlbase}/${project}/${dsname}.kml"
+    then
+
+        linenum=$(grep "${htmlbase}/index.kml" -n -e '</Folder>' |\
+                   tail -n 1 | cut -d ":" -f 1 )
+
+        ed -s "${htmlbase}/index.kml" << EOF
+${linenum}-1a
+
+      <NetworkLink>
+        <name>${dsname}</name>
+        <Link>
+          <href>${urlbase}/${project}/${dsname}.kml</href>
+        </Link>
+      </NetworkLink>
+.
+w
+EOF
+    fi
+
+
 }
+

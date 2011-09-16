@@ -33,8 +33,10 @@ mapserverpath="@mapserverpath@"
 urlcgibin="@urlcgibin@"
 urlbase="@urlbase@"
 htmlbase="@htmlbase@"
-urlcgibin_tc="http://cube.telascience.org/tilecache/tilecache.py"
+urlcgibin_tc="@urlcgibin_tc@"
 
+mapcenter="@mapcenter@"
+mapcenter="@mapzoom@"
 
 export GDAL_CACHEMAX=500
 export GDAL_TIFF_INTERNAL_MASK=YES

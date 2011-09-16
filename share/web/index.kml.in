@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+  <Document>
+    <name>@fullproject@</name>
+    <LookAt>
+      <longitude>@maplon@</longitude>
+      <latitude>@maplat@</latitude>
+      <altitude>@mapaltitude@</altitude>  
+      <range>0</range>   
+      <tilt>0</tilt> 
+      <heading>0</heading> 
+      <altitudeMode>absolute</altitudeMode>
+    </LookAt>
+    <Folder>
+    </Folder>
+  </Document>
+</kml>

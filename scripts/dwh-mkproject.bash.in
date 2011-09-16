@@ -66,6 +66,11 @@ then
        c_urlbase="http://$(hostname)"
 fi
 
+if ! [ -n "$c_urlcgibin_tc" ]
+then
+       c_urlcgibin_tc="http://$(hostname)/tilecache/tilecache.py"
+fi
+
 if ! [ -n "$c_mapcenter" ]
 then
        c_mapcenter="0, 0"
@@ -75,7 +80,6 @@ if ! [ -n "$c_mapzoom" ]
 then
        c_mapzoom="10"
 fi
-
 
 
 ##### input box function #####
@@ -369,6 +373,15 @@ do
     urlbase=$(inputbox "enter the base url for the web server: " "$c_urlbase")
 done
 
+##### tilecache url #####
+
+unset urlcgibin_tc
+
+while ! [ -n "$urlcgibin_tc" ]
+do
+    urlcgibin_tc=$(inputbox "enter the fill url for the tilecache: " "$c_urlcgibin_tc")
+done
+
 ##### url cgi-bin dir #####
 
 unset urlcgibindir
@@ -422,6 +435,15 @@ scriptdir="${path}/${project}/scripts/"
 mapfile="$basedir/$mapfile"
 urlcgibin="$urlcgibindir/$cgibin"
 htmlbase="$htmldir/$project"
+IFS=", "
+read maplon maplat <<<"$mapcenter"
+unset IFS
+
+((mapaltitude = 128000000))
+for ((i = 0; i < mapzoom; i++))
+do
+    ((mapaltitude/=2))
+done
 
 ##### print the stuff #####
 
@@ -444,9 +466,13 @@ echo "htmlbase:         $htmlbase"
 echo "urlbase:          $urlbase"
 echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
+echo "urlcgibin_tc:     $urlcgibin_tc"
 echo "urlhtmldir:       $urlhtmldir"
 echo "mapcenter:        $mapcenter"
+echo "maplon:           $maplon"
+echo "maplat:           $maplat"
 echo "mapzoom:          $mapzoom"
+echo "mapaltitude:      $mapaltitude"
 echo "------------------------------------------------------------------------"
 )
 
@@ -483,8 +509,12 @@ function do_subst {
         -e "s|[@]urlbase[@]|$urlbase|g" \
         -e "s|[@]urlcgibindir[@]|$urlcgibindir|g" \
         -e "s|[@]urlcgibin[@]|$urlcgibin|g" \
+        -e "s|[@]urlcgibin_tc[@]|$urlcgibin_tc|g" \
         -e "s|[@]urlhtmldir[@]|$urlhtmldir|g" \
         -e "s|[@]mapcenter[@]|$mapcenter|g" \
+        -e "s|[@]maplon[@]|$maplon|g" \
+        -e "s|[@]maplat[@]|$maplat|g" \
+        -e "s|[@]mapaltitude[@]|$mapaltitude|g" \
         -e "s|[@]mapzoom[@]|$mapzoom|g"
 }
 
@@ -568,6 +598,20 @@ else
     do_subst < "@PKGDATADIR@/web/index.html" > "$htmlbase/index.html"
 fi
 
+##### tilecache #####
+
+if ! [ -f  "$htmlbase/tilecache.conf" ]
+then
+    do_subst < "@PKGDATADIR@/web/tilecache.conf" > "$htmlbase/tilecache.conf"
+fi
+
+##### kml #####
+
+if ! [ -f  "$htmlbase/index.kml" ]
+then
+    do_subst < "@PKGDATADIR@/web/index.kml" > "$htmlbase/index.kml"
+fi
+
 ##### js #####
 
 for f in @PKGDATADIR@/web/*.js
@@ -585,6 +629,7 @@ c_mapserverpath="$mapserverpath"
 c_cgibindir="$cgibindir"
 c_htmldir="$htmldir"
 c_urlbase="$urlbase"
+c_urlcgibin_tc="$urlcgibin_tc"
 c_mapcenter="$mapcenter"
 c_mapzoom="$mapzoom"
 EOF

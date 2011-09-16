@@ -4,7 +4,10 @@ web_DATA = \
     index.html \
     osm.js \
     proj-def.js \
-    setup.js
+    setup.js \
+    tilecache.conf \
+    kml.js \
+    index.kml
     
 CLEANFILES = $(web_DATA)
 
@@ -16,7 +19,10 @@ EXTRA_DIST = \
     index.html.in \
     osm.js.in \
     proj-def.js.in \
-    setup.js.in
+    setup.js.in \
+    tilecache.conf.in \
+    kml.js.in \
+    index.kml.in
 
 do_subst = cat
 
@@ -37,4 +43,13 @@ proj-def.js: proj-def.js.in Makefile
 
 setup.js: setup.js.in Makefile
 	$(do_subst) < $(srcdir)/setup.js.in > setup.js
+
+tilecache.conf: tilecache.conf.in Makefile
+	$(do_subst) < $(srcdir)/tilecache.conf.in > tilecache.conf
+
+kml.js: kml.js.in Makefile
+	$(do_subst) < $(srcdir)/kml.js.in > kml.js
+
+index.kml: index.kml.in Makefile
+	$(do_subst) < $(srcdir)/index.kml.in > index.kml
 
