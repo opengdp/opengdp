@@ -94,8 +94,8 @@ extension=png
 tms_type=google
 levels=24
 spherical_mercator=true
-resolutions=${res}
-bbox=${gw},${gs},${ge},${gn}
+#resolutions=${res}
+#bbox=${gw},${gs},${ge},${gn}
 
 [${project}_${lname}_4326]
 type=WMS
