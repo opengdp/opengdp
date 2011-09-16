@@ -121,7 +121,7 @@ spherical_mercator=true
 [${project}_${lname}_4326]
 type=WMS
 url=${urlcgibin}?
-layers=${layer}
+layers=${lname}
 extension=png
 levels=24
 EOF
