@@ -637,26 +637,26 @@ EOF
 
 ##### add a list item to the systems index.html file #####
 
-if grep -q "$htmldir/index.html" -e "<a href=.${urlhtmldir}.>${fullproject}</a>"
-then
-    linenum=$(grep -n "$htmldir/index.html" -e "<ul>"
+#if grep -q "$htmldir/index.html" -e "<a href=.${urlhtmldir}.>${fullproject}</a>"
+#then
+#    linenum=$(grep -n "$htmldir/index.html" -e "<ul>"
     
-    ed -s "${htmldir}/index.html" << EOF
-${linenum}-1a
-    <li>
-      <a href="${urlhtmldir}">${fullproject}</a>
-      <a href="${urlcgibin}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities">WMS</a>
-      <a href="${urlhtmldir}/index.kml">KML</a>
-    </li>
-.
-w
-EOF
+#    ed -s "${htmldir}/index.html" << EOF
+#${linenum}-1a
+#    <li>
+#     <a href="${urlhtmldir}">${fullproject}</a>
+#      <a href="${urlcgibin}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities">WMS</a>
+#      <a href="${urlhtmldir}/index.kml">KML</a>
+#    </li>
+#.
+#w
+#EOF
 
-<li>
-  <a href="${urlhtmldir}">${fullproject}</a>
-  <a href="${urlcgibin}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities">WMS</a>
-  <a href="${urlhtmldir}/index.kml">KML</a>
-</li>
+#<li>
+#  <a href="${urlhtmldir}">${fullproject}</a>
+#  <a href="${urlcgibin}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities">WMS</a>
+#  <a href="${urlhtmldir}/index.kml">KML</a>
+#</li>
 
 if [ -n "$have_mc" ]
 then
