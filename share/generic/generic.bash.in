@@ -281,7 +281,34 @@ function sub_main {
         then
             exit
         fi
-
+        
+        ##### loop over the subdatasets if any #####
+            
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                
+                while read ts
+                do
+                    index_add_layer "$ts" "$(getextent "$ts")"
+                
+                done < <( grep "${mirrorfile}" -e "^get" |\
+                           dodate |\
+                           grep -v -e "^get" |\
+                           sort |\
+                           uniq )
+                
+                
+            )
+        done
+        
         if istrue $stop
         then
             
@@ -421,31 +448,30 @@ function sub_main {
 
                     extent=$(getextent "$ts")
                 
-                    ##### if stage is 0 add to the index #####
-                
-                    if (( stage == 0 ))
+                    if istrue "$dolatest"
                     then
-                        index_add_layer "$ts" "$extent" 
+                    
+                        ##### get the last 2 layers from the index #####
+                        
+                        local latest prev
+                        {
+                            latest=$(myline)
+                            prev=$(myline)
+                        } < <( index_get_latest_layers | cut -d "|" -f 3 )
+                        
+                        ##### add includes in the main mapfile #####
+                        
+                        
+                        addinclude "latest"
+                        
+                        if [ -n "$prev" ]
+                        then
+                            addinclude "previous"
+                        fi
                     fi
-                    
-                    ##### get the last 2 layers from the index #####
-                    
-                    local latest prev
-                    {
-                        latest=$(myline)
-                        prev=$(myline)
-                    } < <( index_get_latest_layers | cut -d "|" -f 3 )
-                    
-                    ##### add includes in the main mapfile #####
                     
                     addinclude "$ts"
-                    addinclude "latest"
                     
-                    if [ -n "$prev" ]
-                    then
-                        addinclude "previous"
-                    fi
-
                     ##### add an include line in the main Newworld mapfile #####
 
                     addinclude_NewWorld "$ts"
@@ -483,10 +509,10 @@ function sub_main {
 
                         ##### build latest and prev mapfiles
                         
-                        if [[ "$latest" == "$ts" ]]
+                        if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
                         then
                             writemap_noover "$ts" "$extent" "latest"
-                        elif  [[ "$prev" == "$ts" ]]
+                        elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
                         then
                             writemap_noover "$ts" "$extent" "previous"
                         fi
@@ -525,25 +551,30 @@ function sub_main {
                 index_get_layers | cut -d "|" -f 3 |\
                  while read ts
                 do
-
-                    ##### get the last 2 layers from the index #####
                     
-                    local latest prev
-                    {
-                        latest=$(myline)
-                        prev=$(myline)
-                    } < <( index_get_latest_layers | cut -d "|" -f 3 )
+                    if istrue "$dolatest"
+                    then
                     
-                    ##### add includes in the main mapfile #####
+                        ##### get the last 2 layers from the index #####
+                        
+                        local latest prev
+                        {
+                            latest=$(myline)
+                            prev=$(myline)
+                        } < <( index_get_latest_layers | cut -d "|" -f 3 )
+                        
+                        ##### add includes in the main mapfile #####
+                        
+                        addinclude "latest"
+                        
+                        if [ -n "$prev" ]
+                        then
+                            addinclude "previous"
+                        fi
+                    fi
                     
                     addinclude "$ts"
-                    addinclude "latest"
                     
-                    if [ -n "$prev" ]
-                    then
-                        addinclude "previous"
-                    fi
-
                     ##### add an include line in the main Newworld mapfile #####
 
                     if [ -n "$NewWorld_mapfile" ]
@@ -568,10 +599,10 @@ function sub_main {
 
                         ##### build latest and prev mapfiles
                         
-                        if [[ "$latest" == "$ts" ]]
+                        if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
                         then
                             writemap_withover "$ts" "$extent" "$scale" "latest"
-                        elif  [[ "$prev" == "$ts" ]]
+                        elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
                         then
                             writemap_withover "$ts" "$extent" "$scale" "previous"
                         fi
