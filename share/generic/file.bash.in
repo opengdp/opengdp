@@ -491,7 +491,7 @@ function dozip {
             
             ##### proccess the images #####
             
-            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
+            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${files[0]}")" "no" || return
         
         done < <( find_asoc_files "$iext" <<<"$zipinfo" )
     
@@ -532,7 +532,7 @@ function dozip {
 
             ##### proccess the vectors #####
 
-            dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${f}")" "no" || return
+            dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${files[0]}")" "no" || return
 
         done < <( find_asoc_shape_files "$iext" <<<"$zipinfo" )
 
@@ -668,7 +668,7 @@ function dotar {
             
              ##### proccess the images #####
             
-            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${f}")" "no" || return
+            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${files[0]}")" "no" || return
             
         done < <( find_asoc_files "$iext" <<<"$zipinfo" )
     
@@ -708,7 +708,7 @@ function dotar {
 
             ##### proccess the vectors #####
 
-            dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${f}")" "no" || return
+            dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${files[0]}")" "no" || return
 
         done < <( find_asoc_shape_files "$iext" <<<"$zipinfo" )
 
