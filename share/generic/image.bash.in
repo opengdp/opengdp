@@ -69,7 +69,14 @@ function image_colar {
                       "${img}" \
                       -o "${tmpram}/prewarp_${imgbase}.tif" \
                       > /dev/null || { printerror ; return; }
-                      
+        
+        elif istrue "$nearboth"
+        then
+            nearblack -co TILED=YES -setmask -nb 0 -color 0,0,0 -color 255,255,255 -of GTiff \
+                      "${img}" \
+                      -o "${tmpram}/prewarp_${imgbase}.tif" \
+                      > /dev/null || { printerror ; return; }
+        
         else
             nearblack -co TILED=YES -setmask -nb 0 -of GTiff \
                       "${img}" \
@@ -83,6 +90,12 @@ function image_colar {
         if istrue "$nearwhite"
         then
             nearblack -co TILED=YES -setmask -near 0 -nb 0 -white -of GTiff \
+                      "${img}" \
+                      -o "${tmpram}/prewarp_${imgbase}.tif" \
+                      > /dev/null || { printerror ; return; }
+        elif istrue "$nearboth"
+        then
+            nearblack -co TILED=YES -setmask -near 0 -nb 0 -color 0,0,0 -color 255,255,255 -of GTiff \
                       "${img}" \
                       -o "${tmpram}/prewarp_${imgbase}.tif" \
                       > /dev/null || { printerror ; return; }
@@ -433,7 +446,7 @@ function doimg {
 
     ##### is the image bnw? #####
     
-    if [[ "$bnw" == "yes" ]]
+    if istrue "$bnw"
     then
         gdalbuildvrt -separate "${tmpdir}/${imgdir}${imgbase}_bnw.vrt" "${tmpdir}/${img}" "${tmpdir}/${img}" "${tmpdir}/${img}"
         
