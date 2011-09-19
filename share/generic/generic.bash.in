@@ -476,7 +476,7 @@ function sub_main {
 
                     addinclude_NewWorld "$ts"
                     
-                    if istrue "$doovr" 1
+                    if istrue "$doovr" 0
                     then
 
                         ##### write a temp map file #####
@@ -586,7 +586,7 @@ function sub_main {
 
                     extent=$(getextent "$ts")
 
-                    if istrue "$doovr" 1
+                    if istrue "$doovr" 0
                     then
 
                         ##### get the overview scale from the old mapfile #####

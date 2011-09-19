@@ -898,6 +898,10 @@ function doimg_multiband {
             local msbands=( "${tmp[@]}" )
             unset tmp
             local tmp
+            eval tmp=\"\$panband$sub\"
+            local panband="$tmp"
+            unset tmp
+            local tmp
             eval tmp=\"\$mscalc$sub\"
             local mscalc="$tmp"
             unset tmp
@@ -1064,7 +1068,7 @@ function doimg_multiband {
                 
                 ##### do we pansharpen? #####
                 
-                if [ -n "$panfile" ]
+                if [ -n "$panband" ]
                 then
                     if ! [ -n "$have_otb" ]
                     then

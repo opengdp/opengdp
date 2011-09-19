@@ -516,3 +516,151 @@ function get_srs {
 GDAL_TYPES=( Byte UInt16 Int16 UInt32 Int32 
              Float32 Float64)
 
+###############################################################################
+# function encode a url
+###############################################################################
+
+function url_encode_awk {
+    LANG=C awk '
+$1 == "20"                    { printf("%s",   "+"); next } # space becomes plus
+$1 ~  /0[adAD]/               {                      next } # strip newlines
+$2 ~  /^[a-zA-Z0-9.*()\/-]$/  { printf("%s",   $2);  next } # pass through what we can
+                              { printf("%%%s", $1)        } # take hex value of everything else
+'
+}
+
+function url_encode {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+
+    local encodedurl="$1";
+    
+    hexdump -v -e '1/1 "%02x\t"' -e '1/1 "%_c\n"' <<<"$encodedurl" |\
+     url_encode_awk
+    
+    ##### needs A NEWLINE #####
+    
+    echo
+
+}
+
+###############################################################################
+# function to get the query part of a url
+###############################################################################
+
+function url_get_query {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+    
+    local url=$1
+    url="${url#*\?}"
+    url="/${url%%\#*}"
+    
+    echo "$url"
+    
+}
+    
+###############################################################################
+# function to get the hash part of a url
+###############################################################################
+
+function url_get_hash {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+    
+    local url=$1
+    url="${url#*\#}"
+    
+    echo "$url"
+    
+}
+
+###############################################################################
+# function to get the path part of a url
+###############################################################################
+
+function url_get_path {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+    
+    local url=$1
+    
+    url="${url/*:??/}"
+    url="/${url#*/}"
+    url="/${url%%\#*}"
+    url="/${url%%\?*}"
+    
+    echo "$url"
+    
+}
+
+###############################################################################
+# function to get the host part of a url
+###############################################################################
+
+function url_get_host {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+    
+    local url=$1
+    
+    url="${url/*:??/}"
+    url="${url#*@}"
+    url="${url%%/*}"
+    
+    echo "$url"
+    
+}
+
+###############################################################################
+# function to get the host part of a url
+###############################################################################
+
+function url_get_proto {
+    if ! [ -n "$1" ]
+    then
+        return 1
+    fi
+    
+    local url=$1
+    
+    url="${url%%://*}"
+
+    echo "$url"
+    
+}
+
+###############################################################################
+# function to test if a value is un an array
+###############################################################################
+
+function isinarray {
+    local val = $1
+    local result=1
+    shift
+    
+    local elem
+    for elem;
+    do
+        if [[ "$val" = "$elem" ]]
+        then
+            result=0
+            break;
+        fi
+    done
+    
+    return $result
+}
+
+
+
