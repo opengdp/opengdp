@@ -645,7 +645,7 @@ function url_get_proto {
 ###############################################################################
 
 function isinarray {
-    local val = $1
+    local val="$1"
     local result=1
     shift
     
