@@ -60,7 +60,7 @@ function dozip_multiband {
         eval tmp=\"\$panband$sub\"
         local mypanband="$tmp"
         unset tmp
-        for msband in "${msbands[@]}"
+        for msband in "${mymsbands[@]}"
         do
             local regex="${msband//./[.]}"
             local regex="${regex//\*/.*}"
@@ -84,10 +84,10 @@ function dozip_multiband {
         ##### fixme this only assumes 1 posible panband #####
         
         local panfiles
-        if [ -n "$panband" ]
+        if [ -n "$mypanband" ]
         then
             
-            local regex="${panband//./[.]}"
+            local regex="${mypanband//./[.]}"
             local regex="${regex//\*/.*}"
             local regex="${regex//\?/.}"
             
@@ -95,7 +95,7 @@ function dozip_multiband {
             then
                 panfiles[0]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
             else
-                echo "ERROR: no match in zip for \"$panband\""
+                echo "ERROR: no match in zip for \"$mypanband\""
                 return;
             fi
         fi
