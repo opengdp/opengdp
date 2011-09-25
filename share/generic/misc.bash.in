@@ -733,6 +733,7 @@ function file_get_dir {
     
     local dir="${input%/*}"
     if [[ "$dir" != "$input" ]]
+    then
         echo "${dir}/"
     fi
     

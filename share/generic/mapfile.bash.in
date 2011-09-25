@@ -395,24 +395,26 @@ function writemap {
             writemap_withover "$ts" "$extent" "$scale" "previous"
         fi
                         
-        else
+    else
 
-            ##### write the map file with no min max layers #####
+        ##### write the map file with no min max layers #####
 
-            writemap_noover "$ts" "$extent"
+        writemap_noover "$ts" "$extent"
 
-            ##### build latest and prev mapfiles
+        ##### build latest and prev mapfiles
 
-            if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
-            then
-                writemap_noover "$ts" "$extent" "latest"
-            elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
-            then
-                writemap_noover "$ts" "$extent" "previous"
-            fi
+        if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
+        then
+            writemap_noover "$ts" "$extent" "latest"
+        elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
+        then
+            writemap_noover "$ts" "$extent" "previous"
+        fi
        
-       fi
+   fi
        
+}
+
 ###############################################################################
 # function to add an include line in the main mapfile
 ###############################################################################

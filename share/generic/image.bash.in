@@ -630,7 +630,6 @@ function rebuildtindexs {
 
         ##### make the new tindexs #####
         
-        for 
         for img in ${outdir}/*/*.tif
         do
             local imgfile="${img##*/}"
