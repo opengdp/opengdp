@@ -33,6 +33,7 @@ source @GENERICDIR@/ms_overview.bash
 source @GENERICDIR@/geoext.bash
 source @GENERICDIR@/tc.bash
 source @GENERICDIR@/pan.bash
+source @GENERICDIR@/newearthexplorer.bash
 
 
 ###############################################################################
@@ -226,7 +227,7 @@ function sub_main {
     if (( stage == opt_rebuild ))
     then
         echo "rebuilding"
-        DWH_REBUILD="rebuild"
+        DWH_REBUILD="TRUE"
         if ! mv "$indir" "${indir/%\//}.old"
         then
             exit
@@ -428,7 +429,7 @@ function sub_main {
                 
                 ##### if stage is 0 only do the layers we built #####
                 
-                if (( stage == 0 ))
+                if (( stage == opt_none ))
                 then
                     grep "${mirrorfile}" -e "^get" |\
                      dodate |\
@@ -447,7 +448,7 @@ function sub_main {
                     ##### get the extent of the ds #####
 
                     extent=$(getextent "$ts")
-                
+                    
                     if istrue "$dolatest"
                     then
                     
@@ -476,49 +477,10 @@ function sub_main {
 
                     addinclude_NewWorld "$ts"
                     
-                    if istrue "$doovr" 0
-                    then
-
-                        ##### write a temp map file #####
-
-                        writemap_noover "$ts" "$extent" ""
-                        
-                        ##### create a single file for larger area overviews #####
-
-                        scale=$(makeoverview "$ts" "$extent")
-
-                        ##### write the map file with the correct scale #####
-
-                        writemap_withover "$ts" "$extent" "$scale"
-                        
-                        ##### build latest and prev mapfiles
-                        
-                        if [[ "$latest" == "$ts" ]]
-                        then
-                            writemap_withover "$ts" "$extent" "$scale" "latest"
-                        elif  [[ "$prev" == "$ts" ]]
-                        then
-                            writemap_withover "$ts" "$extent" "$scale" "previous"
-                        fi
-                        
-                    else
-
-                        ##### write the map file with no min max layers #####
-
-                        writemap_noover "$ts" "$extent"
-
-                        ##### build latest and prev mapfiles
-                        
-                        if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
-                        then
-                            writemap_noover "$ts" "$extent" "latest"
-                        elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
-                        then
-                            writemap_noover "$ts" "$extent" "previous"
-                        fi
-                        
-                    fi
-
+                    ##### build the overviews and write out the mapfiles #####
+                    
+                    writemap "$ts" "$extent" "$latest" "$prev" "true"
+                    
                     ##### create a map file for new world #####
                     
                     writemap_NewWorld "$ts" "$extent"
@@ -585,44 +547,10 @@ function sub_main {
                     ##### get the extent of the ds #####
 
                     extent=$(getextent "$ts")
-
-                    if istrue "$doovr" 0
-                    then
-
-                        ##### get the overview scale from the old mapfile #####
-
-                        scale=$(getoverviewscale "$ts")
- 
-                        ##### write the map file with the correct scale #####
-
-                        writemap_withover "$ts" "$extent" "$scale"
-
-                        ##### build latest and prev mapfiles
-                        
-                        if [[ "$latest" == "$ts" ]] && istrue "$dolatest"
-                        then
-                            writemap_withover "$ts" "$extent" "$scale" "latest"
-                        elif  [[ "$prev" == "$ts" ]] && istrue "$dolatest"
-                        then
-                            writemap_withover "$ts" "$extent" "$scale" "previous"
-                        fi
-                        
-                    else
-
-                        ##### write the map file with no min max layers #####
-
-                        writemap_noover "$ts" "$extent"
-                        
-                        ##### build latest and prev mapfiles
-                        
-                        if [[ "$latest" == "$ts" ]]
-                        then
-                            writemap_noover "$ts" "$extent" "latest"
-                        elif  [[ "$prev" == "$ts" ]]
-                        then
-                            writemap_noover "$ts" "$extent" "previous"
-                        fi
-                    fi
+                    
+                    ##### write out the mapfiles #####
+                    
+                    writemap "$ts" "$extent" "$latest" "$prev" "false"
 
                     ##### create a map file for new world #####
 

@@ -33,7 +33,8 @@ function dozip_multiband {
     local origdir="$4"
     
     local file="${zipfile##*/}"
-    local base="${file%.*}"
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
     
     local zipinfo="$(zipinfo -1 "${origdir}/${zipfile}")"
 
@@ -125,18 +126,8 @@ function dotar_multiband {
     local origdir="$4"
     
     local file="${zipfile##*/}"
-    local base="${file%.*}"
-    local base2="${base%.*}"
-    local ext="${zipfile##*.}"
-    local ext2="${zipbase##*.}"
-    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
-
-    if [[ "$ext2" == "tar" ]]
-    then
-        ext="${ext2}.${ext}"
-        base="$base2"
-    fi
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
         
     ##### find the 
     case "$ext" in
@@ -164,42 +155,66 @@ function dotar_multiband {
     
     local i=0
     local files
-    local msband
-
-    for msband in "${msbands[@]}"
+    ##### loop over the subdataset array #####
+    
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        local subdsnames=( "" )
+    fi
+    local sub
+    for sub in "${subdsnames[@]}"
     do
-        local regex="${msband//./[.]}"
-        local regex="${regex//\*/.*}"
-        local regex="${regex//\?/.}"
+        local tmp
+        eval tmp=\( \$\{msbands$sub\[@\]\} \)
+        local mymsbands=( "${tmp[@]}" )
+        unset tmp
+        local tmp
+        eval tmp=\"\$panband$sub\"
+        local mypanband="$tmp"
+        unset tmp
 
-        if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+        local msband
+        for msband in "${mymsbands[@]}"
+        do
+            local regex="${msband//./[.]}"
+            local regex="${regex//\*/.*}"
+            local regex="${regex//\?/.}"
+
+            if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+            then
+                local bandfile="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
+                if ! isinarray "$bandfile" "${files[@]}"
+                then
+                    files[i++]="$bandfile"
+                fi
+            else
+                echo "ERROR: no match in zip for \"$msband\""
+                return;
+            fi
+        
+        done
+    
+        ##### find the pan band #####
+        ##### fixme this only assumes 1 posible panband #####
+        
+        local panfiles
+        if [ -n "$mypanband" ]
         then
-            files[i++]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
-        else
-            echo "ERROR: no match in zip for \"$msband\""
-            return;
+            
+            local regex="${mypanband//./[.]}"
+            local regex="${regex//\*/.*}"
+            local regex="${regex//\?/.}"
+            
+            if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
+            then
+                panfiles[0]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
+            else
+                echo "ERROR: no match in zip for \"$mypanband\""
+                return;
+            fi
         fi
     
     done
-    
-    ##### find the pan band #####
-    
-    local panfiles
-    if [ -n "$panband" ]
-    then
-        
-        local regex="${panband//./[.]}"
-        local regex="${regex//\*/.*}"
-        local regex="${regex//\?/.}"
-        
-        if grep -i -e "$regex" <<<"$zipinfo" > /dev/null
-        then
-            panfiles[0]="$(grep -i -e "$regex" <<<"$zipinfo" | head -n 1)"
-        else
-            echo "ERROR: no match in zip for \"$panband\""
-            return;
-        fi
-    fi
         
     ##### extract the files #####
         
@@ -341,8 +356,8 @@ function dogzip {
     local ts="$3"
     local origdir="$4"
     
-    local base="${zipfile%.*}"
-    local base2="${base%.*}"
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
     
     #### extract the files #####
     
@@ -354,11 +369,12 @@ function dogzip {
     then
 
         ##### check if it is suposed to be multiband #####
+        ##### fixme subdsnames could not contain a "" so check the first one and append to msbands #####
         
         if [ -n "$msbands" ]
         then
             local files=( "$base" )
-            doimg_multiband "$base2" "$tmpdir" \
+            doimg_multiband "$base" "$tmpdir" \
                             "$ts" "no" "${panfiles[0]}" \
                             ${files[@]}
             
@@ -386,8 +402,8 @@ function dobzip {
     local ts="$3"
     local origdir="$4"
     
-    local base="${zipfile%.*}"
-    local base2="${base%.*}"
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
     
     #### extract the files #####
     
@@ -403,7 +419,7 @@ function dobzip {
         if [ -n "$msbands" ]
         then
             local files=( "$base" )
-            doimg_multiband "$base2" "$tmpdir" \
+            doimg_multiband "$base" "$tmpdir" \
                             "$ts" "no" "${panfiles[0]}" \
                             ${files[@]}
             
@@ -582,18 +598,9 @@ function dotar {
         return
     fi
         
-    local zipbase="${zipfile%.*}"
-    local base2="${base%.*}"
-    local ext="${zipfile##*.}"
-    local ext2="${zipbase##*.}"
-    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
-
-    if [[ "$ext2" == "tar" ]]
-    then
-        ext="${ext2}.${ext}"
-        base="$base2"
-    fi
+    local file="${zipfile##*/}"
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
     
     ##### find the 
     case "$ext" in
@@ -750,8 +757,9 @@ function dokmz {
     local origdir="$4"
     local f
     
-    local zipbase="${zipfile##*/}"
-    local zipbase="${zipbase%.*}"
+    local file="${zipfile##*/}"
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
     
     for f in $(zipinfo -1 "${origdir}/${zipfile}" "$baseglob.kml")
     do
@@ -767,18 +775,12 @@ function dokmz {
         
         unzip "${origdir}/${zipfile}" "$img" -d "$tmpdir" || { printerror ; return; }
         
-        local imgfile="${img##*/}"
-        local imgbase="${imgfile%.*}"
-        local imgext="${imgfile##*.}"
-        
-        local imgdir="${img%/*}"
-        if [[ "$imgdir" = "$imgfile" ]]
-        then
-            local imgdir=""
-        else
-            local imgdir="${imgdir}/"
-        fi
 
+        local imgfile="${img##*/}"
+        local imgext=$(file_get_extension "$imgfile")
+        local imgbase=$(file_get_basename "$imgfile")
+        local imgdir=$(file_get_dir "$img")
+        
         ##### get the corner quords #####
         
         read n s e w < <(grep '<GroundOverlay>' -A12 "${tmpdir}/$f" |\
@@ -797,7 +799,7 @@ function dokmz {
         ##### proccess #####
         
         doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" \
-              "$(gdalinfo "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt")" \
+              "$(gdalinfo "${tmpdir}/${imgdir}/${base}_${imgbase}.vrt")" \
               "no" || return
     done
 
@@ -1303,19 +1305,135 @@ function dohdf {
 }
 
 ###############################################################################
+# function to decide howto deal with a file
+###############################################################################
+
+function dofile_sub {
+    local file="$1"
+    local ext="$2"
+    local tmpdir="$3"
+    local ts="$4"
+    local origdir="$5"
+    local files=("${@:6}")
+    
+    case "$ext" in
+        
+        *tar)
+            dotar "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        *tar.gz)
+            dotar "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        *tgz)
+            dotar "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        *tar.bz2)
+            dotar "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        bz2)
+            dobzip "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        gz)
+            dogzip "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+        
+        *zip)
+            dozip "${file}" "$tmpdir" "$ts" "$origdir"
+            ;;
+            
+        *kmz)
+            if ! istrue "$vector"
+            then
+                dokmz "${file}" "$tmpdir" "$ts" "$origdir"
+            fi
+            ;;
+        
+        *hdf)
+            if ! istrue "$vector"
+            then
+                if [ -n "$have_hdf" ]
+                then
+                    dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
+                else
+                     printerror "dwh is built without hdf support"
+                fi
+            fi
+            
+            ;;
+        
+        *)
+
+            if ! istrue "$vector"
+            then
+                if gdalinfo "${origdir}/${file}" > /dev/null
+                then
+                
+                    doimg "${file}" \
+                          "$tmpdir" \
+                          "$ts" \
+                          "$(gdalinfo ${origdir}/$file)" \
+                          "yes"
+                fi
+                else
+                    if ogrinfo "${origdir}/${file}" > /dev/null
+                    then
+                                
+                        dovector "${file}" \
+                                 "$tmpdir" \
+                                 "$ts" \
+                                 "$(ogrinfo -al -so ${origdir}/$file)" \
+                                 "yes"
+                    fi
+                fi
+                
+                ;;
+    esac
+    
+}
+
+###############################################################################
 # function to proccess a file
 ###############################################################################
 
 function dofile {
     myline=$1
 
-    if echo "$myline" | grep -e "^get" > /dev/null
-    then    
-        local sourcedir=${indir//\/\///}
-        local sourcedir=${sourcedir//\/\///}
+    local sourcedir=${indir//\/\///}
+    local sourcedir=${sourcedir//\/\///}
+    local tmpdir
+    local dir=""
+    
+    tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || {
+        printerror "mktemp"
+        echo >&3
+        return
+    }
+    
+    ##### new earth explorer #####
+    
+    if [ -n "$NewEarthExplorer_user" ] && ! istrue "$DWH_REBUILD"
+    then
+        local file
+        file=$( NewEarthExplorer_get "$myline" "$tmpdir" )
+        files=$( "$file" )
         
+    ##### lftp #####
+        
+    else
+        if ! grep -q -e "^get" <<< "$myline"
+        then
+            echo >&3
+            rm -rf "${tmpdir}"
+            return
+        fi
+    
         ##### make an array of files #####
-        
+            
         local i=0
         local files
         local line
@@ -1328,188 +1446,97 @@ function dofile {
         
         local file="${files[@]:(-1)}"
         
-        local base="${file%.*}"
-        local base2="${base%.*}"
-        local ext="${file##*.}"
-        local ext2="${base##*.}"
-        local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-        local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
-
-        if [[ "$ext2" == "tar" ]]
-        then
-            ext="${ext2}.${ext}"
-            base="$base2"
-        fi
-
-        
-        #local ext="${ext,,*}"
-        
-        if [ "$ignoredir" != "yes" ] && echo "$myline" | grep -e "$sourcedir/" > /dev/null
+        if ! istrue "$ignoredir" && grep -q -e "$sourcedir/" <<<"$myline"
         then
             local dir="$(echo "$myline" | sed "s|.*$sourcedir/\(.*\) [A-Za-z]*:/.*|\1|")/"
-
-        else
-            local dir=""
         fi
         
-        local ts=$(${datefunc} <<< "$myline")
         
-        if istrue "$DEBUG_dofile"
-        then
-            printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
-                    "$myline" \
-                    "$sourcedir "\
-                    "$file" \
-                    "$base" \
-                    "$ext" \
-                    "$dir" \
-                    "$ts"
-            echo >&3
-            return
-        fi
-
-        local tmpdir
-        tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
-        
-        
-        if [[ "$DWH_REBUILD" == "rebuild" ]]
-        then
-            local origdir="${indir/%\//}.old/${dir}"
-
-            ##### link to the main files #####
-                        
-            local f
-            for f in "${files[@]}"
-            do
-                ln -s "${origdir}/${f}" "${tmpdir}/${f}"
-            done
-            
-        else
-            
-            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
-            local origdir="$tmpdir"
-        fi
-        
-        ##### loop over the subdataset array #####
+    fi
     
-        if [[ ${#subdsnames[@]} == 0 ]]
-        then
-            local subdsnames=( "" )
-        fi
-        local sub
-        for sub in "${subdsnames[@]}"
-        do
-            (
-                outdir="${outdir}${sub}"
-                dsname="${dsname}${sub}"
-                if ! [ -d "$outdir/${ts}" ]
-                then
-                    mkdir -p "$outdir/${ts}"
-                fi
-            )
-        done
-
-        case "$ext" in
-
-            *tar)
-                dotar "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            *tar.gz)
-                dotar "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            *tgz)
-                dotar "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            *tar.bz2)
-                dotar "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            bz2)
-                dobzip "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            gz)
-                dogzip "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            *zip)
-                dozip "${file}" "$tmpdir" "$ts" "$origdir"
-                ;;
-
-            *kmz)
-                if ! istrue "$vector"
-                then
-                    dokmz "${file}" "$tmpdir" "$ts" "$origdir"
-                fi
-                ;;
-
-            *hdf)
-                if ! istrue "$vector"
-                then
-                    if [ -n "$have_hdf" ]
-                    then
-                        dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
-                    else
-                        printerror "dwh is built without hdf support"
-                    fi
-                fi
-
-                ;;
-
-            *)
-
-                if ! istrue "$vector"
-                then
-                    if gdalinfo "${origdir}/${file}" > /dev/null
-                    then
-
-                        doimg "${file}" \
-                              "$tmpdir" \
-                              "$ts" \
-                              "$(gdalinfo ${origdir}/$file)" \
-                              "yes"
-                    fi
-                else
-                    if ogrinfo "${origdir}/${file}" > /dev/null
-                    then
-                        
-                        dovector "${file}" \
-                                 "$tmpdir" \
-                                 "$ts" \
-                                 "$(ogrinfo -al -so ${origdir}/$file)" \
-                                 "yes"
-                    fi
-                fi
-
-                ;;
-
-        esac
-
-        status=$?
-
-        if (($? == 0)) && [[ "$DWH_REBUILD" != "rebuild" ]]
-        then
-            
-            ##### mv the files to the source dir #####
-            
-            local f
-            for f in "${files[@]}"
-            do
-                if [ -f "${tmpdir}/${f}" ]
-                then
-                    mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
-                fi
-            done
-
-        fi
-
+    local ext=$(file_get_extension "$file")
+    local base=$(file_get_basename "$file")
+    
+    local ts=$(${datefunc} <<< "$myline")
+    
+    if istrue "$DEBUG_dofile"
+    then
+        printf " myline=%s\n sourcedir=%s\n file=%s\n base=%s\n ext=%s\n dir=%s\n ts=%s\n" \
+               "$myline" \
+               "$sourcedir "\
+               "$file" \
+               "$base" \
+               "$ext" \
+               "$dir" \
+               "$ts"
+        echo >&3
         rm -rf "${tmpdir}"
+        return
     
-    fi    
+    fi
 
+    if istrue "$DWH_REBUILD"
+    then
+        local origdir="${indir/%\//}.old/${dir}"
+        
+        ##### link to the main files #####
+        
+        local f
+        for f in "${files[@]}"
+        do
+            ln -s "${origdir}/${f}" "${tmpdir}/${f}"
+        done
+                
+    else
+        local origdir="$tmpdir"
+        
+        if [ -n "$NewEarthExplorer_user" ]
+        then
+            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
+        fi
+    fi
+    
+    ##### loop over the subdataset array #####
+        
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        local subdsnames=( "" )
+    fi
+    
+    local sub
+    for sub in "${subdsnames[@]}"
+    do
+        (
+            outdir="${outdir}${sub}"
+            dsname="${dsname}${sub}"
+            if ! [ -d "$outdir/${ts}" ]
+            then
+                 mkdir -p "$outdir/${ts}"
+            fi
+        )
+    done
+
+    dofile_sub "$file" "$ext" "$tmpdir" "$ts" "$origdir" ${files[@]}
+
+    status=$?
+
+    if (($? == 0)) && ! istrue "$DWH_REBUILD"
+    then
+        
+        ##### mv the files to the source dir #####
+        
+        local f
+        for f in "${files[@]}"
+        do
+            if [ -f "${tmpdir}/${f}" ]
+            then
+                mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
+            fi
+        done
+        
+    fi
+    
+    rm -rf "${tmpdir}"
     echo >&3
     
     return $status

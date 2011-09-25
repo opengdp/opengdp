@@ -1,6 +1,7 @@
 title = "@fullproject@";
 project = "@project@";
 urlcgibin_tc = "@urlcgibin_tc@";
+urlkmlrepeater = "@urlkmlrepeater@;
 
 document.title = title;
 center={};

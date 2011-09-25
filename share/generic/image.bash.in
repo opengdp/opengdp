@@ -23,6 +23,20 @@ have_otb="@HAVE_OTB@"
 have_mrsiddecode="@HAVE_MRSIDDECODE@"
 
 ###############################################################################
+# function to get the number of bands in an image
+###############################################################################
+
+function image_get_nbands {
+    local img="$1"
+    
+    gdalinfo "$img" |\
+     grep -e "^Band" |\
+     sed 's/^Band \([0-9]*\) .*/\1/' |\
+     tail -n 1
+     
+}
+
+###############################################################################
 # function to colar an image
 #
 # returns the dest image
@@ -180,17 +194,10 @@ function dosubimg {
     local isoriginal="$6"
 
     local imgfile="${img##*/}"
-    local imgbase="${imgfile%.*}"
-    local imgext="${imgfile##*.}"
+    local imgext=$(file_get_extension "$imgfile")
+    local imgbase=$(file_get_basename "$imgfile")
+    local imgdir=$(file_get_dir "$img")
     local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
-    
-    local imgdir="${img%/*}"
-    if [[ "$imgdir" = "$imgfile" ]]
-    then
-        local imgdir=""
-    else
-        local imgdir="${imgdir}/"
-    fi
     
     ##### if we need a debug do it and return #####
 
@@ -364,8 +371,8 @@ function myrescale {
 
         img="${imgdir}${imgbase}_scaled.vrt"
         imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
+        imgext=$(file_get_extension "$imgfile")
+        imgbase=$(file_get_basename "$imgfile")
         
     fi
 }
@@ -381,20 +388,11 @@ function doimg {
     local info="$4"
     local isoriginal="$5"
     
-    
     local imgfile="${img##*/}"
-    local imgbase="${imgfile%.*}"
-    local imgext="${imgfile##*.}"
+    local imgext=$(file_get_extension "$imgfile")
+    local imgbase=$(file_get_basename "$imgfile")
+    local imgdir=$(file_get_dir "$img")
     local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
-    local imgdir="${img%/*}"
-    
-    local imgdir="${img%/*}"
-    if [[ "$imgdir" = "$imgfile" ]]
-    then
-        local imgdir=""
-    else
-        local imgdir="${imgdir}/"
-    fi
     
     ##### double check the info #####
     
@@ -439,8 +437,8 @@ function doimg {
 
         img="${imgdir}${imgbase}_srs.vrt"
         imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
+        imgext=$(file_get_extension "$imgfile")
+        imgbase=$(file_get_basename "$imgfile")
         info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
     fi
 
@@ -452,8 +450,9 @@ function doimg {
         
         img="${imgdir}${imgbase}_bnw.vrt"
         imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
+        imgext=$(file_get_extension "$imgfile")
+        imgbase=$(file_get_basename "$imgfile")
+        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
     fi
     
     ##### get the xy size in pixels #####
@@ -631,7 +630,8 @@ function rebuildtindexs {
 
         ##### make the new tindexs #####
         
-        for img in $(find ${outdir} -mindepth 2 -iname "*.tif")
+        for 
+        for img in ${outdir}/*/*.tif
         do
             local imgfile="${img##*/}"
             local ts=$( sed 's:.*/\([0-9]\{8\}\).*:\1:' <<<"$img")

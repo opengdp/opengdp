@@ -288,8 +288,15 @@ do
             uid=$(id -u)
             gid=$(id -g)
             reset
-            if sudo bash -c "$(printf 'touch %q' "$cgibindir/${cgibin}") && $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/${cgibin}") && $(printf 'chmod %q %q' "755" "$cgibindir/${cgibin}")"
+            
+            cmd="$(printf 'touch %q' "$cgibindir/${cgibin}") && "
+            cmd="${cmd} $(printf 'touch %q' "$cgibindir/kmlrepeater") && "
+            cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/${cgibin}") && "
+            cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/kmlrepeater") && "
+            cmd="${cmd} $(printf 'chmod %q %q' "755" "$cgibindir/${cgibin}")"
+            if sudo bash -c "$cmd"
             then
+                "$urlcgibindir/kmlrepeater"
                 break;
             fi
             error="touch failed\n"
@@ -435,6 +442,8 @@ scriptdir="${path}/${project}/scripts/"
 mapfile="$basedir/$mapfile"
 urlcgibin="$urlcgibindir/$cgibin"
 htmlbase="$htmldir/$project"
+urlkmlrepeater="$urlcgibindir/kmlrepeater"
+
 IFS=", "
 read maplon maplat <<<"$mapcenter"
 unset IFS
@@ -466,6 +475,7 @@ echo "htmlbase:         $htmlbase"
 echo "urlbase:          $urlbase"
 echo "urlcgibindir:     $urlcgibindir"
 echo "urlcgibin:        $urlcgibin"
+echo "urlkmlrepeater:   $urlkmlrepeater"
 echo "urlcgibin_tc:     $urlcgibin_tc"
 echo "urlhtmldir:       $urlhtmldir"
 echo "mapcenter:        $mapcenter"
@@ -509,6 +519,7 @@ function do_subst {
         -e "s|[@]urlbase[@]|$urlbase|g" \
         -e "s|[@]urlcgibindir[@]|$urlcgibindir|g" \
         -e "s|[@]urlcgibin[@]|$urlcgibin|g" \
+        -e "s|[@]urlkmlrepeater[@]|$urlkmlrepeater|g" \
         -e "s|[@]urlcgibin_tc[@]|$urlcgibin_tc|g" \
         -e "s|[@]urlhtmldir[@]|$urlhtmldir|g" \
         -e "s|[@]mapcenter[@]|$mapcenter|g" \
@@ -564,6 +575,17 @@ fi
 
 do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$cgibindir/${cgibin}"
 chmod +x "$cgibindir/${cgibin}"
+
+##### urlkmlrepeater #####
+
+if ! [ -x "$urlkmlrepeater" ]
+    cat > "$urlkmlrepeater" << EOF
+#!/bin/bash
+
+cat <0
+EOF
+    chmod +x "$urlkmlrepeater"
+fi
 
 ##### html #####
 
