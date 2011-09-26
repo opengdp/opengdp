@@ -156,19 +156,22 @@ function writekml() {
   </Document>\n\
 </kml>\n';
 
-    var w = window.open();
-    if (XMLHttpRequest) {
-        req = new w.XMLHttpRequest();
-        req.open('POST', kmlrepeater, false); // use POST
-        req.setRequestHeader('Content-Type', 'application/vnd.google-earth.kml+xml .kml;');
-        req.send(kml) ;
-    } else {
-        var doc = w.document.open('application/vnd.google-earth.kml+xml .kml');
-        doc.write(kml);
-        doc.close();
-        w.document.execCommand('SaveAs', true, 'map.kml');
-    }
-    w.close();
+
+    var kmlform = document.createElement("form");
+    kmlform.method="post" ;
+    kmlform.action = urlkmlrepeater;
+    kmlform.target = 'kmlframe';
+    
+    var kmlinput = document.createElement("input");
+    kmlinput.setAttribute("name", "kml") ;
+    kmlinput.setAttribute("value", kml);
+
+    kmlform.appendChild(kmlinput)
+    
+    document.getElementById("kmliframe").appendChild(kmlform)
+
+    kmlform.target = "kmlframe"
+    kmlform.submit() ;
 
 }
 

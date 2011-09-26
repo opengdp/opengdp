@@ -225,12 +225,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 cgibin_DATA = \
-    default.cgi
+    default.cgi \
+    kmlrepeater.cgi
 
 CLEANFILES = $(cgibin_DATA)
 cgibindir = $(pkgdatadir)/cgibin
 EXTRA_DIST = \
-        default.cgi.in
+    default.cgi.in \
+    kmlrepeater.cgi.in
 
 do_subst = cat
 all: all-am
@@ -445,6 +447,9 @@ uninstall-am: uninstall-cgibinDATA
 
 default.cgi: default.cgi.in Makefile
 	$(do_subst) < $(srcdir)/default.cgi.in > default.cgi
+
+kmlrepeater.cgi: kmlrepeater.cgi.in Makefile
+	$(do_subst) < $(srcdir)/kmlrepeater.cgi.in > kmlrepeater.cgi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

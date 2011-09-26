@@ -294,9 +294,8 @@ do
             cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/${cgibin}") && "
             cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/kmlrepeater") && "
             cmd="${cmd} $(printf 'chmod %q %q' "755" "$cgibindir/${cgibin}")"
-            if sudo bash -c "$cmd"
+            if sudo bash -c "$cmd" 2> sudolog
             then
-                "$urlcgibindir/kmlrepeater"
                 break;
             fi
             error="touch failed\n"
@@ -311,6 +310,7 @@ do
     
     error="touch failed\n"
 done
+
 
 ##### html  dir #####
 
@@ -443,6 +443,7 @@ mapfile="$basedir/$mapfile"
 urlcgibin="$urlcgibindir/$cgibin"
 htmlbase="$htmldir/$project"
 urlkmlrepeater="$urlcgibindir/kmlrepeater"
+kmlrepeater="$cgibindir/kmlrepeater"
 
 IFS=", "
 read maplon maplat <<<"$mapcenter"
@@ -470,6 +471,7 @@ echo "tmpdir:           $tmpdir"
 echo "limit:            $limit"
 echo "cgibindir:        $cgibindir"
 echo "cgibin:           $cgibin"
+echo "kmlrepeater:      $kmlrepeater"
 echo "htmldir:          $htmldir"
 echo "htmlbase:         $htmlbase"
 echo "urlbase:          $urlbase"
@@ -574,18 +576,14 @@ fi
 ##### cgi #####
 
 do_subst < "@PKGDATADIR@/cgibin/default.cgi" >> "$cgibindir/${cgibin}"
-chmod +x "$cgibindir/${cgibin}"
 
-##### urlkmlrepeater #####
 
-if ! [ -x "$urlkmlrepeater" ]
+##### kmlrepeater #####
+
+if ! [ -x "$kmlrepeater" ]
 then
-    cat > "$urlkmlrepeater" << EOF
-#!/bin/bash
-
-cat <0
-EOF
-    chmod +x "$urlkmlrepeater"
+    do_subst < "@PKGDATADIR@/cgibin/kmlrepeater.cgi" >> "$cgibindir/kmlrepeater"
+    chmod +x "$cgibindir/kmlrepeater"
 fi
 
 ##### html #####
@@ -601,17 +599,27 @@ then
     grep "$htmlbase/index.html.${ts}.bak" -e '<script type="text/javascript" src=".*.js"></script>' |\
      while read line
      do
-        if ! grep "@PKGDATADIR@/web/index.html" -e "$line"
+        if ! grep -q "@PKGDATADIR@/web/index.html" -e "$line"
         then
-            linenum=$(cat "${htmlbase}/index.html" |\
-                       grep -n -e "finish.js" |\
-                       tail -n 1 |\
-                       cut -d ":" -f 1
-                     )
+            if grep -q "${htmlbase}/index.html" -e "osm.js"
+            then
+            
+                linenum=$(cat "${htmlbase}/index.html" |\
+                           grep -n -e "osm.js" |\
+                           tail -n 1 |\
+                           cut -d ":" -f 1
+                         )
+            else
+                linenum=$(cat "${htmlbase}/index.html" |\
+                           grep -n -e "finish.js" |\
+                           tail -n 1 |\
+                           cut -d ":" -f 1
+                         )
+            fi
 
             ed -s "${htmlbase}/index.html" << EOF
 ${linenum}-1a
-        <script type="text/javascript"
+        $line
 .
 w
 EOF
@@ -690,3 +698,4 @@ then
 else
     echo "there are example scripts in @PKGDATADIR@/examples you can copy to $scriptdir"
 fi
+
