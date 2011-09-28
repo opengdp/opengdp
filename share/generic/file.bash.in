@@ -1339,7 +1339,7 @@ function findpan {
     
     done
     
-    echo "$panfiles[0]"
+    echo "${panfiles[0]}"
     
 }
     
