@@ -1311,7 +1311,7 @@ function dohdf {
 ###############################################################################
 
 function findpan {
-    local files("${@:1}")
+    local files=("${@:1}")
     
     local panfiles=()
     
