@@ -29,7 +29,7 @@ function index_add_layer {
     
     ##### does the db exist? #####
     
-    if ! [ -f "${basedir}/${project}.db" ]
+    if ! sqlite3 "${basedir}/${project}.db" ".tables" | grep -q -e "layers"
     then
         sqlite3 "${basedir}/${project}.db" << EOF || printerror "creating db" ; return
 
@@ -56,9 +56,10 @@ ON layers
 
 EOF
 
-    echo "gotcha"
+    
     fi
     
+        
     local w s e n
     read w s e n <<<"$extent"
     ##### make sure north and south arent out of bounds for 900913 #####
