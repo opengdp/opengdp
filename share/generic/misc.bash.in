@@ -745,7 +745,7 @@ function file_get_dir {
 
 function find_band_file {
     local msb="$1"
-    local files("${@:2}")
+    local files=("${@:2}")
     
     local f
     for f in "${files[@]}"
