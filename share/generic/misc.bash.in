@@ -739,4 +739,23 @@ function file_get_dir {
     
 }
 
-        
+###############################################################################
+# function to find a band file in an array of files
+###############################################################################
+
+function find_band_file
+    local msb="$1"
+    local files("${@:2}")
+    
+    local f
+    for f in "${files[@]}"
+    do
+        if [[ "$f" = *$msb* ]]
+        then
+            echo "$f"
+            return 0
+        fi
+    done
+    
+    return 1
+}

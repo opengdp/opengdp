@@ -1304,6 +1304,45 @@ function dohdf {
     done
 }
 
+
+
+###############################################################################
+# function to get the pan band from an array of files
+###############################################################################
+
+function findpan {
+    local files("${@:1}")
+    
+    local panfiles=()
+    
+    ##### loop over the subdataset array #####
+    
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        local subdsnames=( "" )
+    fi
+    local sub
+    for sub in "${subdsnames[@]}"
+    do
+        local tmp
+        eval tmp=\"\$panband$sub\"
+        local mypanband="$tmp"
+        unset tmp
+        
+        ##### find the pan band #####
+        ##### fixme this only assumes 1 posible panband #####
+        
+        if [ -n "$mypanband" ]
+        then
+            panfiles[0]=$(find_band_file "$mypanband" "${files[@]}") || { printerror ; return; }
+        fi
+    
+    done
+    
+    echo "$panfiles[0]"
+    
+}
+    
 ###############################################################################
 # function to decide howto deal with a file
 ###############################################################################
@@ -1315,6 +1354,8 @@ function dofile_sub {
     local ts="$4"
     local origdir="$5"
     local files=("${@:6}")
+    
+    local base=$(file_get_basename "$file")
     
     case "$ext" in
         
@@ -1372,13 +1413,27 @@ function dofile_sub {
             then
                 if gdalinfo "${origdir}/${file}" > /dev/null
                 then
-                
-                    doimg "${file}" \
-                          "$tmpdir" \
-                          "$ts" \
-                          "$(gdalinfo ${origdir}/$file)" \
-                          "yes"
-                fi
+                    
+                    ##### check if it is suposed to be multiband #####
+    
+                    if [ -n "$msbands" ]
+                    then
+                        
+                        
+                        doimg_multiband "$base" \
+                                        "$tmpdir" \
+                                        "$ts" \
+                                        "yes" \
+                                        $( findpan "${files[@]}" ) \
+                                        "${files[@]}"
+                    
+                    else
+                        doimg "${file}" \
+                              "$tmpdir" \
+                              "$ts" \
+                              "$(gdalinfo ${origdir}/$file)" \
+                              "yes"
+                    fi
                 else
                     if ogrinfo "${origdir}/${file}" > /dev/null
                     then

@@ -34,6 +34,7 @@ urlcgibin="@urlcgibin@"
 urlbase="@urlbase@"
 htmlbase="@htmlbase@"
 urlcgibin_tc="@urlcgibin_tc@"
+urlkmlrepeater="@urlkmlrepeater@"
 
 mapcenter="@mapcenter@"
 mapcenter="@mapzoom@"
