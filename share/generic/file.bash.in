@@ -1304,42 +1304,78 @@ function dohdf {
     done
 }
 
+###############################################################################
+# function loop over the subdataset array and call a callback function
+###############################################################################
 
+function subds_iterator {
+    local cbfunc="$1"
+    local cbargs=("${@:2}")
 
+    ##### if no sub ds names just exec the cb func #####
+        
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        "$cbfinc" "${cbargs[@]}" || return
+    
+    ##### loop over the subdataset array #####
+    
+    else
+    
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                local tmp
+                eval tmp=\( \$\{msbands$sub\[@\]\} \)
+                local msbands=( "${tmp[@]}" )
+                unset tmp
+                local tmp
+                eval tmp=\"\$panband$sub\"
+                local panband="$tmp"
+                unset tmp
+                local tmp
+                eval tmp=\"\$mscalc$sub\"
+                local mscalc="$tmp"
+                unset tmp
+                local tmp
+                eval tmp=\"\$lut$sub\"
+                local lut="$tmp"
+                unset tmp
+                local tmp
+                eval tmp=\"\$msgradient$sub\"
+                local msgradient="$tmp"
+                unset tmp
+                
+                "$cbfinc" "${cbargs[@]}" || return
+            ) || return
+        done
+    fi
+}
+    
 ###############################################################################
 # function to get the pan band from an array of files
 ###############################################################################
 
+function findpan_cb {
+    local files=("${@:1}")
+    
+    if [ -n "$panband" ]
+    then
+        find_band_file "$mypanband" "${files[@]}") || { printerror ; return; }
+    fi
+}
+
 function findpan {
     local files=("${@:1}")
     
-    local panfiles=()
+    ##### find the pan band #####
+    ##### fixme this only assumes 1 posible panband #####
     
-    ##### loop over the subdataset array #####
+    subds_iterator "findpan_cb" "${files[@]}" | head -n 1
     
-    if [[ ${#subdsnames[@]} == 0 ]]
-    then
-        local subdsnames=( "" )
-    fi
-    local sub
-    for sub in "${subdsnames[@]}"
-    do
-        local tmp
-        eval tmp=\"\$panband$sub\"
-        local mypanband="$tmp"
-        unset tmp
-        
-        ##### find the pan band #####
-        ##### fixme this only assumes 1 posible panband #####
-        
-        if [ -n "$mypanband" ]
-        then
-            panfiles[0]=$(find_band_file "$mypanband" "${files[@]}") || { printerror ; return; }
-        fi
-    
-    done
-    
-    echo "${panfiles[0]}"
     
 }
     
