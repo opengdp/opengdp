@@ -33,6 +33,6 @@ EOF
 
 dd bs=${limit} count=1 2> /dev/null |\
  sed 's/^kml=//' |\
- sed -e 's/%\([0-9A-Fa-f]\{2\\}\)/\\\\\x\1/g' |\
+ sed -e 's/%\([0-9A-Fa-f]\{2\}\)/\\\\\x\1/g' |\
  xargs echo -e |\
  sed -e 's/[+]/ /g'
