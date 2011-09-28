@@ -1503,7 +1503,7 @@ function dofile {
         
         if ! istrue "$ignoredir" && grep -q -e "$sourcedir/" <<<"$myline"
         then
-            local dir="$(echo "$myline" | sed "s|.*$sourcedir/\(.*\) [A-Za-z]*:/.*|\1|")/"
+            dir="$(sed "s|.*$sourcedir/\(.*\) [A-Za-z]*:/.*|\1|" <<<"$myline")/"
         fi
         
         
@@ -1585,7 +1585,7 @@ function dofile {
         do
             if [ -f "${tmpdir}/${f}" ]
             then
-                mv "${tmpdir}/${f}" "${indir}/${mydir}/${f}"
+                mv "${tmpdir}/${f}" "${indir}/${dir}${f}"
             fi
         done
         
