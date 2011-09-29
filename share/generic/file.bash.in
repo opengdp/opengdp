@@ -1364,7 +1364,7 @@ function findpan_cb {
     
     if [ -n "$panband" ]
     then
-        find_band_file "$mypanband" "${files[@]}") || { printerror ; return; }
+        find_band_file "$panband" "${files[@]}") || { printerror ; return; }
     fi
 }
 
@@ -1376,9 +1376,35 @@ function findpan {
     
     subds_iterator "findpan_cb" "${files[@]}" | head -n 1
     
+}
+
+###############################################################################
+# function to get the basename of a ms file
+###############################################################################
+
+function getms_base_cb {
+    local files=("${@:1}")
+    
+    if [ -n "$panband" ]
+    then
+        local msb
+        for msb in "${msbands[@]}"
+        do
+            find_band_file "$msb" "${files[@]}") | sed 's/'"$msb"'.*//'
+        done
+    fi
+}
+
+function getms_base {
+    local files=("${@:1}")
+    
+    ##### find the pan band #####
+    ##### fixme this only assumes 1 posible panband #####
+    
+    subds_iterator "getms_base_cb" "${files[@]}" | head -n 1
     
 }
-    
+
 ###############################################################################
 # function to decide howto deal with a file
 ###############################################################################
@@ -1455,8 +1481,9 @@ function dofile_sub {
                     if [ -n "$msbands" ]
                     then
                         
+                        ##### get the base name #####
                         
-                        doimg_multiband "$base" \
+                        doimg_multiband $( getms_base "${files[@]}" ) \
                                         "$tmpdir" \
                                         "$ts" \
                                         "yes" \
@@ -1464,11 +1491,13 @@ function dofile_sub {
                                         "${files[@]}"
                     
                     else
+                    
                         doimg "${file}" \
                               "$tmpdir" \
                               "$ts" \
                               "$(gdalinfo ${origdir}/$file)" \
                               "yes"
+                    
                     fi
                 else
                     if ogrinfo "${origdir}/${file}" > /dev/null
