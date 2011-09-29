@@ -408,6 +408,23 @@ do
     urlhtmldir=$(inputbox "enter the html dir url" "$urlbase/html/$project")
 done
 
+##### check for existing map and center/zoom #####
+
+if [ -f "${htmlbase}/proj-def.js" ]
+then
+    if grep -q "${htmlbase}/proj-def.js" -e "center = new OpenLayers.LonLat."
+    then
+        "$c_mapcenter"=$(grep "${htmlbase}/proj-def.js" -e "center = new OpenLayers.LonLat." |\
+                          sed 's/.*OpenLayers.LonLat[(]\([^)]*\).*/\1/')
+    fi
+    
+    if grep -q "${htmlbase}/proj-def.js" -e "    zoom="
+    then
+        "$c_mapzoom"=$(grep "${htmlbase}/proj-def.js" -e "    zoom=" |\
+                          sed 's/.*zoom=\([0-9]*\).*/\1/')
+    fi
+    
+
 ##### map center #####
 
 unset mapcenter
