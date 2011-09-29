@@ -2,6 +2,7 @@ generic_DATA = \
     generic.bash \
     addo.bash \
     file.bash \
+    hdf.bash \
     index.bash \
     geoext.bash \
     image.bash \
@@ -22,6 +23,7 @@ genericdir = $(pkgdatadir)/generic
 EXTRA_DIST = \
     addo.bash.in \
     file.bash.in \
+    hdf.bash.in \
     generic.bash.in \
     index.bash.in \
     geoext.bash.in \
@@ -50,6 +52,9 @@ addo.bash: addo.bash.in Makefile
 	
 file.bash: file.bash.in Makefile
 	$(do_subst) < $(srcdir)/file.bash.in > file.bash
+	
+hdf.bash: hdf.bash.in Makefile
+	$(do_subst) < $(srcdir)/hdf.bash.in > hdf.bash
 	
 geoext.bash: geoext.bash.in Makefile
 	$(do_subst) < $(srcdir)/geoext.bash.in > geoext.bash

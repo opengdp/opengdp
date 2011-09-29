@@ -28,6 +28,7 @@ source @GENERICDIR@/index.bash
 source @GENERICDIR@/image.bash
 source @GENERICDIR@/vector.bash
 source @GENERICDIR@/file.bash
+source @GENERICDIR@/hdf.bash
 source @GENERICDIR@/mapfile.bash
 source @GENERICDIR@/ms_overview.bash
 source @GENERICDIR@/geoext.bash

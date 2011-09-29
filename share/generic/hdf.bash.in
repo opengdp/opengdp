@@ -1,0 +1,521 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+have_hdf="@HAVE_HDF@"
+
+###############################################################################
+# function to handle a hdf
+###############################################################################
+
+function dohdf {
+    local lastfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    local files=("${@:5}")
+    
+    ##### make a complete list of all the msbands of the subdatasets #####
+    
+    ##### loop over the subdataset array #####
+    
+    if [[ ${#subdsnames[@]} == 0 ]]
+    then
+        local subdsnames=( "" )
+    fi
+    local sub
+    local allmsbands=()
+    for sub in "${subdsnames[@]}"
+    do
+        local tmp
+        eval tmp=\( \$\{msbands$sub\[\@\]\} \)
+        for t in "${tmp[@]}"
+        do
+            unset have
+            for a in "${allmsbands[@]}"
+            do
+                if [[ "$t" == "$a" ]]
+                then
+                    have=true
+                    break
+                fi
+            done
+            
+            if ! istrue "$have"
+            then
+                allmsbands=( ${allmsbands[@]} "$t" )
+            fi
+        done
+    done
+    
+    ##### seperate out the geolocation file #####
+    
+    local dfiles=()
+    local i=0
+    local file
+    for file in "${files[@]}"
+    do
+        if [[ "$file" == M[OY]D03.* ]]
+        then
+            local geoloc="$file"
+        else
+            dfiles[i++]="$file"
+        fi
+    done
+    
+    ##### if there is no geoloc file bail #####
+
+    if ! [ -n "$geoloc" ]
+    then
+        return
+    fi
+
+    ##### get a output prefix #####
+    
+    base="${lastfile#*.}"
+    base="${base%.*}"
+    base="${base%.*}"
+    
+    ##### check if its day or night #####
+    
+    local meta=$(dumpmeta "${tmpdir}/$geoloc" /dev/stdout)
+    local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta" |\
+                      grep "VALUE" |\
+                      sed 's/.*"\([^"]*\)".*/\1/'
+                    )
+    
+    if istrue "$dayonly" && { [[ "$daynight" != "Day" ]] && [[ "$daynight" != "Both" ]] ; }
+    then
+        return;
+    fi
+        
+    ##### get the corners of the image #####
+
+    read ulx urx lrx llx < <(grep " OBJECT.*GRINGPOINTLONGITUDE" -A4 <<<"$meta" |\
+                              grep VALUE |\
+                              sed -e 's/.*[(]\([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\)[)].*/\1 \2 \3 \4/'
+                             )
+
+
+    read uly ury lry lly < <(grep " OBJECT.*GRINGPOINTLATITUDE" -A4 <<<"$meta" |\
+                              grep VALUE |\
+                              sed -e 's/.*[(]\([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\), \([-.0-9]*\)[)].*/\1 \2 \3 \4/'
+                            )
+
+    read bbe < <(grep " OBJECT.*EASTBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+                 
+    read bbn < <(grep " OBJECT.*NORTHBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+    read bbs < <(grep " OBJECT.*SOUTHBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+                 
+    read bbw < <(grep " OBJECT.*WESTBOUNDINGCOORDINATE" -A4 <<<"$meta" |\
+                   grep VALUE |\
+                   sed -e 's/.* \([-.0-9]*\).*/\1/'
+                 )
+
+    ##### large change in lon from top to bottom then its over the pole #####
+
+    if { fcmp "$llx - $ulx > 75" || fcmp "$ulx - $llx > 75" ; } && \
+        { fcmp "$lrx - $urx > 75" || fcmp "$urx - $lrx > 75" ; }
+    then
+        #s
+        if fcmp "$lly < 0"
+        then
+            llx=$(fcalc "$llx - 180")
+            lrx=$(fcalc "$lrx - 180")
+            local t=$llx
+            llx=$lrx
+            lrx=$t
+            if fcmp "$llx < -180"
+            then
+                llx=$(fcalc "$llx + 360")
+            fi
+            if fcmp "$lrx < -180"
+            then
+                lrx=$(fcalc "$lrx + 360")
+            fi
+
+            lly=$(fcalc "-180 - $lly")
+            lry=$(fcalc "-180 - $lry")
+            
+        #n
+        else
+            ulx=$(fcalc "$ulx - 180")
+            urx=$(fcalc "$urx - 180")
+            local t=$ulx
+            ulx=$urx
+            urx=$t
+            if fcmp "$ulx < -180"
+            then
+                ulx=$(fcalc "$ulx + 360")
+            fi
+            if fcmp "$urx < -180"
+            then
+                urx=$(fcalc "$urx + 360")
+            fi
+
+            uly=$(fcalc "180 - $uly")
+            ury=$(fcalc "180 - $ury")
+
+        fi
+    fi
+
+    ##### count the left corners > 90 #####
+    
+    local lcount=0
+    fcmp "$ulx > 90"
+    ((lcount += !$?))
+    fcmp "$llx > 90"
+    ((lcount += !$?))
+    
+    ##### count the right corners < -90 #####
+    
+    local rcount=0
+    fcmp "$urx < -90"
+    ((rcount += !$?))
+    fcmp "$lrx < -90"
+    ((rcount += !$?))
+    
+    ##### if the image has left corners west of the dateline and right      #####
+    ##### corners east of the dateline, then the image is over the dateline #####
+    
+    if ((lcount > 0 && rcount > 0))
+    then
+        if fcmp "$ulx > 0"
+        then
+            ulx=$(fcalc "$ulx - 360")
+        fi
+
+        if fcmp "$llx > 0"
+        then
+            llx=$(fcalc "$llx - 360")
+        fi
+        if fcmp "$urx > 0"
+        then
+            urx=$(fcalc "$urx - 360")
+        fi
+
+        if fcmp "$lrx > 0"
+        then
+            lrx=$(fcalc "$lrx - 360")
+        fi
+    fi
+    
+    ##### find the center of the image #####
+    
+    local cx=$(fcalc "($llx + $ulx + $urx + $lrx) / 4")
+    local cy=$(fcalc "($lly + $uly + $ury + $lry) / 4")
+    
+    ##### correct for center x < 180 #####
+    
+    if fcmp "$cx < -180"
+    then
+        cx=$(fcalc "$cx + 360")
+    fi
+
+    ##### fix center of image if its on the other side of the pole #####
+
+    if fcmp "$cy > 90"
+    then
+        cy=$(fcalc "180 - $cy")
+        if fcmp "$cx < 0"
+        then
+            cx=$(fcalc "$cx + 180")
+        else
+            cx=$(fcalc "$cx - 180")
+        fi
+    fi
+
+    if fcmp "$cy < -90"
+    then
+        cy=$(fcalc "-180 - $cy")
+        if fcmp "$cx < 0"
+        then
+            cx=$(fcalc "$cx + 180")
+        else
+            cx=$(fcalc "$cx - 180")
+        fi
+    fi
+
+    ##### get bbox #####
+    
+    lx=$(fmin $llx $ulx)
+    rx=$(fmax $lrx $urx)
+    if fcmp "$lx < -180"
+    then
+        lx=$(fcalc "$lx + 360")
+    fi
+
+    uy=$(fmax $uly $ury)
+    ly=$(fmin $lly $lry)
+    uy=$(fmin $uy 90)
+    ly=$(fmax $ly -90)
+    
+    local oul=()
+    local olr=()
+    
+    ##### need to split into 2 at the dateline? #####
+    
+    if ((lcount > 0 && rcount > 0))
+    then
+        oul[0]="${lx},${uy}"
+        oul[1]="-180,${uy}"
+        olr[0]="180,${ly}"
+        olr[1]="${rx},${ly}"
+
+    else
+        oul[0]="${lx},${uy}"
+        olr[0]="${rx},${ly}"
+
+    fi
+
+    ##### do we need to run crefl? #####
+    
+    if [ -n "$creflfiles" ]
+    then
+        if [ -n "$creflbands" ]
+        then
+            crefl \
+                  ${tmpdir}/${creflfiles[0]} \
+                  ${tmpdir}/${creflfiles[1]} \
+                  ${tmpdir}/${creflfiles[2]} \
+                  --bands="$creflbands" \
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
+        else
+        
+            crefl \
+                  ${tmpdir}/${creflfiles[0]} \
+                  ${tmpdir}/${creflfiles[1]} \
+                  ${tmpdir}/${creflfiles[2]} \
+                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
+        fi
+            
+        dfiles=( ${dfiles[@]} "crefl.${base}.hdf" )
+    fi
+    
+    ##### loop over the bboxes #####
+    
+    local ibbox
+    for (( ibbox = 0; ibbox < ${#oul[@]} ; ibbox++ ))
+    do
+
+        ##### check if the msbands have landmask #####
+    
+        for msband in "${allmsbands[@]}"
+        do
+            if [[ "$msband" == *LandSeaMask* ]]
+            then
+            
+                ##### extract the landmask from the geoloc file #####
+            
+                swath2grid -if="${tmpdir}/$geoloc" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG \
+                           -sds="Land/SeaMask" > /dev/null || { printerror ; return; }
+            fi
+        done
+        
+        ##### make tiffs from the dfiles #####
+            
+        local dfile
+        for dfile in "${dfiles[@]}"
+        do
+            unset sds
+            
+            if [[ "$dfile" != "crefl.${base}.hdf" ]]
+            then
+            
+                ##### figure out what bands to extract #####
+
+                local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
+
+                ##### find the sds base names #####
+                
+                local bandbases=$(grep -e "OBJECT=DataField" -A4 <<<"$meta" |\
+                                   grep -e DataFieldName |\
+                                   sed 's/.*"\([^"]*\)".*/\1/'
+                                  )
+                
+                ##### loop over the product band list to build an array of bands for this dataset #####
+                
+                
+                local ofiles=()
+                local msband
+                local sds=""
+                
+                ##### loop over the sds base names #####
+                
+                for bandbase in $bandbases
+                do
+                    ##### loop over the msbands #####
+                    local bands=( )
+                    for msband in "${allmsbands[@]}"
+                    do
+                        
+                        ##### is the sds base name equal to the sds name? #####
+                        if [[  "$msband" == "${bandbase}" ]]
+                        then
+                            break
+                        
+                        ##### is the sds base name in the msband name? #####
+                    
+                        elif [[  "$msband" == ${bandbase}* ]]
+                        then
+                            local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
+                            bands[$bnum]=1
+                        fi
+                    done
+                
+                    ##### is there any matching bands to do in this dataset? #####
+                    
+                    if [ -n "${!bands[*]}" ]
+                    then
+                    
+                        ##### build a comma delim list of bands #####
+
+                        local bandlist=""
+                        local indices=(${!bands[*]})
+                        for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+                        do
+                            bandlist="$bandlist,${bands[$i]}"
+                        done
+                        
+                        ##### add the basename and list to the sds list #####
+                        
+                        if [ -n "$sds" ]
+                        then
+                            sds="${sds}; ${bandbase}${bandlist}"
+                        else
+                            sds="${sds}${bandbase}${bandlist}"
+                        fi
+                    
+                    elif [[  "$msband" == "${bandbase}" ]]
+                    then
+                        ##### add the basename and list to the sds list #####
+                        if [ -n "$sds" ]
+                        then
+                            sds="${sds}; ${bandbase}"
+                        else
+                            sds="${sds}${bandbase}"
+                        fi
+
+                     fi
+                done
+            fi
+            
+            if [ -n "$sds" ]
+            then
+            
+                swath2grid -if="${tmpdir}/${dfile}" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG \
+                           -sds="$sds" > /dev/null || { printerror ; return; }
+                
+            elif [[ "${dfile}" == "crefl.${base}.hdf" ]]
+            then    
+                swath2grid -if="${tmpdir}/${dfile}" \
+                           -of="${tmpdir}/${base}_${ibbox}.tif" \
+                           -gf="${tmpdir}/$geoloc" \
+                           -off=GEOTIFF_FMT \
+                           -oproj=PS \
+                           -oprm=0,0,0,0,${cx},${cy} \
+                           -oul="${oul[$ibbox]}" \
+                           -olr="${olr[$ibbox]}" \
+                           -osp=8 \
+                           -osst=LAT_LONG > /dev/null || { printerror ; return; }
+            fi
+            
+
+        done
+
+        ##### make an aray of the msband files needed to build the product #####
+
+        i=0
+        local flisting=$(find "${tmpdir}/" -name "${base}_${ibbox}*.tif")
+        local msband
+        local ofiles=()
+        for msband in "${allmsbands[@]}"
+        do
+            local regex="${msband//./[.]}"
+            local regex="${regex//\*/.*}"
+            local regex="${regex//\?/.}"
+
+            if grep -i -e "$regex" <<<"$flisting" > /dev/null
+            then
+                ofiles[i++]="$(grep -i -e "$regex" <<<"$flisting" | \
+                                sed 's:.*/::' | \
+                                head -n 1)"
+            else
+                echo "ERROR: no match in hdf for \"$msband\""
+                return;
+            fi
+
+        done
+
+        ##### translate the nodata values to 0 #####
+
+        i=0
+        local ofile
+        local vfiles=()
+        for ofile in "${ofiles[@]}"
+        do
+            obase="${ofile%.*}"
+            
+            local type=$(gdalinfo "${tmpdir}/${ofile}" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
+            if [[ type == "Int16" ]]
+            then
+                local nodatav=-32768
+            else
+                local nodatav=65535
+            fi            
+            
+            gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
+                     "${tmpdir}/${ofile}" \
+                     "${tmpdir}/${obase}.vrt" > /dev/null || { printerror ; return; }
+
+            vfiles[i++]="${obase}.vrt"
+        done
+
+        doimg_multiband "${base}_${ibbox}" "$tmpdir" "$ts" "no" "" ${vfiles[@]}
+
+    done
+}
