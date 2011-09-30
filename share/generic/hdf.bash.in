@@ -21,91 +21,230 @@
 
 have_hdf="@HAVE_HDF@"
 
+
+
 ###############################################################################
-# function to handle a hdf
+# function to make a complete list of all the msbands of the subdatasets
 ###############################################################################
 
-function dohdf {
-    local lastfile="$1"
-    local tmpdir="$2"
-    local ts="$3"
-    local origdir="$4"
-    local files=("${@:5}")
+function listmsbands_cb {
     
-    ##### make a complete list of all the msbands of the subdatasets #####
-    
-    ##### loop over the subdataset array #####
-    
-    if [[ ${#subdsnames[@]} == 0 ]]
-    then
-        local subdsnames=( "" )
-    fi
-    local sub
-    local allmsbands=()
-    for sub in "${subdsnames[@]}"
+    local msb
+    for msb in "${msbands[@]}"
     do
-        local tmp
-        eval tmp=\( \$\{msbands$sub\[\@\]\} \)
-        for t in "${tmp[@]}"
+        echo "$msb"
+    done
+}
+
+function listmsbands {
+   
+    subds_iterator "listmsbands_cb" | sort | unique
+
+}
+
+###############################################################################
+# function to make an array of the msband files listed in a tmp dir from the msband array
+###############################################################################
+
+function msbands2filelist {
+    local base="$1"
+    local dir="$2"
+    local msbands==("${@:3}")
+    
+    local i=0
+    local flisting=$(find "${dir}/" -name "${base}*.tif")
+    
+    local msb
+    local ofiles=()
+    for msb in "${msbands[@]}"
+    do
+        local regex="${msband//./[.]}"
+        local regex="${regex//\*/.*}"
+        local regex="${regex//\?/.}"
+        
+        if grep -i -e "$regex" <<<"$flisting" > /dev/null
+        then
+            grep -i -e "$regex" <<<"$flisting" |\
+             sed 's:.*/::' | \
+             head -n 1
+        else
+            printerror "ERROR: no match for \"$msb\""
+            return 1;
+        fi
+    
+    done
+}
+
+###############################################################################
+# function to figure out what bands to extract
+###############################################################################
+
+function getsdslist {
+    local hdffile="$1"
+    local msbands=("${@:3}")
+    
+    local meta=$(dumpmeta "${hdffile}" /dev/stdout)
+    
+    ##### find the sds base names #####
+    
+    local bandbases=$(grep -e "OBJECT=DataField" -A4 <<<"$meta" |\
+                       grep -e DataFieldName |\
+                       sed 's/.*"\([^"]*\)".*/\1/'
+                      )
+    
+    ##### loop over the product band list to build an array of bands for this dataset #####
+    
+    local ofiles=()
+    local msband
+    local sds=""
+    
+    ##### loop over the sds base names #####
+    
+    for bandbase in $bandbases
+    do
+        
+        ##### loop over the msbands #####
+        
+        local bands=( )
+        for msband in "${msbands[@]}"
         do
-            unset have
-            for a in "${allmsbands[@]}"
-            do
-                if [[ "$t" == "$a" ]]
-                then
-                    have=true
-                    break
-                fi
-            done
             
-            if ! istrue "$have"
+            ##### is the sds base name equal to the sds name? #####
+            
+            if [[  "$msband" == "${bandbase}" ]]
             then
-                allmsbands=( ${allmsbands[@]} "$t" )
+                break
+            
+            ##### is the sds base name in the msband name? #####
+            
+            elif [[  "$msband" == ${bandbase}* ]]
+            then
+                local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
+                bands[$bnum]=1
             fi
         done
-    done
-    
-    ##### seperate out the geolocation file #####
-    
-    local dfiles=()
-    local i=0
-    local file
-    for file in "${files[@]}"
-    do
-        if [[ "$file" == M[OY]D03.* ]]
+        
+        ##### is there any matching bands to do in this dataset? #####
+        
+        if [ -n "${!bands[*]}" ]
         then
-            local geoloc="$file"
+        
+        ##### build a comma delim list of bands #####
+        
+        local bandlist=""
+        local indices=(${!bands[*]})
+        local i=0
+        for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
+        do
+            bandlist="$bandlist,${bands[$i]}"
+        done
+        
+        ##### add the basename and list to the sds list #####
+        
+        if [ -n "$sds" ]
+        then
+            sds="${sds}; ${bandbase}${bandlist}"
         else
-            dfiles[i++]="$file"
+            sds="${sds}${bandbase}${bandlist}"
+        fi
+        
+        elif [[  "$msband" == "${bandbase}" ]]
+        then
+            
+            ##### add the basename and list to the sds list #####
+            
+            if [ -n "$sds" ]
+            then
+                sds="${sds}; ${bandbase}"
+            else
+                sds="${sds}${bandbase}"
+            fi
         fi
     done
     
-    ##### if there is no geoloc file bail #####
+    echo "$sds"
+}
 
-    if ! [ -n "$geoloc" ]
+
+###############################################################################
+# wrapper for swath2grid
+###############################################################################
+
+function swath2grid_wrap {
+    local infile="$1"
+    local outfile="$2"
+    local geolocfile="$3"
+    local cx="$4"
+    local cy="$5"
+    local oul="$6"
+    local olr="$7"
+    local sds="$8"
+            
+    if [ -n "$sds" ]
     then
-        return
+    
+        swath2grid -if="${tmpdir}/${dfile}" \
+                   -of="${tmpdir}/${base}_${ibbox}.tif" \
+                   -gf="${tmpdir}/$geoloc" \
+                   -off=GEOTIFF_FMT \
+                   -oproj=PS \
+                   -oprm=0,0,0,0,${cx},${cy} \
+                   -oul="${oul[$ibbox]}" \
+                   -olr="${olr[$ibbox]}" \
+                   -osp=8 \
+                   -osst=LAT_LONG \
+                   -sds="$sds" > /dev/null || { printerror ; return; }
+                    
+    else
+        swath2grid -if="${tmpdir}/${dfile}" \
+                   -of="${tmpdir}/${base}_${ibbox}.tif" \
+                   -gf="${tmpdir}/$geoloc" \
+                   -off=GEOTIFF_FMT \
+                   -oproj=PS \
+                   -oprm=0,0,0,0,${cx},${cy} \
+                   -oul="${oul[$ibbox]}" \
+                   -olr="${olr[$ibbox]}" \
+                   -osp=8 \
+                   -osst=LAT_LONG > /dev/null || { printerror ; return; }
+    
     fi
 
-    ##### get a output prefix #####
-    
-    base="${lastfile#*.}"
-    base="${base%.*}"
-    base="${base%.*}"
-    
-    ##### check if its day or night #####
-    
-    local meta=$(dumpmeta "${tmpdir}/$geoloc" /dev/stdout)
-    local daynight=$(grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta" |\
-                      grep "VALUE" |\
-                      sed 's/.*"\([^"]*\)".*/\1/'
-                    )
-    
-    if istrue "$dayonly" && { [[ "$daynight" != "Day" ]] && [[ "$daynight" != "Both" ]] ; }
+}
+
+###############################################################################
+# wrapper for crefl
+###############################################################################
+
+function crefl_wrap {
+    local tmpdir="$1"
+    local outfile="$2"
+
+    if [ -n "$creflbands" ]
     then
-        return;
-    fi
+        crefl ${tmpdir}/${creflfiles[0]} \
+              ${tmpdir}/${creflfiles[1]} \
+              ${tmpdir}/${creflfiles[2]} \
+              --bands="$creflbands" \
+              --of="${tmpdir}/${outfile}" > /dev/null || { printerror ; return; }
+    else
         
+        crefl ${tmpdir}/${creflfiles[0]} \
+              ${tmpdir}/${creflfiles[1]} \
+              ${tmpdir}/${creflfiles[2]} \
+              --of="${tmpdir}/${outfile}" > /dev/null || { printerror ; return; }
+    fi
+    
+}
+
+###############################################################################
+# get the corners and center of the image
+###############################################################################
+
+function hdf_findcorners {
+    local file="$1"
+    
+    local meta=$(dumpmeta "${file}" /dev/stdout)
+    
     ##### get the corners of the image #####
 
     read ulx urx lrx llx < <(grep " OBJECT.*GRINGPOINTLONGITUDE" -A4 <<<"$meta" |\
@@ -261,9 +400,96 @@ function dohdf {
             cx=$(fcalc "$cx - 180")
         fi
     fi
+    
+    echo "$ulx $urx $lrx $llx $uly $ury $lry $lly $cx $cy"
 
+}
+
+
+###############################################################################
+# function to test an image for day or night
+###############################################################################
+
+function hdf_get_daynight {
+    local file="$1"    
+    
+    dumpmeta "$file" /dev/stdout |\
+     grep -e " OBJECT.*DAYNIGHTFLAG" -A4 <<<"$meta" |\
+     grep "VALUE" |\
+     sed 's/.*"\([^"]*\)".*/\1/'
+     
+}
+
+###############################################################################
+# function to handle a hdf
+###############################################################################
+
+function dohdf {
+    local lastfile="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local origdir="$4"
+    local files=("${@:5}")
+    
+    ##### make a complete list of all the msbands of the subdatasets #####
+    
+    allmsbands=( $(listmsbands) )
+    
+    ##### loop though the files and sep out the support files #####
+    
+    local dfiles=()
+    local i=0
+    local file
+    for file in "${files[@]}"
+    do
+        ##### geolocation? #####
+        
+        if [[ "$file" == M[OY]D03.* ]]
+        then
+            local geoloc="$file"
+        
+        ##### cloud mask? #####
+        
+        elif [[ "$file" == M[OY]D35_L2.* ]]
+        then
+            local cloudmask="$file"
+        
+        ##### must be the source bands #####
+        
+        else
+            dfiles[i++]="$file"
+        fi
+    done
+    
+    ##### if there is no geoloc file bail #####
+
+    if ! [ -n "$geoloc" ]
+    then
+        return
+    fi
+
+    ##### get a output prefix #####
+    
+    base="${lastfile#*.}"
+    base="${base%.*}"
+    base="${base%.*}"
+    
+    ##### check if its day or night #####
+    
+    local daynight=$( hdf_get_daynight "${tmpdir}/$geoloc" )
+    if istrue "$dayonly" && { [[ "$daynight" != "Day" ]] && [[ "$daynight" != "Both" ]] ; }
+    then
+        return;
+    fi
+    
+    ##### get the corners and center of the image #####
+    
+    local ulx urx lrx llx uly ury lry lly cx cy
+    read ulx urx lrx llx uly ury lry lly cx cy < <(hdf_findcorners "${tmpdir}/$geoloc" )
+    
     ##### get bbox #####
     
+    local lx rx
     lx=$(fmin $llx $ulx)
     rx=$(fmax $lrx $urx)
     if fcmp "$lx < -180"
@@ -271,6 +497,7 @@ function dohdf {
         lx=$(fcalc "$lx + 360")
     fi
 
+    local uy ly
     uy=$(fmax $uly $ury)
     ly=$(fmin $lly $lry)
     uy=$(fmin $uy 90)
@@ -298,23 +525,10 @@ function dohdf {
     
     if [ -n "$creflfiles" ]
     then
-        if [ -n "$creflbands" ]
-        then
-            crefl \
-                  ${tmpdir}/${creflfiles[0]} \
-                  ${tmpdir}/${creflfiles[1]} \
-                  ${tmpdir}/${creflfiles[2]} \
-                  --bands="$creflbands" \
-                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
-        else
+        crefl_wrap "$tmpdir" "${tmpdir}/crefl.${base}.hdf" || return
         
-            crefl \
-                  ${tmpdir}/${creflfiles[0]} \
-                  ${tmpdir}/${creflfiles[1]} \
-                  ${tmpdir}/${creflfiles[2]} \
-                  --of="${tmpdir}/crefl.${base}.hdf" > /dev/null || { printerror ; return; }
-        fi
-            
+        ##### append the crefl hdf to the dfiles #####
+        
         dfiles=( ${dfiles[@]} "crefl.${base}.hdf" )
     fi
     
@@ -332,20 +546,30 @@ function dohdf {
             then
             
                 ##### extract the landmask from the geoloc file #####
-            
-                swath2grid -if="${tmpdir}/$geoloc" \
-                           -of="${tmpdir}/${base}_${ibbox}.tif" \
-                           -gf="${tmpdir}/$geoloc" \
-                           -off=GEOTIFF_FMT \
-                           -oproj=PS \
-                           -oprm=0,0,0,0,${cx},${cy} \
-                           -oul="${oul[$ibbox]}" \
-                           -olr="${olr[$ibbox]}" \
-                           -osp=8 \
-                           -osst=LAT_LONG \
-                           -sds="Land/SeaMask" > /dev/null || { printerror ; return; }
+                swath2grid_wrap "${tmpdir}/$geoloc" \
+                                "${tmpdir}/${base}_${ibbox}.tif" \
+                                "${tmpdir}/$geoloc" \
+                                "${cx}" "${cy}" \
+                                "${oul[$ibbox]}" \
+                                "${olr[$ibbox]}" \
+                                "Land/SeaMask" || return
+                
             fi
         done
+        
+        ##### if msmask do the mask file #####
+        ##### fixme this should be optional #####
+        
+        if [ -n "$cloudmask"
+        then
+            swath2grid_wrap "${tmpdir}/$cloudmask" \
+                            "${tmpdir}/${base}_${ibbox}.tif" \
+                            "${tmpdir}/$geoloc" \
+                            "${cx}" "${cy}" \
+                            "${oul[$ibbox]}" \
+                            "${olr[$ibbox]}" \
+                            "Cloud_Mask,,,,,,1" || return
+        fi
         
         ##### make tiffs from the dfiles #####
             
@@ -356,141 +580,32 @@ function dohdf {
             
             if [[ "$dfile" != "crefl.${base}.hdf" ]]
             then
-            
-                ##### figure out what bands to extract #####
-
-                local meta=$(dumpmeta "${tmpdir}/$dfile" /dev/stdout)
-
-                ##### find the sds base names #####
                 
-                local bandbases=$(grep -e "OBJECT=DataField" -A4 <<<"$meta" |\
-                                   grep -e DataFieldName |\
-                                   sed 's/.*"\([^"]*\)".*/\1/'
-                                  )
+                ##### get the list of sds's to extract freom this file #####
                 
-                ##### loop over the product band list to build an array of bands for this dataset #####
-                
-                
-                local ofiles=()
-                local msband
-                local sds=""
-                
-                ##### loop over the sds base names #####
-                
-                for bandbase in $bandbases
-                do
-                    ##### loop over the msbands #####
-                    local bands=( )
-                    for msband in "${allmsbands[@]}"
-                    do
-                        
-                        ##### is the sds base name equal to the sds name? #####
-                        if [[  "$msband" == "${bandbase}" ]]
-                        then
-                            break
-                        
-                        ##### is the sds base name in the msband name? #####
-                    
-                        elif [[  "$msband" == ${bandbase}* ]]
-                        then
-                            local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
-                            bands[$bnum]=1
-                        fi
-                    done
-                
-                    ##### is there any matching bands to do in this dataset? #####
-                    
-                    if [ -n "${!bands[*]}" ]
-                    then
-                    
-                        ##### build a comma delim list of bands #####
-
-                        local bandlist=""
-                        local indices=(${!bands[*]})
-                        for (( i = 0 ; i <= ${indices[@]:(-1)} ; i++ ))
-                        do
-                            bandlist="$bandlist,${bands[$i]}"
-                        done
-                        
-                        ##### add the basename and list to the sds list #####
-                        
-                        if [ -n "$sds" ]
-                        then
-                            sds="${sds}; ${bandbase}${bandlist}"
-                        else
-                            sds="${sds}${bandbase}${bandlist}"
-                        fi
-                    
-                    elif [[  "$msband" == "${bandbase}" ]]
-                    then
-                        ##### add the basename and list to the sds list #####
-                        if [ -n "$sds" ]
-                        then
-                            sds="${sds}; ${bandbase}"
-                        else
-                            sds="${sds}${bandbase}"
-                        fi
-
-                     fi
-                done
+                local sds=$(getsdslist "${tmpdir}/$dfile" "${allmsbands[@]}")
             fi
             
-            if [ -n "$sds" ]
+            ##### if it has any sds's to extract or #####
+            ##### its the crefl file, extract       #####
+                        
+            if [ -n "$sds" ] || [[ "${dfile}" == "crefl.${base}.hdf" ]]
             then
-            
-                swath2grid -if="${tmpdir}/${dfile}" \
-                           -of="${tmpdir}/${base}_${ibbox}.tif" \
-                           -gf="${tmpdir}/$geoloc" \
-                           -off=GEOTIFF_FMT \
-                           -oproj=PS \
-                           -oprm=0,0,0,0,${cx},${cy} \
-                           -oul="${oul[$ibbox]}" \
-                           -olr="${olr[$ibbox]}" \
-                           -osp=8 \
-                           -osst=LAT_LONG \
-                           -sds="$sds" > /dev/null || { printerror ; return; }
                 
-            elif [[ "${dfile}" == "crefl.${base}.hdf" ]]
-            then    
-                swath2grid -if="${tmpdir}/${dfile}" \
-                           -of="${tmpdir}/${base}_${ibbox}.tif" \
-                           -gf="${tmpdir}/$geoloc" \
-                           -off=GEOTIFF_FMT \
-                           -oproj=PS \
-                           -oprm=0,0,0,0,${cx},${cy} \
-                           -oul="${oul[$ibbox]}" \
-                           -olr="${olr[$ibbox]}" \
-                           -osp=8 \
-                           -osst=LAT_LONG > /dev/null || { printerror ; return; }
+                swath2grid_wrap "${tmpdir}/${dfile}" \
+                                "${tmpdir}/${base}_${ibbox}.tif" \
+                                "${tmpdir}/$geoloc" \
+                                "${cx}" "${cy}" \
+                                "${oul[$ibbox]}" \
+                                "${olr[$ibbox]}" \
+                                "$sds" || return
             fi
-            
-
         done
 
         ##### make an aray of the msband files needed to build the product #####
 
-        i=0
-        local flisting=$(find "${tmpdir}/" -name "${base}_${ibbox}*.tif")
-        local msband
-        local ofiles=()
-        for msband in "${allmsbands[@]}"
-        do
-            local regex="${msband//./[.]}"
-            local regex="${regex//\*/.*}"
-            local regex="${regex//\?/.}"
-
-            if grep -i -e "$regex" <<<"$flisting" > /dev/null
-            then
-                ofiles[i++]="$(grep -i -e "$regex" <<<"$flisting" | \
-                                sed 's:.*/::' | \
-                                head -n 1)"
-            else
-                echo "ERROR: no match in hdf for \"$msband\""
-                return;
-            fi
-
-        done
-
+        ofiles=( $(msbands2filelist "${base}_${ibbox}" "${tmpdir}/" "${allmsbands[@]}" ) )
+        
         ##### translate the nodata values to 0 #####
 
         i=0
@@ -519,3 +634,4 @@ function dohdf {
 
     done
 }
+
