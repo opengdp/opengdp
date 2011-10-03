@@ -814,12 +814,12 @@ function dokmz {
 function subds_iterator {
     local cbfunc="$1"
     local cbargs=("${@:2}")
-
+    
     ##### if no sub ds names just exec the cb func #####
         
     if [[ ${#subdsnames[@]} == 0 ]]
     then
-        "$cbfinc" "${cbargs[@]}" || return
+        "$cbfunc" "${cbargs[@]}" || return
     
     ##### loop over the subdataset array #####
     
@@ -831,28 +831,38 @@ function subds_iterator {
             (
                 outdir="${outdir}${sub}"
                 dsname="${dsname}${sub}"
+                
                 local tmp
                 eval tmp=\( \$\{msbands$sub\[@\]\} \)
                 local msbands=( "${tmp[@]}" )
                 unset tmp
+                
+                local tmp
+                eval tmp=\( \$\{msmaskbands$sub\[@\]\} \)
+                local msmaskbands=( "${tmp[@]}" )
+                unset tmp
+
                 local tmp
                 eval tmp=\"\$panband$sub\"
                 local panband="$tmp"
                 unset tmp
+                
                 local tmp
                 eval tmp=\"\$mscalc$sub\"
                 local mscalc="$tmp"
                 unset tmp
+                
                 local tmp
                 eval tmp=\"\$lut$sub\"
                 local lut="$tmp"
                 unset tmp
+                
                 local tmp
                 eval tmp=\"\$msgradient$sub\"
                 local msgradient="$tmp"
                 unset tmp
                 
-                "$cbfinc" "${cbargs[@]}" || return
+                "$cbfunc" "${cbargs[@]}" || return
             ) || return
         done
     fi
@@ -867,7 +877,7 @@ function findpan_cb {
     
     if [ -n "$panband" ]
     then
-        find_band_file "$panband" "${files[@]}") || { printerror ; return; }
+        find_band_file "$panband" "${files[@]}" || { printerror ; return; }
     fi
 }
 
@@ -893,7 +903,7 @@ function getms_base_cb {
         local msb
         for msb in "${msbands[@]}"
         do
-            find_band_file "$msb" "${files[@]}") | sed 's/'"$msb"'.*//'
+            find_band_file "$msb" "${files[@]}" | sed 's/'"$msb"'.*//'
         done
     fi
 }

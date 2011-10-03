@@ -1,4 +1,4 @@
-#!/bin/bash
+no#!/bin/bash
 # Copyright (c) 2010, Brian Case
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -423,7 +423,7 @@ then
         "$c_mapzoom"=$(grep "${htmlbase}/proj-def.js" -e "    zoom=" |\
                           sed 's/.*zoom=\([0-9]*\).*/\1/')
     fi
-    
+fi
 
 ##### map center #####
 

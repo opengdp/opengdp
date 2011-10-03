@@ -189,14 +189,14 @@ RX_YMD='\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)'
 RX_MDY='\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{4\}\)'
 RX_YDJ='\([0-9]\{4\}\)\([0-9]\{3\}\)'
 
-Months='january february march april may june july august september
+Months=(january february march april may june july august september
         october november december jan feb mar apr jun jul aug sep sept oct
-        nov dec'
+        nov dec)
 
 RX_LM='\('
 
 needor=0
-for m in $Months
+for m in "${Months[@]}"
 do
     if istrue $needor
     then
@@ -207,7 +207,7 @@ do
 
     while read c
     do
-        RX_LM="${RX_LM}[$(tr [a-z] [A-Z] <<<"$c")${c}]"
+        RX_LM="${RX_LM}[$(tr "[a-z]" "[A-Z]" <<<"$c")${c}]"
     done < <(fold -w1 <<<"$m")
     
 done
