@@ -60,12 +60,31 @@ function listmsbands {
 }
 
 ###############################################################################
+# function to make a complete list of all the msmaskbands of the subdatasets
+###############################################################################
+
+function listmsmaskbands_cb {
+    
+    local msb
+    for msb in "${msmaskbands[@]}"
+    do
+        echo "$msb"
+    done
+}
+
+function listmsmaskbands {
+   
+    subds_iterator "listmsmaskbands_cb" | sort | uniq
+
+}
+
+###############################################################################
 # function to figure out what bands to extract
 ###############################################################################
 
 function getsdslist {
     local hdffile="$1"
-    local msbands=("${@:3}")
+    local msbands=("${@:2}")
     
     local meta=$(dumpmeta "${hdffile}" /dev/stdout)
     
@@ -95,13 +114,13 @@ function getsdslist {
             
             ##### is the sds base name equal to the sds name? #####
             
-            if [[  "$msband" == "${bandbase}" ]]
+            if [[  "$msband" == "${bandbase///}" ]]
             then
                 break
             
             ##### is the sds base name in the msband name? #####
             
-            elif [[  "$msband" == ${bandbase}* ]]
+            elif [[ "$msband" == ${bandbase///}* ]]
             then
                 local bnum=$(sed -e "s/${bandbase}_b//" <<<"$msband")
                 bands[$bnum]=1
@@ -132,7 +151,7 @@ function getsdslist {
                 sds="${sds}${bandbase}${bandlist}"
             fi
         
-        elif [[  "$msband" == "${bandbase}" ]]
+        elif [[  "$msband" == "${bandbase///}" ]]
         then
             
             ##### add the basename and list to the sds list #####
@@ -417,6 +436,7 @@ function dohdf {
     ##### make a complete list of all the msbands of the subdatasets #####
     
     allmsbands=( $(listmsbands) )
+    allmsmaskbands=( $(listmsmaskbands) )
     
     ##### loop though the files and sep out the support files #####
     
@@ -431,17 +451,10 @@ function dohdf {
         then
             local geoloc="$file"
         
-        ##### cloud mask? #####
-        
-        elif [[ "$file" == M[OY]D35_L2.* ]]
-        then
-            local cloudmask="$file"
-        
-        ##### must be the source bands #####
-        
-        else
-            dfiles[i++]="$file"
         fi
+        
+        dfiles[i++]="$file"
+        
     done
     
     ##### if there is no geoloc file bail #####
@@ -521,60 +534,20 @@ function dohdf {
     for (( ibbox = 0; ibbox < ${#oul[@]} ; ibbox++ ))
     do
 
-        ##### check if the msbands have landmask #####
-    
-        for msband in "${allmsbands[@]}"
-        do
-            if [[ "$msband" == *LandSeaMask* ]]
-            then
-            
-                ##### extract the landmask from the geoloc file #####
-                swath2grid_wrap "${tmpdir}/$geoloc" \
-                                "${tmpdir}/${base}_${ibbox}.tif" \
-                                "${tmpdir}/$geoloc" \
-                                "${cx}" "${cy}" \
-                                "${oul[$ibbox]}" \
-                                "${olr[$ibbox]}" \
-                                "Land/SeaMask" || return
-                
-            fi
-        done
-        
-        ##### if there is a cloud mask file do the mask file #####
-        
-        local cloudmaskfile=""
-        if [ -n "$cloudmask" ]
-        then
-            
-            swath2grid_wrap "${tmpdir}/${cloudmask}" \
-                            "${tmpdir}/${base}_${ibbox}.tif" \
-                            "${tmpdir}/$geoloc" \
-                            "${cx}" "${cy}" \
-                            "${oul[$ibbox]}" \
-                            "${olr[$ibbox]}" \
-                            "Cloud_Mask,,,,,,1" || return
-            
-            mk_lut_vrt "${tmpdir}/${base}_${ibbox}_Cloud_Mask_b5.tif"\
-                       "${tmpdir}/${base}_${ibbox}_Cloud_Mask_b5.vrt" \
-                       "0:0,1:255,255,255"
-                       
-            cloudmaskfile="${base}_${ibbox}_Cloud_Mask_b5.vrt"
-            
-        fi
-        
         ##### make tiffs from the dfiles #####
             
         local dfile
         for dfile in "${dfiles[@]}"
         do
             unset sds
-            
+                        
             if [[ "$dfile" != "crefl.${base}.hdf" ]]
             then
                 
                 ##### get the list of sds's to extract freom this file #####
                 
-                local sds=$(getsdslist "${tmpdir}/$dfile" "${allmsbands[@]}")
+                local sds=$(getsdslist "${tmpdir}/$dfile" "${allmsbands[@]}" "${allmsmaskbands[@]}")
+                
             fi
             
             ##### if it has any sds's to extract or #####
@@ -598,7 +571,7 @@ function dohdf {
         local ofile
         local ofiles=()
         
-        for msb in "${allmsbands[@]}"
+        for msb in "${allmsbands[@]}" "${allmsmaskbands[@]}"
         do
             ofile=$(hdf_findmatchingfile "${tmpdir}/${base}*${msb}*") \
              || { printerror "Can not find file "${tmpdir}/${base}*${msb}*"" ;
@@ -617,26 +590,34 @@ function dohdf {
             obase="${ofile%.*}"
             
             local type=$(gdalinfo "${tmpdir}/${ofile}" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
+            
+            ##### FIXME we need to handle more data types ####yo
+            ##### FIXME if we were to op any msmaskbands we could break things #####
+            
             if [[ type == "Int16" ]]
             then
                 local nodatav=-32768
-            else
+                
+                gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
+                         "${tmpdir}/${ofile}" \
+                         "${tmpdir}/${obase}.vrt" > /dev/null || { printerror ; return; }
+                
+                vfiles[i++]="${obase}.vrt"
+                
+            elif [[ type == "UInt16" ]]
+            then
                 local nodatav=65535
-            fi            
+                gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
+                         "${tmpdir}/${ofile}" \
+                         "${tmpdir}/${obase}.vrt" > /dev/null || { printerror ; return; }
+                
+                vfiles[i++]="${obase}.vrt"
+                
+            else
+                vfiles[i++]="${ofile}"
+            fi
             
-            gdalwarp -srcnodata $nodatav -wo INIT_DEST=0 -of VRT \
-                     "${tmpdir}/${ofile}" \
-                     "${tmpdir}/${obase}.vrt" > /dev/null || { printerror ; return; }
-
-            vfiles[i++]="${obase}.vrt"
         done
-        
-        ##### add the cloudmask to the file array #####
-        
-        if [ -n "$cloudmaskfile" ]
-        then
-            vfiles[i++]="$cloudmaskfile"
-        fi
         
         doimg_multiband "${base}_${ibbox}" "$tmpdir" "$ts" "no" "" "${vfiles[@]}"
         
