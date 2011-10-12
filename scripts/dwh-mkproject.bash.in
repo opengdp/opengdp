@@ -715,4 +715,3 @@ then
 else
     echo "there are example scripts in @PKGDATADIR@/examples you can copy to $scriptdir"
 fi
-
