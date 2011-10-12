@@ -1,4 +1,4 @@
-no#!/bin/bash
+#!/bin/bash
 # Copyright (c) 2010, Brian Case
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -294,7 +294,7 @@ do
             cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/${cgibin}") && "
             cmd="${cmd} $(printf 'chown %q %q' ${uid}:${gid} "$cgibindir/kmlrepeater") && "
             cmd="${cmd} $(printf 'chmod %q %q' "755" "$cgibindir/${cgibin}")"
-            if sudo bash -c "$cmd" 2> sudolog
+            if sudo bash -c "$cmd"
             then
                 break;
             fi

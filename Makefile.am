@@ -4,7 +4,8 @@ SUBDIRS = src \
 	share\
 	scripts\
 	MRTSwath \
-	crefl
+	crefl \
+	MOD_PRDS
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

@@ -57,6 +57,7 @@ if test "$SINCOS" = "1" ; then
 	])
 fi
 
+
 ##### bash #####
 
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
@@ -583,6 +584,8 @@ share/web/Makefile
 src/Makefile
 MRTSwath/Makefile
 MRTSwath/data/Makefile
+MOD_PRDS/Makefile
+MOD_PRDS/data/Makefile
 crefl/Makefile
 crefl/data/Makefile
 ])

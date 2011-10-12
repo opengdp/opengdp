@@ -19,6 +19,9 @@ AC_HEADER_STDC
 AM_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_PROG_FC
+AC_PROG_F77
+
 cflagsold="$CFLAGS"
 ldflagsold="$LDFLAGS"
 dnl -----------------------------------------------------------------
@@ -57,8 +60,8 @@ if test "$SINCOS" = "1" ; then
 	])
 fi
 
-dnl bash
 
+##### bash #####
 
 AC_CHECK_PROG(HAVE_BASH, bash, true, false)
 if test $HAVE_BASH = "false"; then
@@ -66,13 +69,41 @@ if test $HAVE_BASH = "false"; then
 fi
 
 
-dnl Check for dialog
-AC_CHECK_PROGS([DIALOG], [dialog], [:])
-if test "$DIALOG" = :; then
-AC_MSG_ERROR([dialog not found])
-fi
-AC_MSG_RESULT([dialog $DIALOG])
+##### dialog #####
 
+AC_CHECK_PROGS([DIALOG], [dialog], [:])
+if test "$DIALOG" = :
+then
+    AC_MSG_RESULT([dialog not found])
+else
+    AC_MSG_RESULT([dialog $DIALOG])
+    HAVE_DIALOG=true
+    AC_SUBST(HAVE_DIALOG)
+fi
+
+##### mc #####
+
+AC_CHECK_PROGS([MC], [mc], [:])
+if test "$MC" = :
+then
+    AC_MSG_RESULT([mc not found])
+else
+    AC_MSG_RESULT([mc $MC])
+    HAVE_MC=true
+    AC_SUBST(HAVE_MC)
+fi
+
+##### mrsiddecode #####
+
+AC_CHECK_PROGS([MRSIDDECODE], [mrsiddecode], [:])
+if test "$MC" = :
+then
+    AC_MSG_RESULT([mrsiddecode not found])
+else
+    AC_MSG_RESULT([mrsiddecode $MRSIDDECODE])
+    HAVE_MRSIDDECODE=true
+    AC_SUBST(HAVE_MRSIDDECODE)
+fi
 
 ##### tar #####
 
@@ -89,6 +120,14 @@ if test "$" = :; then
   AC_MSG_ERROR([unzip not found])
 fi
 AC_MSG_RESULT([unzip $UNZIP])
+
+##### lftp #####
+
+AC_CHECK_PROGS([LFTP], [lftp], [:])
+if test "$" = :; then
+  AC_MSG_ERROR([lftp not found])
+fi
+AC_MSG_RESULT([lftp $LFTP])
 
 ##### grep #####
 
@@ -122,7 +161,6 @@ fi
 AM_CONDITIONAL(HAVE_GDAL, test "x$GDAL_CONFIG" != "x")
 
 ##### OTB #####
-
 
 AC_ARG_WITH(otb-lib,
   [AS_HELP_STRING([--with-otb-lib=/some/path],
@@ -167,14 +205,16 @@ then
   done << EOF
 $prefrm
 EOF
-  
-
+  HAVE_OTB="true"
   AC_SUBST(OTBINC)
   AC_SUBST(OTBLIB)
+  AC_SUBST(HAVE_OTB)
+  
 else
-  AC_MSG_FAILURE([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
+  AC_MSG_RESULT([cannot find OTBConfig.cmake try setting --with-otb-lib=/some/path])
 fi
-
+AM_CONDITIONAL(HAVE_OTB, test "$HAVE_OTB" = "true")
+  
 ##### tiff #####
 
 AC_ARG_WITH([tiff-includes],
@@ -197,184 +237,335 @@ AC_ARG_WITH([tiff-libs],
   ]
 )
 
-AC_CHECK_HEADERS([tiffio.h],[HAVE_TIFFIO_H=1],[AC_MSG_ERROR(libtiff is required to compile dwh.)])
-AC_CHECK_LIB([tiff],[TIFFGetVersion],[HAVE_LIBTIFF=1],[AC_MSG_ERROR(libtiff is required to compile dwh.)])
+AC_CHECK_HEADERS([tiffio.h],
+    [
+        HAVE_TIFFIO_H=1
+        HAVE_HDF="true"
+    ],
+    [
+        AC_MSG_RESULT(libtiff is required for hdf support.)
+        unset HAVE_HDF
+    ])
+AC_CHECK_LIB([tiff],[TIFFGetVersion],
+    [
+        HAVE_LIBTIFF=1
+        HAVE_HDF="true"
+    ],
+    [
+        AC_MSG_RESULT(libtiff is required for hdf support.)
+        unset HAVE_HDF
+        
+    ])
 
 AC_SUBST(TIFFINC)
 AC_SUBST(TIFFLIB)
 
 ##### geotiff #####
 
-AC_ARG_WITH([geotiff-includes],
-  [AC_HELP_STRING([--with-geotiff-includes],[Location of libgeotiff include files.])],
-  [
-    GEOTIFFINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
+    AC_ARG_WITH([geotiff-includes],
+      [AC_HELP_STRING([--with-geotiff-includes],[Location of libgeotiff include files.])],
+      [
+        GEOTIFFINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
+      ]
+    )
 
-AC_ARG_WITH([geotiff-libs],
-  [AC_HELP_STRING([--with-geotiff-libs],[Location of libgeotiff library files.])],
-  [
-    GEOTIFFLIB="-L${withval} -lgeotiff"
-    LDFLAGS="$LDFLAGS -L${withval} -lgeotiff"
-  ],
-  [
-    GEOTIFFLIB="-lgeotiff"
-    LDFLAGS="$LDFLAGS -lgeotiff"
-  ]
-)
+    AC_ARG_WITH([geotiff-libs],
+      [AC_HELP_STRING([--with-geotiff-libs],[Location of libgeotiff library files.])],
+      [
+        GEOTIFFLIB="-L${withval} -lgeotiff"
+        LDFLAGS="$LDFLAGS -L${withval} -lgeotiff"
+      ],
+      [
+        GEOTIFFLIB="-lgeotiff"
+        LDFLAGS="$LDFLAGS -lgeotiff"
+      ]
+    )
 
-AC_CHECK_HEADERS([geotiff.h],[HAVE_GEOTIFFIO_H=1],[AC_MSG_ERROR(libgeotiff is required to compile dwh.)])
-AC_CHECK_LIB([geotiff],[GTIFNew],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(libgeotiff is required to compile dwh.)])
+    AC_CHECK_HEADERS([geotiff.h],
+        [
+            HAVE_GEOTIFFIO_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(libgeotiff is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([geotiff],[GTIFNew],
+        [
+            HAVE_LIBGEOTIFF=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(libgeotiff is required for hdf support.)
+            unset HAVE_HDF
+        ])
 
-AC_SUBST(GEOTIFFINC)
-AC_SUBST(GEOTIFFLIB)
+    AC_SUBST(GEOTIFFINC)
+    AC_SUBST(GEOTIFFLIB)
+fi
 
-##### jpeg #####
+    ##### jpeg #####
 
-AC_ARG_WITH([jpeg-includes],
-  [AC_HELP_STRING([--with-jpeg-includes],[Location of jpeg include files.])],
-  [
-    JPEGINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
 
-AC_ARG_WITH([jpeg-libs],
-  [AC_HELP_STRING([--with-jpeg-libs],[Location of jpeg library files.])],
-  [
-    JPEGLIB="-L${withval} -ljpeg"
-    LDFLAGS="$LDFLAGS -L${withval} -ljpeg"
-  ],
-  [
-    JPEGLIB="-ljpeg"
-    LDFLAGS="$LDFLAGS -ljpeg"
-  ]
-)
+    AC_ARG_WITH([jpeg-includes],
+      [AC_HELP_STRING([--with-jpeg-includes],[Location of jpeg include files.])],
+      [
+        JPEGINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
+      ]
+    )
 
-AC_CHECK_HEADERS([jpeglib.h],[HAVE_JPEG_H=1],[AC_MSG_ERROR(jpeg is required to compile dwh.)])
-AC_CHECK_LIB([jpeg],[jpeg_set_defaults],[HAVE_JPEG=1],[AC_MSG_ERROR(jpeg is required to compile dwh.)])
+    AC_ARG_WITH([jpeg-libs],
+      [AC_HELP_STRING([--with-jpeg-libs],[Location of jpeg library files.])],
+      [
+        JPEGLIB="-L${withval} -ljpeg"
+        LDFLAGS="$LDFLAGS -L${withval} -ljpeg"
+      ],
+      [
+        JPEGLIB="-ljpeg"
+        LDFLAGS="$LDFLAGS -ljpeg"
+      ]
+    )
 
-AC_SUBST(JPEGINC)
-AC_SUBST(JPEGLIB)
+    AC_CHECK_HEADERS([jpeglib.h],
+        [
+            HAVE_JPEG_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(jpeg is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([jpeg],[jpeg_set_defaults],
+        [
+            HAVE_JPEG=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(jpeg is required for hdf support.)
+            unset HAVE_HDF
+        ])
 
+    AC_SUBST(JPEGINC)
+    AC_SUBST(JPEGLIB)
+fi
 
-##### szip #####
+    ##### szip #####
 
-AC_ARG_WITH([szip-includes],
-  [AC_HELP_STRING([--with-szip-includes],[Location of szip include files.])],
-  [
-    JPEGINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
 
-AC_ARG_WITH([szip-libs],
-  [AC_HELP_STRING([--with-szip-libs],[Location of szip library files.])],
-  [
-    SZLIB="-L${withval} -lsz"
-    LDFLAGS="$LDFLAGS -L${withval} -lsz"
-  ],
-  [
-    SZLIB="-lsz"
-    LDFLAGS="$LDFLAGS -lsz"
-  ]
-)
+    AC_ARG_WITH([szip-includes],
+      [AC_HELP_STRING([--with-szip-includes],[Location of szip include files.])],
+      [
+        JPEGINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
+      ]
+    )
 
-AC_CHECK_HEADERS([szlib.h],[HAVE_SZLIB_H=1],[AC_MSG_ERROR(szip is required to compile dwh.)])
-AC_CHECK_LIB([sz],[SZ_Decompress],[HAVE_SZ=1],[AC_MSG_ERROR(szip is required to compile dwh.)])
+    AC_ARG_WITH([szip-libs],
+      [AC_HELP_STRING([--with-szip-libs],[Location of szip library files.])],
+      [
+        SZLIB="-L${withval} -lsz"
+        LDFLAGS="$LDFLAGS -L${withval} -lsz"
+      ],
+      [
+        SZLIB="-lsz"
+        LDFLAGS="$LDFLAGS -lsz"
+      ]
+    )
 
-AC_SUBST(SZINC)
-AC_SUBST(SZLIB)
+    AC_CHECK_HEADERS([szlib.h],
+        [
+            HAVE_SZLIB_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(szip is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([sz],[SZ_Decompress],
+        [
+            HAVE_SZ=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(szip is required for hdf support.)
+            unset HAVE_HDF
+        ])
 
+    AC_SUBST(SZINC)
+    AC_SUBST(SZLIB)
+fi
 
-##### zlib #####
+    ##### zlib #####
 
-AC_ARG_WITH([zlib-includes],
-  [AC_HELP_STRING([--with-zlib-includes],[Location of zlib include files.])],
-  [
-    ZINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
 
-AC_ARG_WITH([zlib-libs],
-  [AC_HELP_STRING([--with-zlib-libs],[Location of zlib library files.])],
-  [
-    ZLIB="-L${withval} -lz"
-    LDFLAGS="$LDFLAGS -L${withval} -lz"
-  ],
-  [
-    ZLIB="-lz"
-    LDFLAGS="$LDFLAGS -lz"
-  ]
-)
+    AC_ARG_WITH([zlib-includes],
+      [AC_HELP_STRING([--with-zlib-includes],[Location of zlib include files.])],
+      [
+        ZINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
+      ]
+    )
 
-AC_CHECK_HEADERS([szlib.h],[HAVE_SZLIB_H=1],[AC_MSG_ERROR(zlib is required to compile dwh.)])
-AC_CHECK_LIB([z],[SZ_Decompress],[HAVE_SZ=1],[AC_MSG_ERROR(zlib is required to compile dwh.)])
+    AC_ARG_WITH([zlib-libs],
+      [AC_HELP_STRING([--with-zlib-libs],[Location of zlib library files.])],
+      [
+        ZLIB="-L${withval} -lz"
+        LDFLAGS="$LDFLAGS -L${withval} -lz"
+      ],
+      [
+        ZLIB="-lz"
+        LDFLAGS="$LDFLAGS -lz"
+      ]
+    )
 
-AC_SUBST(ZINC)
-AC_SUBST(ZLIB)
+    AC_CHECK_HEADERS([szlib.h],
+        [
+            HAVE_SZLIB_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(zlib is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([z],[SZ_Decompress],
+        [
+            HAVE_SZ=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(zlib is required for hdf support.)
+            unset HAVE_HDF
+        ])
 
+    AC_SUBST(ZINC)
+    AC_SUBST(ZLIB)
+fi
 
-##### hdf #####
+    ##### hdf #####
 
-AC_ARG_WITH([hdf4-includes],
-  [AC_HELP_STRING([--with-hdf4-includes],[Location of hdf4 include files.])],
-  [
-    HDFINC="-I${withval}"
-    CFLAGS="$CFLAGS -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
+    AC_ARG_WITH([hdf4-includes],
+      [AC_HELP_STRING([--with-hdf4-includes],[Location of hdf4 include files.])],
+      [
+        HDFINC="-I${withval}"
+        CFLAGS="$CFLAGS -I${withval}"
+      ]
+    )
 
-AC_ARG_WITH([hdf4-libs],
-  [AC_HELP_STRING([--with-hdf4-libs],[Location of hdf4 library files.])],
-  [
-    HDFLIB="-L${withval} -lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
-  ],
-  [
-    HDFLIB="-lmfhdf -ldf"
-    LDFLAGS="$LDFLAGS -lmfhdf -ldf"
-  ]
-)
+    AC_ARG_WITH([hdf4-libs],
+      [AC_HELP_STRING([--with-hdf4-libs],[Location of hdf4 library files.])],
+      [
+        HDFLIB="-L${withval} -lmfhdf -ldf"
+        LDFLAGS="$LDFLAGS -L${withval} -lmfhdf -ldf"
+      ],
+      [
+        HDFLIB="-lmfhdf -ldf"
+        LDFLAGS="$LDFLAGS -lmfhdf -ldf"
+      ]
+    )
 
-AC_CHECK_HEADERS([mfhdf.h],[HAVE_MFHDF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-AC_CHECK_HEADERS([df.h],[HAVE_DF_H=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-AC_CHECK_LIB([df],[DFopen],[HAVE_DF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
-AC_CHECK_LIB([mfhdf -ldf],[SDstart],[HAVE_MFHDF=1],[AC_MSG_ERROR(hdf4 is required to compile dwh.)])
+    AC_CHECK_HEADERS([mfhdf.h],
+        [
+            HAVE_MFHDF_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_HEADERS([df.h],
+        [
+            HAVE_DF_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([df],[DFopen],
+        [
+            HAVE_DF=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([mfhdf -ldf],[SDstart],
+        [
+            HAVE_MFHDF=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdf4 is required for hdf support.)
+            unset HAVE_HDF
+        ])
 
-AC_SUBST(HDFINC)
-AC_SUBST(HDFLIB)
+    AC_SUBST(HDFINC)
+    AC_SUBST(HDFLIB)
+fi
 
-##### hdfeos #####
+    ##### hdfeos #####
 
-AC_ARG_WITH([hdfeos-includes],
-  [AC_HELP_STRING([--with-hdfeos-includes],[Location of hdfeos include files.])],
-  [
-    HDFEOSINC="-I${withval}"
-    CFLAGS="$CFLAGS --include hdf.h -I${withval}"
-  ]
-)
+if test "$HAVE_HDF" = "true"
+then
+    AC_ARG_WITH([hdfeos-includes],
+      [AC_HELP_STRING([--with-hdfeos-includes],[Location of hdfeos include files.])],
+      [
+        HDFEOSINC="-I${withval}"
+        CFLAGS="$CFLAGS --include hdf.h -I${withval}"
+      ]
+    )
 
-AC_ARG_WITH([hdfeos-libs],
-  [AC_HELP_STRING([--with-hdfeos-libs],[Location of hdfeos library files.])],
-  [
-    HDFEOSLIB="-L${withval} -lhdfeos"
-    LDFLAGS="$LDFLAGS -L${withval} -lhdfeos"
-  ],
-  [
-    HDFEOSLIB="-lhdfeos"
-    LDFLAGS="$LDFLAGS -lhdfeos"
-  ]
-)
+    AC_ARG_WITH([hdfeos-libs],
+      [AC_HELP_STRING([--with-hdfeos-libs],[Location of hdfeos library files.])],
+      [
+        HDFEOSLIB="-L${withval} -lhdfeos"
+        LDFLAGS="$LDFLAGS -L${withval} -lhdfeos"
+      ],
+      [
+        HDFEOSLIB="-lhdfeos"
+        LDFLAGS="$LDFLAGS -lhdfeos"
+      ]
+    )
 
-AC_CHECK_HEADERS([HDFEOSVersion.h],[HAVE_HdfEosDef_H=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
-AC_CHECK_LIB([hdfeos -lmfhdf -ldf],[SWopen],[HAVE_LIBGEOTIFF=1],[AC_MSG_ERROR(hdfeos is required to compile dwh.)])
+    AC_CHECK_HEADERS([HDFEOSVersion.h],
+        [
+            HAVE_HdfEosDef_H=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdfeos is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    AC_CHECK_LIB([hdfeos -lmfhdf -ldf],[SWopen],
+        [
+            HAVE_LIBHdfEos=1
+            HAVE_HDF="true"
+        ],
+        [
+            AC_MSG_RESULT(hdfeos is required for hdf support.)
+            unset HAVE_HDF
+        ])
+    
 
-AC_SUBST(HDFEOSINC)
-AC_SUBST(HDFEOSLIB)
+    AC_SUBST(HDFEOSINC)
+    AC_SUBST(HDFEOSLIB)
+fi
+
+AC_SUBST(HAVE_HDF)
+AM_CONDITIONAL(HAVE_HDF, test "$HAVE_HDF" = "true")
 
 CFLAGS="$cflagsold"
 LDFLAGS="$ldflagsold"
@@ -396,6 +587,7 @@ share/web/Makefile
 src/Makefile
 MRTSwath/Makefile
 MRTSwath/data/Makefile
-gctpc/Makefile
+MOD_PRDS/Makefile
 crefl/Makefile
+crefl/data/Makefile
 ])
