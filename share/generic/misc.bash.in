@@ -460,7 +460,9 @@ function get_transform {
 
 function get_size {
 
-    gdalinfo $1 | grep -e "Size is"  | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/'
+    gdalinfo $1 |\
+     grep -e "Size is" |\
+     sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/'
 
 }
 
@@ -491,7 +493,9 @@ function get_origin {
 ###############################################################################
 
 function get_num_bands {
-    gdalinfo "$1" | grep "^Band " | wc -l
+    gdalinfo "$1" |\
+     grep "^Band " |\
+     wc -l
 }
 
 ###############################################################################
@@ -499,7 +503,11 @@ function get_num_bands {
 ###############################################################################
 
 function get_band_type {
-    gdalinfo "$1" | grep "^Band $2 " | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1
+    gdalinfo "$1" |\
+     grep "^Band $2 " |\
+     grep "Type=" |\
+     sed 's/.*Type=\(\w*\).*/\1/' |\
+     head -n 1
 }
 
 ###############################################################################
@@ -758,4 +766,28 @@ function find_band_file {
     done
     
     return 1
+}
+
+###############################################################################
+# function to find a band file in a dir
+###############################################################################
+function findmatchingfile {
+    local base="$1"
+    local msb="$2"
+    local dir="$3"
+    
+    local result=0
+    
+    shopt -s nullglob dotglob
+    local file=( ${dir}/${base}*${msb}* )
+    if (( ${#file[@]} ))
+    then
+        echo "${file[0]}"
+    else
+        result=1
+    fi
+    
+    shopt -u nullglob dotglob
+    
+    return $result
 }
