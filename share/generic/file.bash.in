@@ -82,7 +82,7 @@ function dozip_multiband {
         done
     
         ##### find the pan band #####
-        ##### fixme this only assumes 1 posible panband #####
+        ##### FIXME this only assumes 1 posible panband #####
         
         local panfiles
         if [ -n "$mypanband" ]
@@ -195,7 +195,7 @@ function dotar_multiband {
         done
     
         ##### find the pan band #####
-        ##### fixme this only assumes 1 posible panband #####
+        ##### FIXME this only assumes 1 posible panband #####
         
         local panfiles
         if [ -n "$mypanband" ]
@@ -369,7 +369,7 @@ function dogzip {
     then
 
         ##### check if it is suposed to be multiband #####
-        ##### fixme subdsnames could not contain a "" so check the first one and append to msbands #####
+        ##### FIXME subdsnames could not contain a "" so check the first one and append to msbands #####
         
         if [ -n "$msbands" ]
         then
@@ -843,6 +843,11 @@ function subds_iterator {
                 unset tmp
 
                 local tmp
+                eval tmp=\( \$\{mspreproc_lut$sub\[@\]\} \)
+                local mspreproc_lut=( "${tmp[@]}" )
+                unset tmp
+
+                local tmp
                 eval tmp=\"\$panband$sub\"
                 local panband="$tmp"
                 unset tmp
@@ -885,7 +890,7 @@ function findpan {
     local files=("${@:1}")
     
     ##### find the pan band #####
-    ##### fixme this only assumes 1 posible panband #####
+    ##### FIXME this only assumes 1 posible panband #####
     
     subds_iterator "findpan_cb" "${files[@]}" | head -n 1
     
@@ -912,7 +917,7 @@ function getms_base {
     local files=("${@:1}")
     
     ##### find the pan band #####
-    ##### fixme this only assumes 1 posible panband #####
+    ##### FIXME this only assumes 1 posible panband #####
     
     subds_iterator "getms_base_cb" "${files[@]}" | head -n 1
     
