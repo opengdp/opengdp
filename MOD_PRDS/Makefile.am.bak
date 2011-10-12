@@ -1,0 +1,16 @@
+
+bin_PROGRAMS = \
+	modis_destripe1km
+
+modis_destripe1km_SOURCES = \
+	MOD_PRDS1KM.c      \
+	interp.c      \
+	modis_edf_destripe.c
+   
+modis_destripe1km_LDFLAGS = \
+	@HDFLIB@ @JPEGLIB@ @ZLIB@ @SZLIB@ 
+
+
+modis_destripe1km_CFLAGS = \
+    -DH4_HAVE_NETCDF -DHAVE_INT8 \
+    @HDFEOSINC@ @HDFINC@ @JPEGINC@ @ZINC@ @SZINC@

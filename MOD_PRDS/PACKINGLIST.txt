@@ -1,0 +1,68 @@
+================================================================================
+1. Packing List for MOD_PRDS1KM (MODIS Atmosphere L1B 1KM Destriping process)
+================================================================================
+
+
+================================================================================
+2. POINTS OF CONTACT:
+================================================================================
+
+Developers:
+----------
+Nazmi Saleous (adapted code to 1KM input)
+MODIS Land Science Team           
+Raytheon Systems 
+NASA's GSFC Code 923 
+Greenbelt, MD 20771
+phone: 301-614-6647
+nazmi.saleous@gsfc.nasa.gov      
+
+Liam Gumley (developer of original MOD_PRDS)
+CIMSS/SSEC
+1225 W. Dayton St.
+Madison WI 53706
+(608) 265-5358
+Liam.Gumley@ssec.wisc.edu
+
+
+SDST Contacts:
+-------------
+Carol Davidson	301-352-2159	cdavidson@saicmodis.com
+Gwyn Fireman	301-352-2118	gfireman@saicmodis.com
+SAIC-GSO MODIS SCIENCE DATA SUPPORT OFFICE
+7501 Forbes Boulevard, Suite 103, Seabrook, MD 20706
+Fax: 301-352-0143
+
+
+================================================================================
+3. Files in MOD_PRDS1KM science algorithm package
+================================================================================
+Filename			Format	Description
+---------			------	-----------
+
+MOD_PRDS1KM documents and misc files:
+----------------------------------
+HISTORY.txt			ASCII	Delivery version history
+MOD_PRDS1KM.mk			ASCII	Makefile for MOD_PRDS1KM process
+MOD_PRDS1KM.pcf			ASCII	Sample Production Control File
+PACKINGLIST.txt			ASCII	Packing List for MOD_PRDS1KM
+README.txt			ASCII	MOD_PRDS1KM README file
+
+MOD_PRDS1KM source and include files:
+----------------------------------
+CONCATENATE.f			ASCII	Concatenates strings
+MODIS_SMF_SETDYNAMICMSG_V2.1.f	ASCII	Write status message to Log file
+MOD_PRDS.inc			ASCII	Include file for MOD_PRDS1KM
+STRING_LOC.f			ASCII	String locator
+hdf_destripe_new.f90		ASCII	new MOD_PRDS1KM routine
+interp.f			ASCII	Linear interpolation
+message.f			ASCII	Write message to SDPTK LogStatus
+modis_edf_destripe.f90		ASCII	new MOD_PRDS1KM routine
+strcompress.f			ASCII	Removes embedded white space
+strlen.f			ASCII	String length
+MODIS_39500.t                   ASCII	SMF seed file
+
+Static coefficient files and Look-Up Tables:
+--------------------------------------------
+MOD021KM_destripe_config.dat.v1 ASCII	Terra destriping configuration file
+

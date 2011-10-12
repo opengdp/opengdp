@@ -1,0 +1,74 @@
+                        Version History File
+                              MOD_PRDS1KM
+
+This file shows the following:
+(a) What was changed in the process
+(b) Why it was changed
+(c) How the output product will be affected by the change
+(d) Date the change was made
+
+
+v5.0.0 MOD_PRDS1KM                                                    07/21/2005
+================================================================================
+Initial version of MOD_PRDS1KM, based on MOD_PRDS500M by Nazmi Saleous
+Modified by Nazmi Saleous to destripe L1B 1KM files.
+
+
+v5.0.0 MOD_PRDS500M                                                   10/25/2004
+================================================================================
+Initial version of MOD_PRDS500M, based on MOD_PRDS by Liam Gumley.
+Modified by Nazmi Saleous to destripe L1B HKM files.
+Modified by Gwyn Fireman to loop through all versions of input file.
+
+
+History of original MOD_PRDS code by Liam Gumley included for reference below:
+
+
+v5.0.0 MOD_PRDS                                                       05/19/2004
+================================================================================
+
+Initial version of MOD_PRDS
+Liam Gumley
+
+This version of the MODIS L1B destriping algorithm is based on the IDL version
+that has been running at CIMSS on direct broadcast since June 2003. The 
+algorithm is reliable and fast in the IDL implementation.
+
+The algorithm is based on Weinreb et al., 1989: “Destriping GOES Images by 
+Matching Empirical Distribution Functions”. Remote Sens. Environ., 29, 
+185-195.
+
+1. Algorithm Details
+- Accounts for both detector-to-detector and mirror side striping.
+- MODIS is treated as a 20 detector instrument in the thermal emissive bands
+ (10 detectors on each mirror side).
+- The empirical distribution function (EDF) is computed for each detector
+ (cumulative histogram of relative frequency).
+- The EDF for each detector is adjusted to match the EDF of a reference 
+  in-family detector.
+- Algorithm operates on L1B scaled integers (0-32767).
+- Median scaled integer value for each band is restored following destriping.
+
+2. Terra and Aqua MODIS Implementation in FORTRAN-90
+- Correction LUT is created for each individual granule on the fly.
+- Uncorrected scaled integers are replaced with corrected scaled integers.
+- Impact on bands 31 and 32 is equivocal.
+- For Terra MODIS, noisy detectors in some bands are replaced with neighbors.
+- For Aqua MODIS, no detectors are replaced.
+- Requires less than 60 seconds to run for each granule.
+- Text configuration file (one each for Terra and Aqua) defines
+  (a) which bands will be destriped
+  (b) which detector will be the reference for each band
+  (c) which detectors will be replaced for each band
+
+3. Impact on the L1B 1KM data
+- For most of the thermal infrared bands, the impact is positive. Striping noise
+  is significantly reduced, and this has a positive impact on downstream 
+  products such as the cloudmask, atmospheric profiles, and cloud top 
+  properties.
+- For bands 31 and 32, the impact is equivocal. However, for cloud top phase
+  computations involving differences between bands 31, 32, and 29, the impact
+  appears to be positive.
+- NOTE: The L1B 1KM file is irreversibly changed by this algorithm. It is 
+  possible, but complicated, to implement this algorithm in such a way that the
+  destriping is reversible.
