@@ -1,0 +1,795 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+have_otb="@HAVE_OTB@"
+
+###############################################################################
+# function to write a vrt to rescale with a lut
+###############################################################################
+
+function mk_lut_vrt {
+    local infile="$1"
+    local outvrt="$2"
+    local lut="$3"
+    
+    local xs
+    local ys
+    read xs ys < <(get_size "$infile")
+    
+    local xo
+    local yo
+    read xo yo < <(get_origin "$infile")
+    
+    local xd
+    local yd
+    read xd yd < <(get_pixelsize "$infile")
+    
+    local srs
+    read srs < <(get_srs "$infile")
+    
+    cat > "$outvrt" << EOF
+<VRTDataset rasterXSize="$xs" rasterYSize="$ys">
+  <SRS>$srs</SRS>
+  <GeoTransform>$xo,  $xd,  0.0,  $yo,  0.0, $yd</GeoTransform>
+EOF
+    
+    for ((ib = 1; ib <= $(get_num_bands "$infile"); ib++ ))
+    do  
+        read type < <(get_band_type "$infile" $ib)
+        cat >> "$outvrt" << EOF
+  <VRTRasterBand dataType="Byte" band="$ib">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>$ib</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+EOF
+    done
+
+    cat >> "$outvrt" << EOF
+</VRTDataset>
+EOF
+
+}
+
+
+###############################################################################
+# function to build a 3 band vrt out of a 1 band image with a gradient
+###############################################################################
+
+function mk_gradient_vrt {
+    local infile="$1"
+    local outvrt="$2"
+    local gradient="$3"
+    
+    local xs
+    local ys
+    read xs ys < <(get_size "$infile")
+    
+    local xo
+    local yo
+    read xo yo < <(get_origin "$infile")
+    
+    local xd
+    local yd
+    read xd yd < <(get_pixelsize "$infile")
+    
+    local srs
+    read srs < <(get_srs "$infile")
+    
+    local r
+    local g
+    local b
+    local src
+    local lut_r
+    local lut_g
+    local lut_b
+    
+    while read r g b src
+    do
+        if [ -n "$lut_r" ]
+        then
+            lut_r="${lut_r},${src}:${r}"
+            lut_g="${lut_g},${src}:${g}"
+            lut_b="${lut_b},${src}:${b}"
+        else
+            lut_r="${src}:${r}"
+            lut_g="${src}:${g}"
+            lut_b="${src}:${b}"
+        fi
+    done <<<"$gradient"
+    
+    cat > "$outvrt" << EOF
+<VRTDataset rasterXSize="$xs" rasterYSize="$ys">
+  <SRS>$srs</SRS>
+  <GeoTransform>$xo,  $xd,  0.0,  $yo,  0.0, $yd</GeoTransform>
+  <VRTRasterBand dataType="Byte" band="1">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_r</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_g</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut_b</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>
+EOF
+
+}
+
+
+###############################################################################
+# function to build a 3 band vrt out of a 1 band image
+###############################################################################
+
+function mk_3of1_vrt {
+    in=$1
+    out=$2
+    
+    ##### make a temp dir #####
+    
+    local tmpdir
+    tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
+    
+    ##### build a temp vrt to get most of our info from #####
+
+    gdal_translate -of VRT "$in" "${tmpdir}/mk_3of1_vrt.vrt" || { printerror ; return; }
+    
+    ##### get the band type #####
+    
+    local type=$(get_band_type "$in" 1)
+
+    keep=$(sed "${tmpdir}/mk_3of1_vrt.vrt" -e 's:</VRTDataset>::')
+    
+    cat > "$out" << EOF
+$keep
+  <VRTRasterBand dataType="$type" band="2">
+  </VRTRasterBand>
+  <VRTRasterBand dataType="$type" band="3">
+  </VRTRasterBand>
+</VRTDataset>
+EOF
+
+}
+
+###############################################################################
+# function to build a single mask vrt out of an array of masks
+###############################################################################
+
+function combine_masks {
+    local base="$1"
+    local tmpdir="$2"
+    local masks=("${@:3}")
+    
+    ##### no mask files, return error #####
+    
+    if (( ${#masks[@]} < 1 ))
+    then
+        return 1;
+    
+    else
+        local lastfile="${masks[0]}"
+        local i
+        for (( i = 1; i < ${#masks[@]}; i++ ))
+        do
+            
+            ##### build a vrt of the 2 mask bands #####
+            
+            gdalbuildvrt -resolution highest -separate \
+                         "${tmpdir}/${base}_prewarp_mask_${i}.vrt" \
+                         "${tmpdir}/${lastfile}" \
+                         "${tmpdir}/${masks[i]}" > /dev/null || { printerror ; return; }
+            
+            ##### change band 2 to a mask band #####
+            
+            gdal_translate -of VRT -b 1 -mask 2 \
+                           "${tmpdir}/${base}_prewarp_mask_${i}.vrt" \
+                           "${tmpdir}/${base}_prewarp2_mask_${i}.vrt" > /dev/null || { printerror ; return; }
+            
+            ##### combine the 2 masks
+
+            gdalwarp "${tmpdir}/${base}_prewarp2_mask_${i}.vrt" \
+                     "${tmpdir}/${base}_mask_${i}.tif" > /dev/null || { printerror ; return; }
+            
+            lastfile="${base}_mask_${i}.tif"
+        done
+        
+        echo "${tmpdir}/$lastfile"
+    fi
+    
+}
+
+###############################################################################
+# function to make an array of files with tmpdir prefixed that match
+# the msbands array
+###############################################################################
+
+function ms2tmpfiles {
+    local tmpdir="$1"
+    local nummsbands="$2"
+    local msbands=( "${@:3:$2}" )
+    local files=( "${@:$((3+$2))}" )
+    
+    ##### make an array of the files with tmpdir #####
+    ##### prefixed  that match the msbands array #####
+    
+    local msb
+    
+    local i
+    local myfiles=( )
+    for msb in "${msbands[@]}"
+    do
+        local f
+        for f in "${files[@]}"
+        do
+            if [[ "$f" = *$msb* ]]
+            then
+                myfiles[i++]="${tmpdir}/$f"
+                break
+            fi
+        done
+    done
+    
+    echo "${myfiles[@]}"
+    
+}
+
+###############################################################################
+# function to make an array of files that match the msbands array
+###############################################################################
+
+function ms2files {
+    local nummsbands="$1"
+    local msbands=( "${@:2:$1}" )
+    local files=( "${@:$((2+$1))}" )
+    
+    ##### make an array of the files that match the msbands array #####
+    
+    local msb
+    
+    local i
+    local myfiles=( )
+    for msb in "${msbands[@]}"
+    do
+        local f
+        for f in "${files[@]}"
+        do
+            if [[ "$f" = *$msb* ]]
+            then
+                myfiles[i++]="$f"
+                break
+            fi
+        done
+    done
+    
+    echo "${myfiles[@]}"
+    
+}
+
+###############################################################################
+# function to fill nodata
+###############################################################################
+
+function fillnodata {
+    local base="$1"
+    local tmpdir="$2"
+    local file="$3"
+    
+    ##### assume a max distance of 12 for landsat 7 #####
+    
+    if ! [ -n "$fillnodata_md" ]
+    then
+        local fillnodata_md=12
+    fi
+    
+    ##### loop over the bands and fill them #####
+    
+    numbands=$(get_num_bands "$file")
+    
+    local i
+    for ((i = 0; i < numbands ; i++))
+    do
+    
+        bands[i++]="${tmpdir}/${base}_$(($i + 1))_filled.tif"
+        export CPL_TMPDIR="$tmpdir"
+    
+        gdal_fillnodata.py -md $fillnodata_md \
+                           -b $i \
+                           "${file}" \
+                           "${tmpdir}/${base}_${i}_filled.tif" \
+                           > /dev/null || { printerror ; return; }
+        
+    done
+        
+    ##### make a vrt of the filled ms bands #####
+        
+    gdalbuildvrt -srcnodata 0 -separate -resolution highest \
+                 "${tmpdir}/${base}_fillnodata.vrt" \
+                 ${bands[@]} > /dev/null || { printerror ; return; }
+    
+    echo "${tmpdir}/${base}_fillnodata.vrt"
+}
+
+###############################################################################
+# function mscalc
+###############################################################################
+
+function mscalc {
+    local base="$1"
+    local tmpdir="$2"
+    local file="$3"
+    
+    local tmpcalc=$(echo "$mscalc" | tr "\n" " " | sed 's/[ ]\{1,\}/ /g')
+    
+    ###### mixed bands are a pain, lets just translate it to float64 #####
+    
+    gdal_translate -ot Float64 -of VRT \
+                   "${file}" \
+                   "${tmpdir}/${base}_float.vrt" > /dev/null \
+                   || { printerror ; return; }
+    
+    otbCalc "${tmpdir}/${base}_float.vrt" \
+            "${tmpdir}/${base}_calc.tif" \
+            "$tmpcalc"  > /dev/null || { printerror ; return; }
+    
+    if [ -n "$msgradient" ]
+    then
+            
+        mk_gradient_vrt "${tmpdir}/${base}_calc.tif" \
+                        "${tmpdir}/${base}_mscalc.vrt" \
+                        "$msgradient" || return
+    else        
+        mk_3of1_vrt "${tmpdir}/${base}_calc.tif" \
+                    "${tmpdir}/${base}_3.vrt" || return
+        
+        gdal_translate -ot Byte -of VRT \
+                       "${tmpdir}/${base}_3.vrt" \
+                       "${tmpdir}/${base}_mscalc.vrt" > /dev/null \
+                       || { printerror ; return; }
+        
+    fi
+    
+    echo "${tmpdir}/${base}_mscalc.vrt"
+}
+
+###############################################################################
+# function to pansharpen an image
+###############################################################################
+
+function pansharpen {
+    local base="$1"
+    local tmpdir="$2"
+    local panfile="$3"
+    local file="$4"
+    
+    if ! [ -n "$have_otb" ]
+    then
+        printerror "dwh is built without otb"
+        return 1
+    fi
+    
+    
+    ##### this don't seem to work with gaps, the gaps in the pan band arent filled #####
+    ##### mayby with cloud masking and multiple images it will be worth doing #####
+
+    ##### get the pix size of the pan image #####    
+    
+    local pan_xsize
+    local pan_ysize
+    read pan_xsize pan_ysize < <(get_size "$panfile")
+    
+    ##### make an ms vrt the same res as the panfile #####
+    
+    gdal_translate -of VRT -outsize $pan_xsize $pan_ysize \
+                   "${file}.vrt" \
+                   "${tmpdir}/${base}_resize.vrt" > /dev/null \
+                   || { printerror ; return; }
+    
+    ##### run it though the otb pan sharpener #####
+    
+    otbPanSharp "$type" \
+                "$panfile" \
+                "${tmpdir}/${base}_resize.vrt" \
+                "${tmpdir}/${base}_pansharpen.tif" > /dev/null \
+                || { printerror ; return; }
+    
+    echo "${tmpdir}/${base}_pansharpen.tif"
+    
+}
+
+###############################################################################
+# function to make a rgb image and a band image into a rgba vrt
+###############################################################################
+
+function combine_rgb_a {
+    local base="$1"
+    local tmpdir="$2"
+    local img_rgb="$3"
+    local img_a="$4"
+    
+    ##### loop over the ms bands and make a seperate vrt for each one #####
+    
+    local bands=()
+    
+    numbands=$(get_num_bands "$img_rgb")
+    local i
+    for ((i = 0; i < numbands ; i++))
+    do
+        bands[i]="${tmpdir}/${base}_combine_rgb_a_${i}.vrt"
+        gdal_translate -b $(($i + 1)) -of VRT \
+                       "$img_rgb" \
+                       "${bands[i]}" > /dev/null \
+                       || { printerror ; return; }
+    done
+            
+    ##### combine all the bands into a single vrt #####
+            
+    gdalbuildvrt -separate \
+                         "${tmpdir}/${base}_sep.vrt" \
+                         "${bands[@]}" \
+                         "${img_a}" > /dev/null \
+                         || { printerror ; return; }
+    
+    ##### rework the vrt to rgba #####
+    
+    sed "${tmpdir}/${base}_sep.vrt" \
+        -e 's,\(band=\"1\".*>\),\1\n    <ColorInterp>Red</ColorInterp>,' \
+        -e 's,\(band=\"2\".*>\),\1\n    <ColorInterp>Green</ColorInterp>,' \
+        -e 's,\(band=\"3\".*>\),\1\n    <ColorInterp>Blue</ColorInterp>,' \
+        -e 's,\(band=\"4\".*>\),\1\n    <ColorInterp>Alpha</ColorInterp>,' \
+        > "${tmpdir}/${base}_combine_rgb_a.vrt"
+    
+    echo "${tmpdir}/${base}_combine_rgb_a.vrt"
+    
+}
+
+###############################################################################
+# function to proccess a multiband image
+###############################################################################
+
+function preproc_lut {
+    local base="$1"
+    local tmpdir="$2"
+    local newtmpdir="$3"
+    local file="$4"
+    
+    for ((i = 0; i < "${#mspreproc_lut[@]}"  ; i += 2))
+    do
+        local myfile
+        myfile=$( findmatchingfile "${base}" "${mspreproc_lut[i]}" "${tmpdir}" ) || continue
+        
+        local mybase=$( file_get_basename "$myfile" )
+        mk_lut_vrt "${tmpdir}/$myfile" \
+                   "${newtmpdir}/${mybase}.vrt" \
+                   "${mspreproc_lut[i + 1]}"
+                   
+        echo "${newtmpdir}/${mybase}.vrt"
+        return
+    done
+    
+    return 1
+}
+
+###############################################################################
+#function to print out a list of color switches for a washout nearblack
+###############################################################################
+
+function washout_switches {
+    local numbands=$1
+    
+    for ((i = 0 ; i < $(bc <<< "2^${numbands}") - 1 ; i++ ))
+    do
+        printf "%0${numbands}d\n" $(bc <<< "obase=2; $i")
+    done |\
+     sed -e 's/0/0,/g' -e 's/1/255,/g' -e 's/,$//' -e 's/^/-color /'
+}
+
+###############################################################################
+# function to do a washout nearblack
+###############################################################################
+
+function washout_nearblack {
+    local base="$1"
+    local file="$2"
+    local tmpdir="$3"
+
+ 
+    local numbands
+    numbands=$(get_num_bands "$file") || { printerror ; return; }
+    
+    ##### no point if there is only 1 band #####
+    
+    if (( numbands > 1 ))
+    then
+        local switches=( $(washout_switches $numbands) )
+
+        nearblack ${switches[@]} \
+                  -near 0 -nb 0 -setalpha -of gtiff \
+                  "$file" \
+                  -o "${tmpdir}/${base}_wash.tif" > /dev/null 2>&1 || { printerror ; return; }
+                  
+        ##### make a vrt for the alpha band #####
+        
+        gdal_translate -b $(($numbands + 1)) -of VRT \
+                       "${tmpdir}/${base}_wash.tif" \
+                       "${tmpdir}/${base}_wash.vrt" > /dev/null || { printerror ; return; }
+        
+        echo "${base}_wash.vrt"
+    
+    else
+        return 1
+    fi
+}
+        
+###############################################################################
+# function to proccess a multiband image
+###############################################################################
+
+#FIXME panfile should just be in the file array and we should sort it out in this function
+# this will make other code easyer
+# there should be a function to get a list of all msbands, msmasks, mspans
+
+function doimg_multiband_cb {
+
+    local base="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local isoriginal="$4"
+    local panfile="$5"
+    local files=("${@:6}")
+
+    if [ -n "$DEBUG_doimg_multiband" ]
+    then
+        printf " base=%s\n tmpdir=%s\n ts=%s\n isoriginal=%s\n panfile=%s\n" \
+               "$base" \
+               "$tmpdir" \
+               "$ts" \
+               "$isoriginal" \
+               "$panfile"
+        echo " files=${files[@]}"
+        return
+    fi
+    
+    ##### create a new tmp dir to make cleanup easyer #####
+    
+    local newtmpdir
+    newtmpdir=$(mktemp -d -p "$tmpdir" "${dsname}XXXXXXXXXX") || { printerror ; return; }
+    
+    ##### run preproc_lut on any maching files #####
+    ##### symlink all other files              #####
+    
+    local file
+    local newfiles=( )
+    
+    for file in "${files[@]}"
+    do  
+        local newfile
+        if newfile=$(preproc_lut "$tmpdir" "$newtmpdir" "${files[@]}")
+        then
+            newfiles=( "${newfiles[@]}" "$newfile" )
+        else
+            ln -s "${tmpdir}/${file}" "${newtmpdir}/${file}"
+            newfiles=( "${newfiles[@]}" "$file" )
+        fi
+    done
+    
+    ##### make an array of the files with tmpdir #####
+    ##### prefixed  that match the msbands array #####
+    
+    local bands
+    bands=( $(ms2tmpfiles "$newtmpdir" "${#msbands[@]}" "${msbands[@]}" "${newfiles[@]}" ) )
+
+    ##### make an array of the files that match the msbands array #####
+    
+    local myfiles
+    myfiles=( $(ms2files "${#msbands[@]}" "${msbands[@]}" "${newfiles[@]}" ) )
+    
+    local masks
+    masks=( $(ms2files "${#msmaskbands[@]}" "${msmaskbands[@]}" "${newfiles[@]}" ) )
+        
+    ##### do we need a nodata value? #####
+    
+    if [ -n "$srcnodata" ]
+    then
+        local nodata=( -srcnodata "$srcnodata" )
+    fi
+    
+    local lastfile originalfile
+    
+    ##### make a vrt of the ms bands first ######
+    
+    gdalbuildvrt ${nodata[@]} \
+                 -separate \
+                 -resolution highest \
+                 "${newtmpdir}/${base}.vrt" \
+                 ${bands[@]} > /dev/null || return
+    
+    originalfile="${newtmpdir}/${base}.vrt"
+    lastfile="${newtmpdir}/${base}.vrt"
+    
+    ##### get the data type. just use the first band #####
+    
+    local type=$(get_band_type "${newtmpdir}/${base}.vrt" 1)
+    
+    ##### fillnodata ? #####
+    
+    if istrue "$fillnodata"
+    then
+        lastfile=$( fillnodata "$base" "$newtmpdir" "$lastfile" ) || return
+    fi
+
+    ##### mscalc #####
+        
+    if [ -n "$mscalc" ] 
+    then
+        lastfile=$( mscalc "$base" "$newtmpdir" "$lastfile" ) || return
+        
+    else
+        
+        ##### gradient #####
+        ##### FIXME this only reads the original files #####
+        
+        if [ -n "$msgradient" ]
+        then
+             
+            mk_gradient_vrt "${bands[0]}" \
+                            "${newtmpdir}/${base}_gradient.vrt" \
+                            "$msgradient" || return
+                            
+            lastfile="${newtmpdir}/${base}_gradient.vrt"
+        fi 
+        
+        ##### do we pansharpen? #####
+        
+        if [ -n "$panband" ]
+        then
+        
+            lastfile=$( pansharpen "$base" "$newtmpdir" "${tmpdir}/$panfile" "$lastfile" ) || return
+            
+        fi
+    fi
+    
+    ##### cloud masking? #####
+    ##### FIXME this does not work #####
+    
+    #if [ -n "$cloudmask" ]
+    #then
+    #    if ! [ -n "$have_otb" ]
+    #    then
+    #        printerror "dwh is built without otb"
+    #        return 1
+    #    fi
+        
+    #    "${#cloudmask[@]}"
+        
+    #    otbCloudMask "${newtmpdir}/${base}.vrt" \
+    #                 "${newtmpdir}/${base}_cloudmask.tif" \
+    #                 "${#cloudmask[@]}" \
+    #                 ${cloudmask[@]} \
+    #                 .2 .75 1
+                     
+        
+    #fi
+    
+    ##### rescale the image #####
+
+    if [ -n "$rescale" ]
+    then
+        ##### rename the source vrt so the output vrt will have the same filename for consistency #####
+        
+        gdal_translate -ot byte -scale $rescale -of VRT \
+                       "$lastfile" \
+                       "${newtmpdir}/${base}_rescale.vrt" > /dev/null || { printerror ; return; }
+        
+        lastfile="${newtmpdir}/${base}_rescale.vrt"
+        
+    ##### rescale with a lut #####
+    
+    elif [ -n "$lut" ]
+    then
+        ##### rename the source vrt so the output vrt will have the same filename for consistency #####
+        
+        mk_lut_vrt "$lastfile" \
+                   "${newtmpdir}/${base}_lut.vrt" "$lut"
+        
+        lastfile="${newtmpdir}/${base}_lut.vrt"
+
+    fi
+    
+
+    
+    ##### do a washout nearblack to remove ms band staggering artefacts? #####
+    
+    ##### FIXME this reads only the original files #####
+    ##### FIXME figure out a way to save this based on the bands given, #####
+    ##### so it can be reused if posible this is a costly op            #####
+    
+    if [[ "$type" != "Byte" ]] && ! istrue "$nearwhite"
+    then
+        
+        if wash=$( washout_nearblack "$base" "$originalfile" "${newtmpdir}") 
+        then
+
+            ##### add the alpha band vrt to the masks array #####
+
+            masks=( "${masks[@]}" "${wash}" )
+        fi
+    fi
+    
+    ##### is there any mask files? #####
+    
+    if (( ${#masks[@]} ))
+    then
+        
+        ##### combine the masks into a single mask file #####
+
+        mask=$( combine_masks "$base" "${newtmpdir}" "${masks[@]}" )
+        
+        lastfile=$(combine_rgb_a "$base" "${newtmpdir}" \
+                                 "$lastfile" \
+                                 "$mask" ) || return
+    fi
+                                
+    ##### proccess the image like any normal rgba now #####
+    
+    doimg "${lastfile##*/}" \
+          "$newtmpdir" \
+          "$ts" \
+          "$(gdalinfo "$lastfile" )" \
+          "no" || return
+    
+    ##### cleanup #####
+    
+    rm -r "$newtmpdir"
+
+}
+
+function doimg_multiband {
+    
+    subds_iterator "doimg_multiband_cb" "$@"
+
+}
+
