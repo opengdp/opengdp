@@ -152,22 +152,27 @@ function image_warp {
     
     else
         
-        ##### does the image already have a alpha band? #####
+        ###### does the image have a alpha band? #####
     
         if gdalinfo "${img}" | grep 'ColorInterp=Alpha' > /dev/null
         then
-            gdalwarp -co TILED=YES -t_srs EPSG:4326 \
-                     "${img}" \
-                     "${tmpram}/warped_${imgbase}.tif" \
-                     > /dev/null || { printerror ; return; }
-                     
-        else
-            gdalwarp -co TILED=YES -dstalpha -t_srs EPSG:4326 \
-                     "${img}" \
-                     "${tmpram}/warped_${imgbase}.tif" \
-                     > /dev/null || { printerror ; return; }
-                     
-        fi        
+            
+            ##### convert alpha mask to a mask band #####
+            
+            gdal_translate -b 1 -b 2 -b 3 -mask 4 -of VRT \
+                           "${img}" \
+                           "${tmpram}/prewarp_masked_${imgbase}.vrt" \
+                            > /dev/null || { printerror ; return; }
+            img="${tmpram}/prewarp_masked_${imgbase}.vrt"
+        fi
+        
+        ##### warp the image #####
+        
+        gdalwarp -co TILED=YES -dstalpha -t_srs EPSG:4326 \
+                 "${img}" \
+                 "${tmpram}/warped_${imgbase}.tif" \
+                 > /dev/null || { printerror ; return; }
+        
     fi
     
     if ! istrue "$isoriginal" 1
