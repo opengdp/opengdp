@@ -19,7 +19,16 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-function print_res_merc {
+###############################################################################
+## @brief function to get a tc resolution array for merc
+##
+## @return 0 for success
+##
+## @retval stdout the resolution array
+##
+###############################################################################
+
+print_res_merc () {
     local maxResolution=156543.0339
     local zoom
     for (( zoom=0; zoom<=24; ++zoom ))
@@ -28,7 +37,16 @@ function print_res_merc {
     done
 }
 
-function print_res {
+###############################################################################
+## @brief function to get a tc resolution array for latlon
+##
+## @return 0 for success
+##
+## @retval stdout the resolution array
+##
+###############################################################################
+
+print_res () {
     local maxResolution=1.40625
     local zoom
     for (( zoom=0; zoom<=24; ++zoom ))
@@ -37,7 +55,23 @@ function print_res {
     done
 }
 
-function dotc {
+###############################################################################
+## @brief main function to setup tiilecache for a dataset
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param project         name of the project
+## @param htmlbase        path to the local html files for the project
+## @param dsname          name of the dataset
+## @param urlcgibin       url for the projects mapserver cgibin
+## @param urlhtmldir      url for the projects html dir
+##
+###############################################################################
+
+
+dotc () {
 
     echo "" > "${htmlbase}/${dsname}.tilecache.conf"
     
@@ -127,7 +161,7 @@ levels=24
 EOF
        fi
 
-##### kml for the layer #####
+       ##### kml for the layer #####
        
        cat >> "${htmlbase}/${dsname}.kml" << EOF
 
@@ -203,7 +237,7 @@ ${linenum}-1a
       <NetworkLink>
         <name>${dsname}</name>
         <Link>
-          <href>${urlbase}/${project}/${dsname}.kml</href>
+          <href>${urlhtmldir}/${dsname}.kml</href>
         </Link>
       </NetworkLink>
 .

@@ -19,9 +19,20 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-have_hdf="@HAVE_HDF@"
+have_hdf="@HAVE_HDF@";
 
-function hdf_findmatchingfile {
+###############################################################################
+## @brief function to find a file with a glob
+##
+## @param glob the glob to match (include path)
+##
+## @return 0 on success, 1 on failure
+##
+## @retval stdout   full path to the first matching file
+##
+###############################################################################
+
+globfile () {
     local glob="$1"
     
     local result=0
@@ -41,10 +52,20 @@ function hdf_findmatchingfile {
 }
 
 ###############################################################################
-# function to make a complete list of all the msbands of the subdatasets
+## @brief callback function to make a complete list of all the msbands of the
+##         subdatasets
+##
+## @return 0 for success
+##
+## @retval stdout list of all the msbands for the current subdataset
+##
+## @details
+## global vars
+## @param msbands*        array of band filename patterns
+##
 ###############################################################################
 
-function listmsbands_cb {
+listmsbands_cb () {
     
     local msb
     for msb in "${msbands[@]}"
@@ -53,36 +74,36 @@ function listmsbands_cb {
     done
 }
 
-function listmsbands {
-   
-    subds_iterator "listmsbands_cb" | sort | uniq
-
-}
-
 ###############################################################################
-# function to make a complete list of all the msmaskbands of the subdatasets
+## @brief function to make a complete list of all the msbands of the
+##         subdatasets
+##
+## @return 0 for success
+##
+## @retval stdout list of all the msbands for all the subdatasets
+##
+## @details
+## global vars
+## @param msbands*        array of band filename patterns
+##
 ###############################################################################
 
-function listmsmaskbands_cb {
-    
-    local msb
-    for msb in "${msmaskbands[@]}"
-    do
-        echo "$msb"
-    done
-}
-
-function listmsmaskbands {
+listmsmaskbands () {
    
     subds_iterator "listmsmaskbands_cb" | sort | uniq
 
 }
 
 ###############################################################################
-# function to figure out what bands to extract
+## @brief function to figure out what bands to extract from an hdf
+##
+## @param hdffile       full path to the hdf file
+## @param msbands       array of band filename patterns
+##
+## @return 0 for success
 ###############################################################################
 
-function getsdslist {
+getsdslist () {
     local hdffile="$1"
     local msbands=("${@:2}")
     
@@ -170,10 +191,25 @@ function getsdslist {
 
 
 ###############################################################################
-# wrapper for swath2grid
+## @brief wrapper for swath2grid
+##
+## @param infile        full path to the hdf file to extract from
+## @param outfile       full path output filename (template)
+## @param geolocfile    full path to the geolocation file
+## @param cx            center x coordanate
+## @param cy            center y coordanate
+## @param oul           upper left output coordanates "lx,uy"
+## @param olr           lower right output coordanates "rx,ly"
+## @param sds           sds to extract
+##
+## @return 0 for success, 1 for failure
+##
+## @details
+## if sds is "" all sds's will be extracted
+##
 ###############################################################################
 
-function swath2grid_wrap {
+swath2grid_wrap () {
     local infile="$1"
     local outfile="$2"
     local geolocfile="$3"
@@ -214,10 +250,21 @@ function swath2grid_wrap {
 }
 
 ###############################################################################
-# wrapper for crefl
+## @brief wrapper for crefl
+##
+## @param tmpdir    dir the hdf files are in
+## @param outfile   full path output filename (template)
+##
+## @return 0 for success, 1 for failure
+##
+## @details
+## global vars
+## @param creflfiles    array of 3 globs for the 1km, hkm, qkm files
+## @param creflbands    comma sepperated list of bands
+##
 ###############################################################################
 
-function crefl_wrap {
+crefl_wrap () {
     local tmpdir="$1"
     local outfile="$2"
 
@@ -239,10 +286,19 @@ function crefl_wrap {
 }
 
 ###############################################################################
-# get the corners and center of the image
+## @brief function to calc the corners and center of the image from the hdf
+##        metadata
+##
+## @param file      full path to the hdf file to read the metadata from
+##
+## @return 0 for success, 1 for failure
+##
+## @retval the corners and center
+##           "ulx urx lrx llx uly ury lry lly cx cy"
+##
 ###############################################################################
 
-function hdf_findcorners {
+hdf_findcorners () {
     local file="$1"
     
     local meta=$(dumpmeta "${file}" /dev/stdout)
@@ -409,10 +465,17 @@ function hdf_findcorners {
 
 
 ###############################################################################
-# function to test an image for day or night
+## @brief function to test an image for day or night
+##
+## @param file   full path to the hdf file to read the metadata from
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout value of the DAYNIGHTFLAG metadata object
+##
 ###############################################################################
 
-function hdf_get_daynight {
+hdf_get_daynight () {
     local file="$1"    
     
     dumpmeta "$file" /dev/stdout |\
@@ -423,10 +486,24 @@ function hdf_get_daynight {
 }
 
 ###############################################################################
-# function to handle a hdf
+## @brief main function to handle a hdf
+##
+## @param lastfile   the main file
+## @param tmpdir     temp dir to use for proccessing
+## @param ts         timestamp of this file
+## @param origdir    dir all files are assumed to be in
+## @param files      array of the file and its asociated files
+##
+## @return 0 for success, 1 for failure
+##
+## @details
+## global vars
+## @param dayonly       dayonly flag proccess only daytime files
+## @param creflfiles    array of 3 globs for the 1km, hkm, qkm files
+##
 ###############################################################################
 
-function dohdf {
+dohdf () {
     local lastfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -573,7 +650,7 @@ function dohdf {
         
         for msb in "${allmsbands[@]}" "${allmsmaskbands[@]}"
         do
-            ofile=$(hdf_findmatchingfile "${tmpdir}/${base}*${msb}*") \
+            ofile=$(globfile "${tmpdir}/${base}*${msb}*") \
              || { printerror "Can not find file "${tmpdir}/${base}*${msb}*"" ;
                   return;
                 }
@@ -591,7 +668,7 @@ function dohdf {
             
             local type=$(gdalinfo "${tmpdir}/${ofile}" | grep "Type=" | sed 's/.*Type=\(\w*\).*/\1/' | head -n 1)
             
-            ##### FIXME we need to handle more data types ####yo
+            ##### FIXME we need to handle more data types ####
             ##### FIXME if we were to op any msmaskbands we could break things #####
             
             if [[ type == "Int16" ]]

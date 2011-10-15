@@ -19,9 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-wms_srs='EPSG:900913 EPSG:4326 EPSG:3857'
-myprojection=$(cat <<EOF
-
+wms_srs='EPSG:900913 EPSG:4326 EPSG:3857';
+myprojection='
     PROJECTION
      'init=epsg:4326'
      'proj=longlat'
@@ -31,14 +30,31 @@ myprojection=$(cat <<EOF
      ''
     END
 
-EOF
-)
+';
 
 ###############################################################################
-# function to write out a map file with no min max
+## @brief function to write out a map file with no min max
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param latest    "latest" or "previous" if we are making lateste or previous
+##                     map
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vectorstyle     mapserver STYLE tags for vector data
+## @param offsite         mapserver OFFSITE tags
+## 
 ###############################################################################
 
-function writemap_nominmax {
+writemap_nominmax () {
     local ts="$1"
     local extent="$2"
     local latest="$3"
@@ -79,7 +95,7 @@ function writemap_nominmax {
     END
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
-
+    $offsite
     PROCESSING "RESAMPLE=AVERAGE"
   END
 EOF
@@ -121,10 +137,29 @@ EOF
 }
 
 ###############################################################################
-# function to write out a map file with overview
+## @brief function to write out a map file with overview
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param scale     scale to switch between hires and overview layers
+## @param latest    "latest" or "previous" if we are making lateste or previous
+##                     map
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vectorstyle     mapserver STYLE tags for vector data
+## @param offsite         mapserver OFFSITE tags
+## 
 ###############################################################################
 
-function writemap_withover {
+writemap_withover () {
     local ts="$1"
     local extent="$2"
     local scale="$3"
@@ -232,10 +267,29 @@ EOF
 }
 
 ###############################################################################
-# function to write out a map file without a overview layer
-###############################################################################
+## @brief function to write out a map file without a overview layer
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param scale     scale to switch between hires and overview layers
+## @param latest    "latest" or "previous" if we are making lateste or previous
+##                     map
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vectorstyle     mapserver STYLE tags for vector data
+## @param offsite         mapserver OFFSITE tags
+##
+#################################################################################
 
-function writemap_noover {
+writemap_noover () {
     local ts="$1"
     local extent="$2"
     local latest="$3"
@@ -312,10 +366,23 @@ EOF
 }
 
 ###############################################################################
-# function to write out a map file for newworld
+## @brief function to write out a map file for newworld
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+##
 ###############################################################################
 
-function writemap_NewWorld {
+writemap_NewWorld () {
     local ts="$1"
     local extent="$2"
     
@@ -351,15 +418,29 @@ EOF
 }
 
 ##############################################################################
-# main writemap function
+## @brief main writemap function
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param latest    timestalp of the latest layer
+## @param prev      timestalp of the previous layer
+## @param reover    flag to mark the job as a -reover
+##
+## @return 0 for success
+##
+## @details
+## global vars
+
 ##############################################################################
 
-function writemap {
+
+writemap () {
     local ts="$1"
     local extent="$2"
     local latest="$3"
     local prev="$4"
     local reover="$5"
+    #FIXME scale var is missing
     
     if istrue "$doovr" 0
     then
@@ -416,10 +497,21 @@ function writemap {
 }
 
 ###############################################################################
-# function to add an include line in the main mapfile
+## @brief function to add an include line in the main mapfile
+##
+## @param ts        timestamp of the layer
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param dsname          name of the dataset
+## @param outdir          dataset output dir
+## @param mapfile         full pathname to the projects main mapfile
+##
 ###############################################################################
 
-function addinclude {
+addinclude () {
     local ts="$1"
 
     if ! grep $mapfile -e "${outdir}/${dsname}${ts}.map" > /dev/null
@@ -442,10 +534,21 @@ EOF
 
 
 ###############################################################################
-# function to add an include line in the NewWorld mapfile
+## @brief function to add an include line in the NewWorld mapfile
+##
+## @param ts        timestamp of the layer
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param dsname              name of the dataset
+## @param outdir              dataset output dir
+## @param NewWorld_mapfile    full pathname to the projects main NewWorld_mapfile
+##
 ###############################################################################
 
-function addinclude_NewWorld {
+addinclude_NewWorld () {
     ts="$1"
 
     if [ -f "$NewWorld_mapfile" ] &&  ! grep "$NewWorld_mapfile" -e "${outdir}/${dsname}${ts}.map" > /dev/null
@@ -456,11 +559,22 @@ function addinclude_NewWorld {
 }
 
 ###############################################################################
-# function to add the main mapfile if its missing
+## @brief function to add the main mapfile if its missing
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param project         name of the project
+## @param outdir          dataset output dir
+## @param mapfile         full pathname to the projects main mapfile
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param urlcgibin       url for the projects mapserver cgibin
+##
 ###############################################################################
 
-function write_main_map {
-
+write_main_map () {
 
 cat > "$mapfile" << EOF
 

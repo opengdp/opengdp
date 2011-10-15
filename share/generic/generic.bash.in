@@ -39,15 +39,23 @@ source @GENERICDIR@/newearthexplorer.bash
 
 
 ###############################################################################
-# est completion time meter
+## @brief print est completion time meter to stdout
+##
+## @param started    time job started UNIXTIME
+## @param lines      total number of jobs
+## @param donelines  jobs completed
+##
+## @return 0 for success
+##
 ###############################################################################
 
-function comp_meter {
+comp_meter () {
 
     started=$1
     lines=$2
     donelines=$3
     
+    #FIXME use locals
     decdone=$(fcalc "$donelines / $lines")
     percdone=$(fcalc "scale = 0; $decdone * 100")
     elap=$(($(date +%s) - started))
@@ -58,12 +66,17 @@ function comp_meter {
 }
 
 ###############################################################################
-# multi proceessing loop
+## @brief multi proceessing loop
+##
+## @param mirrorfile     the mirror file
+##
+## @return 0 for success
+##
 ###############################################################################
 
-function mainloop {
+mainloop () {
     local mirrorfile="$1"
-    
+    #FIXME use locals
     ((doing=0))
     
     ##### open a fd to a named pipe #####
@@ -122,19 +135,24 @@ function mainloop {
 }
 
 ###############################################################################
-# usage
+## @brief print usage
+##
+## @return 0 for success
+##
 ###############################################################################
 
-function usage {
-
+usage () {
+#FIXME add --reindex
 echo "$1 [ -h ] || [ -v ] || | [ -rebuild ] || [ -readdo ] || [ -retindex ] ||"
 echo "                            [ -reover ] || [ -remapfile || [ -regeoext ]"
 }
 
 ###############################################################################
-# sub main function
+## @brief sub main function
+##
 ###############################################################################
 
+#FIXME use locals
 opt_none=0
 opt_rebuild=1
 opt_readdo=2
@@ -615,10 +633,13 @@ function sub_main {
 }
 
 ###############################################################################
-# main
+## @brief main
 ###############################################################################
 
-function main {
+#FIXME use locals
+#FIXME exit with error code
+
+main () {
     
     ##### project #####
 

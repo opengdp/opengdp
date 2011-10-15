@@ -22,11 +22,26 @@
 
  
 ###############################################################################
-# function to follow redirects on new earth explorer
-#
+## @brief recursive function to follow redirects on new earth explorer
+##
+## @param url       url to return if no redirect
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param headers   header file
+## @param cookie    cookie file
+## @param outfile   output file
+##
+## @return 0 for success
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args a standard set of arguments for curl
+##
 ###############################################################################
 
-function NEE_redirect {
+NEE_redirect () {
     local url="$1"
     local referer="$2"
     local tmpdir="$3"
@@ -102,13 +117,31 @@ function NEE_redirect {
 }
 
 ###############################################################################
-# function to log into new earth explorer
-#
-# vars NewEarthExplorer_user NewEarthExplorer_pass must be set
-#
+## @brief function to log into new earth explorer
+##
+## @param url       url to connect to
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param oldcookie last coockie file
+## @param cookie    cookie file
+## @param headers   header file
+## @param outfile   output file
+##
+## @return 0 for success 1 for failure
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args         a standard set of arguments for curl
+## @param NewEarthExplorer_user username for login
+## @param NewEarthExplorer_pass password for login
+##
+## vars NewEarthExplorer_user NewEarthExplorer_pass must be set
+##
 ###############################################################################
 
-function NEE_login {
+NEE_login () {
     local url="$1"
     local referer="$2"
     local tmpdir="$3"
@@ -146,10 +179,27 @@ function NEE_login {
 }
 
 ###############################################################################
-# function std curl call with a recursive redirect
+## @brief function std curl call with a recursive redirect
+##
+## @param url       url to connect to
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param oldcookie last coockie file
+## @param cookie    cookie file
+## @param headers   header file
+## @param outfile   output file
+##
+## @return 0 for success 1 for failure
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args         a standard set of arguments for curl
+##
 ###############################################################################
 
-function NEE_curl {
+NEE_curl () {
     local url="$1"
     local referer="$2"
     local tmpdir="$3"
@@ -196,17 +246,28 @@ function NEE_curl {
 
 
 ###############################################################################
-# main function to get a file from new earth explorer
-#
-# vars NewEarthExplorer_user NewEarthExplorer_pass must be set
-#
-# usage: NewEarthExplorer_get "<url> <outdir>
-# http://edcsns17.cr.usgs.gov/NewEarthExplorer/order/process?node=RS&dataset_name=LANDSAT_ETM_SLC_OFF&ordered=LE71270312011259EDC00
+## @brief main function to get a file from new earth explorer
+##
+## @param url       url for the file
+## @param outdir    output dir
+##
+## @return 0 for success 1 for failure
+##
+## @details
+## global vars
+## @param NewEarthExplorer_user username for login
+## @param NewEarthExplorer_pass password for login
+##
+## vars NewEarthExplorer_user NewEarthExplorer_pass must be set
+##
+## usage: NewEarthExplorer_get "<url> <outdir>
+## @n http://edcsns17.cr.usgs.gov/NewEarthExplorer/order/process?node=RS&dataset_name=LANDSAT_ETM_SLC_OFF&ordered=LE71270312011259EDC00
+##
 ###############################################################################
 
-function NewEarthExplorer_get {
+NewEarthExplorer_get () {
     local url="$1"
-    local oldtmpdir="$2"
+    local outdir="$2"
     
     local urlenc="$(url_encode "$url")"
     
@@ -230,7 +291,7 @@ function NewEarthExplorer_get {
         --header "Connection: keep-alive" )
 
     local tmpdir
-    tmpdir=$(mktemp -d -p "${oldtmpdir}" "${dsname}XXXXXXXXXX") #|| { printerror "create tmpdir" ; return 1 }
+    tmpdir=$(mktemp -d -p "${outdir}" "${dsname}XXXXXXXXXX") #|| { printerror "create tmpdir" ; return 1 }
     
 
     ##### get the login page #####
@@ -338,7 +399,7 @@ function NewEarthExplorer_get {
             outfile=$(grep "${tmpdir}/download.header" -e filename= |\
                       sed 's/.*filename=//' |\
                       tr -d "\r" )
-            mv "${tmpdir}/download.out" "$outfile"
+            mv "${tmpdir}/download.out" "${outdir}/$outfile"
             
             echo "$outfile"
         fi

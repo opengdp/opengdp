@@ -19,13 +19,30 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-have_hdf="@HAVE_HDF@"
+
+have_hdf="@HAVE_HDF@";
+
+
 
 ###############################################################################
-# function to process a zip in a multiband case
+## @brief function to process a zip in a multiband case
+##
+## @param zipfile    zip file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param subdsnames  array of subdsnames
+## @param msbands     arrays of band filename patterns to use
+## @param panband     panban panband filename pattern to use
+##
 ###############################################################################
 
-function dozip_multiband {
+dozip_multiband () {
 
     local zipfile="$1"
     local tmpdir="$2"
@@ -45,7 +62,7 @@ function dozip_multiband {
     local msband
     
     ##### loop over the subdataset array #####
-    
+    # FIXME add mask bands
     if [[ ${#subdsnames[@]} == 0 ]]
     then
         local subdsnames=( "" )
@@ -115,10 +132,24 @@ function dozip_multiband {
 }
 
 ###############################################################################
-# function to process a tar in a multiband case
+## @brief function to process a tar in a multiband case
+##
+## @param zipfile    tar file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param subdsnames  array of subdsnames
+## @param msbands     arrays of band filename patterns to use
+## @param panband     panban panband filename pattern to use
+##
 ###############################################################################
 
-function dotar_multiband {
+dotar_multiband () {
 
     local zipfile="$1"
     local tmpdir="$2"
@@ -152,7 +183,7 @@ function dotar_multiband {
     zipinfo="$(tar -t${switch}f "${origdir}/${zipfile}")"
 
     ##### for now we just assume tiff, id like to make this better later #####
-    
+    #FIXME add mask bands
     local i=0
     local files
     ##### loop over the subdataset array #####
@@ -228,12 +259,19 @@ function dotar_multiband {
 }
 
 ###############################################################################
-# function to take a list of files on stdin and make a bash array declaration
-# script of files with the same basename in each array
-# this produces one local array per line named files
-###############################################################################'
+## @brief function to take a list of files on stdin and make a bash array declaration
+## script of files with the same basename in each array
+## this produces one local array per line named files
+##
+## @param ext    the extension on the files to mach associated files to
+## @param stdin  PIPE of files names to search
+##
+## note this function creates bash arrays that are outputed to stdout to be
+## eval by the calling function
+## 
+###############################################################################
 
-function find_asoc_files {
+find_asoc_files () {
     ext=$1
     
     awk -v "ext=$ext" '
@@ -287,12 +325,18 @@ END {
 }
 
 ###############################################################################
-# function to take a list of files on stdin and make a bash array declaration
-# script of files with the same basename in each array
-# this produces one local array per line named files
-###############################################################################'
+## @brief function to take a list of files on stdin and make a bash array declaration
+## script of files with the same basename in each array
+## this produces one local array per line named files
+## @param ext    the extension on the files to mach associated files to
+## @param stdin  PIPE of files names to search
+##
+## note this function creates bash arrays that are outputed to stdout to be
+## eval by the calling function
+## 
+###############################################################################
 
-function find_asoc_shape_files {
+find_asoc_shape_files () {
     ext=$1
     
     awk -v "ext=$ext" '
@@ -347,10 +391,23 @@ END {
 
 
 ###############################################################################
-# function to process a gzip file
+## @brief function to process a gzip file
+##
+## @param zipfile    gzip file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param vector
+## @param msbands
+##   
 ###############################################################################
 
-function dogzip {
+dogzip () {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -392,11 +449,24 @@ function dogzip {
 
 }
 
-################################################################################
-# function to process a gzip file
+###############################################################################
+## @brief function to process a bzip file
+##
+## @param zipfile    bzip file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param vector
+## @param msbands
+##   
 ###############################################################################
 
-function dobzip {
+dobzip () {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -438,10 +508,24 @@ function dobzip {
 
 
 ###############################################################################
-# function to process a zip file
+## @brief function to process a zip file
+##
+## @param zipfile    zip file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param vector
+## @param msbands
+## @param extglob
+##   
 ###############################################################################
 
-function dozip {
+dozip () {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -581,10 +665,24 @@ function dozip {
 }
 
 ###############################################################################
-# function to process a tar.gz file
+## @brief function to process a tar.gz file
+##
+## @param zipfile    tar file its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
+## @details
+## global vars
+## @param vector
+## @param msbands
+## @param extglob
+##   
 ###############################################################################
 
-function dotar {
+dotar () {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -747,10 +845,18 @@ function dotar {
 }
 
 ###############################################################################
-# function to process a kmz file
+## @brief function to process a kmz file
+##
+## @param zipfile    kmzfile its assumed to be in origdir
+## @param tmpdir     temp dir to store output in
+## @param ts         timestamp of the current file
+## @param origdir    dir the original files are in
+##
+## @return 0 on success, 1 on fail
+##
 ###############################################################################
 
-function dokmz {
+dokmz () {
     local zipfile="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -808,10 +914,27 @@ function dokmz {
 
 
 ###############################################################################
-# function loop over the subdataset array and call a callback function
+## @brief function loop over the subdataset array and call a callback function
+##
+## @param cbfunc     callback function
+## @param cbargs     array of args to pass to the callback function
+##
+## @return 0 on success, 1 on fail of the callback
+##
+## @details
+## global vars
+## @param subdsnames      array of subdsnames
+## @param msbands*        arrays of band filename patterns
+## @param msmaskbands*    array of mask bands
+## @param mspreproc_lut*  lut to scale bands with before any other proccessing
+## @param panband*        panban panband filename pattern
+## @param mscalc*         ITK calculation to build a product
+## @param lut*            lut to recale output
+## @param msgradient*     gradient to colorize single band image
+##   
 ###############################################################################
 
-function subds_iterator {
+subds_iterator () {
     local cbfunc="$1"
     local cbargs=("${@:2}")
     
@@ -874,19 +997,19 @@ function subds_iterator {
 }
     
 ###############################################################################
-# function to get the pan band from an array of files
+## @brief function to get the pan band from an array of files
+##
+## @param files      array of files to search
+##
+## @details
+## global vars
+## @param panband*        panban panband filename pattern
+##
 ###############################################################################
 
-function findpan_cb {
-    local files=("${@:1}")
-    
-    if [ -n "$panband" ]
-    then
-        find_band_file "$panband" "${files[@]}" || { printerror ; return; }
-    fi
-}
 
-function findpan {
+
+findpan () {
     local files=("${@:1}")
     
     ##### find the pan band #####
@@ -896,11 +1019,36 @@ function findpan {
     
 }
 
+findpan_cb () {
+    local files=("${@:1}")
+    
+    if [ -n "$panband" ]
+    then
+        find_band_file "$panband" "${files[@]}" || { printerror ; return; }
+    fi
+}
+
 ###############################################################################
-# function to get the basename of a ms file
+## @brief function to get the basename of a set of ms files
+##
+## @param files      array of files to search
+##
+## @details
+## global vars
+## @param msbands*        arrays of band filename patterns
+##
 ###############################################################################
 
-function getms_base_cb {
+getms_base () {
+    local files=("${@:1}")
+    
+    ##### find the base name #####
+
+    subds_iterator "getms_base_cb" "${files[@]}" | head -n 1
+    
+}
+
+getms_base_cb () {
     local files=("${@:1}")
     
     if [ -n "$panband" ]
@@ -913,21 +1061,21 @@ function getms_base_cb {
     fi
 }
 
-function getms_base {
-    local files=("${@:1}")
-    
-    ##### find the pan band #####
-    ##### FIXME this only assumes 1 posible panband #####
-    
-    subds_iterator "getms_base_cb" "${files[@]}" | head -n 1
-    
-}
 
 ###############################################################################
-# function to decide howto deal with a file
+## @brief function to decide howto deal with a file
+##
+## @param file       main file to proccess
+## @param ext        extension of the main file
+## @param tmpdir     temp dir to use for proccessing
+## @param ts=        timestamp of this file
+## @param origdir    dir all files are assumed to be in
+## @param files      array of the file and its asociated files
+##
+## 
 ###############################################################################
 
-function dofile_sub {
+dofile_sub () {
     local file="$1"
     local ext="$2"
     local tmpdir="$3"
@@ -1036,10 +1184,29 @@ function dofile_sub {
 }
 
 ###############################################################################
-# function to proccess a file
+## @brief function to proccess a file
+## 
+## @param myline     line from a ftp mirror file or a url for NewEarthExplorer
+##
+## @details
+## global vars
+## @param indir                   dir the original file(s) will be placed in
+## @param outdir                  dir to place the output in
+## @param NewEarthExplorer_user   username for the NewEarthExplorer login if this is
+##                            set myline is assumed to be a NewEarthExplorer url
+## @param DWH_REBUILD             flag to say if were in rebuild mode -rebuild
+## @param tmp                     the temp dir
+## @param ignoredir               flag to ignore ignore the sub dir name files are
+##                            placed in
+## @param DEBUG_dofile            flag to print out debug info and return
+## @param subdsnames              array of subdsnames
+##
+## note this function echoes to fd 3 when finished and is called by mainloop
+## multi proccesseing
+##
 ###############################################################################
 
-function dofile {
+dofile () {
     myline=$1
 
     local sourcedir=${indir//\/\///}
@@ -1054,7 +1221,7 @@ function dofile {
     }
     
     ##### new earth explorer #####
-    
+    #FIXME add error checking
     if [ -n "$NewEarthExplorer_user" ] && ! istrue "$DWH_REBUILD"
     then
         local file

@@ -19,13 +19,20 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-have_otb="@HAVE_OTB@"
+have_otb="@HAVE_OTB@";
 
 ###############################################################################
-# function to write a vrt to rescale with a lut
+## @brief function to write a vrt to rescale with a lut
+##
+## @param infile    full path to the input file
+## @param outvrt    full path to the vrt to create
+## @param lut       the lut
+##
+## @return 0 for success, 1 for failure
+##
 ###############################################################################
 
-function mk_lut_vrt {
+mk_lut_vrt () {
     local infile="$1"
     local outvrt="$2"
     local lut="$3"
@@ -76,10 +83,17 @@ EOF
 
 
 ###############################################################################
-# function to build a 3 band vrt out of a 1 band image with a gradient
+## @brief function to build a 3 band vrt out of a 1 band image with a gradient
+##
+## @param infile    full path to the input file
+## @param outvrt    full path to the vrt to create
+## @param gradient  the gradient
+##
+## @return 0 for success, 1 for failure
+##
 ###############################################################################
 
-function mk_gradient_vrt {
+mk_gradient_vrt () {
     local infile="$1"
     local outvrt="$2"
     local gradient="$3"
@@ -162,12 +176,18 @@ EOF
 
 
 ###############################################################################
-# function to build a 3 band vrt out of a 1 band image
+## @brief function to build a 3 band vrt out of a 1 band image
+##
+## @param infile    full path to the input file
+## @param outvrt    full path to the vrt to create
+##
+## @return 0 for success, 1 for failure
+##
 ###############################################################################
 
-function mk_3of1_vrt {
-    in=$1
-    out=$2
+mk_3of1_vrt () {
+    infile=$1
+    outvrt=$2
     
     ##### make a temp dir #####
     
@@ -176,15 +196,15 @@ function mk_3of1_vrt {
     
     ##### build a temp vrt to get most of our info from #####
 
-    gdal_translate -of VRT "$in" "${tmpdir}/mk_3of1_vrt.vrt" || { printerror ; return; }
+    gdal_translate -of VRT "$infile" "${tmpdir}/mk_3of1_vrt.vrt" || { printerror ; return; }
     
     ##### get the band type #####
     
-    local type=$(get_band_type "$in" 1)
+    local type=$(get_band_type "$infile" 1)
 
     keep=$(sed "${tmpdir}/mk_3of1_vrt.vrt" -e 's:</VRTDataset>::')
     
-    cat > "$out" << EOF
+    cat > "$outvrt" << EOF
 $keep
   <VRTRasterBand dataType="$type" band="2">
   </VRTRasterBand>
@@ -196,10 +216,19 @@ EOF
 }
 
 ###############################################################################
-# function to build a single mask vrt out of an array of masks
+## @brief function to build a single mask vrt out of an array of masks
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param masks     the array of masks to and together
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the full path to the final output file
+##
 ###############################################################################
 
-function combine_masks {
+combine_masks () {
     local base="$1"
     local tmpdir="$2"
     local masks=("${@:3}")
@@ -243,11 +272,21 @@ function combine_masks {
 }
 
 ###############################################################################
-# function to make an array of files with tmpdir prefixed that match
-# the msbands array
+## @brief function to make an array of files with tmpdir prefixed that match
+##        the msbands array
+##
+## @param tmpdir        dir the files are in
+## @param nummsbands    number of msbands 
+## @param msbands       array of mabands
+## @param files         array of filenames
+##
+## @return 0 for success
+##
+## @retval stdout the array of files with tmpdir prefixed
+##
 ###############################################################################
 
-function ms2tmpfiles {
+ms2tmpfiles () {
     local tmpdir="$1"
     local nummsbands="$2"
     local msbands=( "${@:3:$2}" )
@@ -278,10 +317,19 @@ function ms2tmpfiles {
 }
 
 ###############################################################################
-# function to make an array of files that match the msbands array
+## @brief function to make an array of files that match the msbands array
+##
+## @param nummsbands    number of msbands 
+## @param msbands       array of mabands
+## @param files         array of filenames
+##
+## @return 0 for success
+##
+## @retval stdout the array of files
+##
 ###############################################################################
 
-function ms2files {
+ms2files () {
     local nummsbands="$1"
     local msbands=( "${@:2:$1}" )
     local files=( "${@:$((2+$1))}" )
@@ -310,10 +358,23 @@ function ms2files {
 }
 
 ###############################################################################
-# function to fill nodata
+## @brief function to fill nodata
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param file      full path to the input file
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the full path to the final output file
+##
+## @detail
+## global vars
+## @param fillnodata_md  the maxdistance to search for valid values to fill with
+##
 ###############################################################################
 
-function fillnodata {
+fillnodata () {
     local base="$1"
     local tmpdir="$2"
     local file="$3"
@@ -354,10 +415,26 @@ function fillnodata {
 }
 
 ###############################################################################
-# function mscalc
+## @brief function to run otb calc to do band math
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param file      full path to the input file
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the full path to the final output file
+##
+## @detail
+## global vars
+## @param mscalc*       the ITK math to use with otbcalc
+## @param msgradient*   the gradient to scale the output with if set
+## 
+## if msgradient is not set the result will be a black and white image (3 bands)
+##
 ###############################################################################
 
-function mscalc {
+mscalc () {
     local base="$1"
     local tmpdir="$2"
     local file="$3"
@@ -396,10 +473,20 @@ function mscalc {
 }
 
 ###############################################################################
-# function to pansharpen an image
+## @brief function to pansharpen an image
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param panfile   the panfile to sharpen with
+## @param file      full path to the input file
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the full path to the final output file
+##
 ###############################################################################
 
-function pansharpen {
+pansharpen () {
     local base="$1"
     local tmpdir="$2"
     local panfile="$3"
@@ -441,10 +528,20 @@ function pansharpen {
 }
 
 ###############################################################################
-# function to make a rgb image and a band image into a rgba vrt
+## @brief function to make a rgb image and a band image into a rgba vrt
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param img_rgb   full path to the rgb image
+## @param img_a     full path to the rgb band
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the full path to the final output file
+#
 ###############################################################################
 
-function combine_rgb_a {
+combine_rgb_a () {
     local base="$1"
     local tmpdir="$2"
     local img_rgb="$3"
@@ -487,14 +584,27 @@ function combine_rgb_a {
 }
 
 ###############################################################################
-# function to proccess a multiband image
+## @brief function to preproccess bands with a lut
+##
+## @param base      products basename
+## @param tmpdir    the dir to find the the input files in
+## @param newtmpdir the dir to place the output files in
+##
+## @return 0 for match, 1 for no match
+##
+## @retval stdout the full path to the final output files
+##
+## @detail
+## global vars
+## @param mspreproc_lut*  lut to scale bands with before any other proccessing
+##
 ###############################################################################
 
-function preproc_lut {
+preproc_lut () {
     local base="$1"
     local tmpdir="$2"
     local newtmpdir="$3"
-    local file="$4"
+
     
     for ((i = 0; i < "${#mspreproc_lut[@]}"  ; i += 2))
     do
@@ -514,10 +624,17 @@ function preproc_lut {
 }
 
 ###############################################################################
-#function to print out a list of color switches for a washout nearblack
+## @brief function to print out a list of color switches for a washout nearblack
+##
+## @param numbands      number of bands
+##
+## @return 0 for success
+##
+## @retval stdout the list of color switches
+##
 ###############################################################################
 
-function washout_switches {
+washout_switches () {
     local numbands=$1
     
     for ((i = 0 ; i < $(bc <<< "2^${numbands}") - 1 ; i++ ))
@@ -528,13 +645,22 @@ function washout_switches {
 }
 
 ###############################################################################
-# function to do a washout nearblack
+## @brief function to do a washout nearblack
+##
+## @param base      products basename
+## @param tmpdir    the dir to create the files in
+## @param file      full path to the input file
+##
+## @return 0 for success, 1 for failure
+##
+## @retval stdout the final output files with no path
+##
 ###############################################################################
 
-function washout_nearblack {
+washout_nearblack () {
     local base="$1"
-    local file="$2"
-    local tmpdir="$3"
+    local tmpdir="$2"
+    local file="$3"
 
  
     local numbands
@@ -565,14 +691,36 @@ function washout_nearblack {
 }
         
 ###############################################################################
-# function to proccess a multiband image
+## @brief callback function to proccess a multiband image
+##
+## @param base          products basename
+## @param tmpdir        the dir the files are in
+## @param ts            timestamp of this item
+## @param isoriginal    flag to mark the image as original file
+##                            (dont delete = true)
+## @param panfile       the panfile to sharpen with
+## @param files         array of files
+##
+## @return 0 for success, 1 for failure
+##
+## @details
+## global vars
+## @param subdsnames      array of subdsnames
+## @param msbands*        arrays of band filename patterns
+## @param msmaskbands*    array of mask bands
+## @param mspreproc_lut*  lut to scale bands with before any other proccessing
+## @param panband*        panban panband filename pattern
+## @param mscalc*         ITK calculation to build a product
+## @param lut*            lut to recale output
+## @param msgradient*     gradient to colorize single band image
+##   
 ###############################################################################
 
 #FIXME panfile should just be in the file array and we should sort it out in this function
 # this will make other code easyer
 # there should be a function to get a list of all msbands, msmasks, mspans
 
-function doimg_multiband_cb {
+doimg_multiband_cb () {
 
     local base="$1"
     local tmpdir="$2"
@@ -750,7 +898,7 @@ function doimg_multiband_cb {
     if [[ "$type" != "Byte" ]] && ! istrue "$nearwhite"
     then
         
-        if wash=$( washout_nearblack "$base" "$originalfile" "${newtmpdir}") 
+        if wash=$( washout_nearblack "$base" "${newtmpdir}" "$originalfile" ) 
         then
 
             ##### add the alpha band vrt to the masks array #####
@@ -786,8 +934,33 @@ function doimg_multiband_cb {
     rm -r "$newtmpdir"
 
 }
+###############################################################################
+## @brief main function to proccess a multiband image
+##
+## @param base          products basename
+## @param tmpdir        the dir the files are in
+## @param ts            timestamp of this item
+## @param isoriginal    flag to mark the image as original file
+##                            (dont delete = true)
+## @param panfile       the panfile to sharpen with
+## @param files         array of files
+##
+## @return 0 for success, 1 for failure
+##
+## @details
+## global vars
+## @param subdsnames      array of subdsnames
+## @param msbands*        array of band filename patterns
+## @param msmaskbands*    array of mask bands
+## @param mspreproc_lut*  lut to scale bands with before any other proccessing
+## @param panband*        panban panband filename pattern
+## @param mscalc*         ITK calculation to build a product
+## @param lut*            lut to recale output
+## @param msgradient*     gradient to colorize single band image
+##  
+###############################################################################
 
-function doimg_multiband {
+doimg_multiband () {
     
     subds_iterator "doimg_multiband_cb" "$@"
 

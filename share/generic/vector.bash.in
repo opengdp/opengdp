@@ -1,10 +1,38 @@
-###############################################################################
-# function to transform a vector
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
 #
-# returns the dest vector
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+###############################################################################
+## @brief function to transform a vector
+##
+## @param img        full path to the input vector
+## @param tmpram     temp dir to place output in
+## @param info       ogrinfo output for vector
+## @param isoriginal flag to mark the vector as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+## 
 ###############################################################################
 
-function vector_warp {
+vector_warp () {
     local img="$1"
     local tmpram="$2"
     local info="$3"
@@ -36,10 +64,26 @@ function vector_warp {
 }
 
 ###############################################################################
-# function to proccess a single vector file
+## @brief function to proccess a single vector file
+##
+## @param img        full path to the input vector
+## @param tmpram     temp dir to place output in
+## @param ts         timestamp of the vector
+## @param info       ogrinfo output for vector
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+##
+## @details
+## global vars
+## @param ramdisk       if set, temp data will be wrote to a new temp dir here
+## @param outdir        datasets output dir
+## @param dsname        name of the dataset
+## @param s_srs         var to overide set projection
+##
 ###############################################################################
 
-function dovector {
+dovector () {
     local img="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -57,23 +101,6 @@ function dovector {
         local imgdir=""
     else
         local imgdir="${imgdir}/"
-    fi
-    
-    ##### if we need a debug do it and return #####
-
-    if [ -n "$DEBUG_dosubimg" ]
-    then            
-        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n islossy=%s\n isoriginal=%s\n " \
-              "$img" \
-              "$tmpdir "\
-              "$ts" \
-              "$imgfile" \
-              "$imgbase" \
-              "$imgext" \
-              "$imgdir" \
-              "$islossy" \
-              "$isoriginal"
-        return
     fi
 
     ##### double check the info #####

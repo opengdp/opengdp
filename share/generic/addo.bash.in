@@ -22,10 +22,17 @@
 
 
 ###############################################################################
-# function to add internal overviews to a file down to  64x64
+## @brief function to add internal overviews to a file down to  64x64
+## 
+## @param file the path/file to add overviews to
+##
+## @details
+## global vars
+## @param resample_alg  var that contains the gdal resample algorithm option
+##
 ###############################################################################
 
-function addo {
+addo () {
     local file="$1"
     local x
     local y
@@ -50,10 +57,20 @@ function addo {
     
 }
 ###############################################################################
-# function to add internal overviews to a file down to  64x64
+## @brief function to add internal overviews to a file down to  64x64
+##
+## @param file the path/file to add overviews to
+##
+## @details
+## global vars
+## @param resample_alg  the gdal resample algorithm option
+##
+## note this function echoes to fd 3 and is used when doing -readdo
+## multi proccesseing
+##
 ###############################################################################
 
-function readdo2 {
+readdo2 () {
     local file="$1"
     local x
     local y
@@ -80,10 +97,19 @@ function readdo2 {
 }
 
 ###############################################################################
-# function to rebuild internal overviews
+## @brief function to rebuild internal overviews -readdo
+##
+## @details
+## global vars 
+## @param tmp     the temp dir
+## @param outdir  the image output dir
+##
+## note this function calls mainloop which spawns limit number of readdo2
+## proccesses
+##
 ###############################################################################
 
-function readdo {
+readdo () {
     
     local tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX")
             
@@ -94,9 +120,6 @@ function readdo {
     rm -rf "${tmpdir}"
     
 }
-
-
-
 
 
 

@@ -19,8 +19,17 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+###############################################################################
+## @brief a line utility, it is missing on some systems
+## 
+## @param stdin     stream to read from
+## 
+## @return 0 for success
+## @retval stdout   first line read from stdin
+##
+###############################################################################
 
-function myline {
+myline () {
 
     local line
     
@@ -29,13 +38,19 @@ function myline {
 }
 
 ###############################################################################
-# function to print an error msg
-#
-# usage:
-#           cmd || printerror [ msg ] ; return
+## @brief function to print an error msg
+## 
+## @param ...   mesages to print
+##
+## @return the status of the the last cmd before printerror was called
+## @retval stderr   the complete error message
+##
+## @details
+## cmd || printerror [ msg ] ; return
+##
 ###############################################################################
 
-function printerror {
+printerror () {
 
     ecode=$?
     
@@ -46,10 +61,19 @@ function printerror {
 
 
 ###############################################################################
-# function to test for true
+## @brief function to test for true
+##
+## @param value     the value to test
+## @param default   the default return value if no match
+##
+## @return 0 for true, 1 for false
+##
+## @details
+## case insensitive matching of true/ false / yes / no / 0 (false)/ 1 (true)
+##
 ###############################################################################
 
-function istrue {
+istrue () {
     
    case "$1" in
         [nN][oO])
@@ -85,19 +109,38 @@ function istrue {
     
 }
 ###############################################################################
-# to remove dupe /'s from a path
+## @brief to remove dupe /'s from a path
+##
+## @param path  the path to fix
+##
+## @return 0 for success
+##
+## @retval stdout the path with missing /'s removed
+##
 ###############################################################################
 
-function fixpath {
+fixpath () {
 
     sed -r 's|[/]+|/|g' <<<"$1"
 }
 
 ###############################################################################
-# function to get the extent of the ds
+## @brief function to get the extent of the ds
+##
+## @param ts    the timestamp of the dataset
+##
+## @return 0 for success
+##
+## @retval stdout the extent "west south east north"
+##
+## @details
+## global vars
+## @param outdir      the datasets output dir
+## @param dsname      the name of the dataset
+##
 ###############################################################################
 
-function getextent {
+getextent () {
     ts="$1"
 
     ogrinfo -so -al "${outdir}/${dsname}${ts}.shp" |\
@@ -106,10 +149,18 @@ function getextent {
 }
 
 ###############################################################################
-# min a b
+## @brief min a b for floats
+##
+## @param a     first value
+## @param b     second value
+##
+## @return 0 for success, 1 for failure
+## 
+## @retval stdout the smallest value
+##
 ###############################################################################
 
-function fmin {
+fmin () {
     
     bc << EOF
 scale=20;
@@ -122,10 +173,18 @@ EOF
 }
 
 ###############################################################################
-# max a b
+## @brief max a b for floats
+##
+## @param a     first value
+## @param b     second value
+##
+## @return 0 for success, 1 for failure
+## 
+## @retval stdout the largest value
+##
 ###############################################################################
 
-function fmax {
+fmax () {
     
     bc << EOF
 scale=20;
@@ -138,10 +197,17 @@ EOF
 }
 
 ###############################################################################
-# frontend to bc for calcing floats
+## @brief frontend to bc for calcing floats
+##
+## @param ...   the calculation to perform
+##
+## @return 0 for success, 1 for failure
+## 
+## @retval stdout the calculation result
+##
 ###############################################################################
 
-function fcalc {
+fcalc () {
 
     if [[ $# -gt 0 ]]
     then
@@ -150,10 +216,15 @@ function fcalc {
 }
     
 ###############################################################################
-# frontend to bc for compareing floats
+## @brief frontend to bc for compareing floats
+##
+## @param ...   the comparison "1.0 < 30"
+##
+## @return 0 for true, 1 for false
+## 
 ###############################################################################
 
-function fcmp {
+fcmp () {
 
     local cond=0
     if [[ $# -gt 0 ]]
@@ -173,55 +244,70 @@ function fcmp {
 }
 
 ###############################################################################
-# convert sci noteation to dec
+## @brief convert sci notation to dec
+##
+## @param in    the scientific notation
+##
+## @return 0 for true, 1 for false
+##
+## @retval stdout the numper in decimal
+##
 ###############################################################################
 
-function fsci2dec {
+fsci2dec () {
     
     fcalc $(sed 's/e[+]*/*10^/g' <<< "$1")
 }
     
 ###############################################################################
-# function to get a ts from a lftp command
+## @brief function to get a ts from a lftp command
+##
+## @param stdin  the lines from the mirror file
+##
+## @return 0 for true, 1 for false
+##
+## @retval stdout the timestamps "20010520"
+##
 ###############################################################################
 
-RX_YMD='\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)'
-RX_MDY='\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{4\}\)'
-RX_YDJ='\([0-9]\{4\}\)\([0-9]\{3\}\)'
 
-Months=(january february march april may june july august september
-        october november december jan feb mar apr jun jul aug sep sept oct
-        nov dec)
+dodate () {
+    RX_YMD='\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)';
+    RX_MDY='\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{4\}\)';
+    RX_YDJ='\([0-9]\{4\}\)\([0-9]\{3\}\)';
 
-RX_LM='\('
+    Months=(january february march april may june july august september
+            october november december jan feb mar apr jun jul aug sep sept oct
+            nov dec);
 
-needor=0
-for m in "${Months[@]}"
-do
-    if istrue $needor
-    then
-        RX_LM="$RX_LM"'\|'
-    else
-        needor=1
-    fi
+    RX_LM='\(';
 
-    while read c
+    needor=0;
+    for m in "${Months[@]}" 
     do
-        RX_LM="${RX_LM}[$(tr "[a-z]" "[A-Z]" <<<"$c")${c}]"
-    done < <(fold -w1 <<<"$m")
-    
-done
-RX_LM="$RX_LM"'\)'
+        if istrue $needor
+        then
+            RX_LM="$RX_LM"'\|'
+        else
+            needor=1
+        fi
 
-RX_MLD="$RX_LM"'\([0-9]\{2\}\)'
+        while read c
+        do
+            RX_LM="${RX_LM}[$(tr "[a-z]" "[A-Z]" <<<"$c")${c}]"
+        done < <(fold -w1 <<<"$m")
+        
+    done;
+    RX_LM="$RX_LM"'\)';
+
+    RX_MLD="$RX_LM"'\([0-9]\{2\}\)';
 
 
-RX_USGSID='[A-Z]\{2\}[0-9]\{2\}'
-RX_PATHROW='[0-9]\{3\}[0-9]\{3\}'
-RX_LAT='[NS][0-9]\{2\}_[0-9]\{6\}'
-RX_LON='[EW][0-9]\{3\}_[0-9]\{6\}'
+    RX_USGSID='[A-Z]\{2\}[0-9]\{2\}';
+    RX_PATHROW='[0-9]\{3\}[0-9]\{3\}';
+    RX_LAT='[NS][0-9]\{2\}_[0-9]\{6\}';
+    RX_LON='[EW][0-9]\{3\}_[0-9]\{6\}';
 
-function dodate {
     sed -e "s:.*/${RX_USGSID}${RX_PATHROW}${RX_YMD}.*:jan 1 \1 - 1 month - 1 days + \2 months \3 days:g" \
         -e "s:.*/${RX_USGSID}${RX_LAT}${RX_LON}${RX_YMD}.*:jan 1 \1 - 1 month - 1 days + \2 months \3 days:g" \
         -e "s:.*/AST_L1[AB]E_[0-9]\{3\}_${RX_MDY}${RX_PATHROW}_${RX_MDY}.*:jan 1 \6 - 1 month - 1 days + \4 months \5 days:g" \
@@ -236,12 +322,21 @@ function dodate {
 }
 
 ###############################################################################
-# function to get the a list of new files
+## @brief function to get the a list of new files
+##
+## @param mirrorfile    file to store the lftp commands in
+## @param pattern       include pattern to search for on the site
+##
+## @return 0 for true
+
 ###############################################################################
 
-function getlist {
+getlist () {
     local mirrorfile="$1"
     local pattern="$2"
+    #FIXME use locals
+    #FIXME check for errors
+    #FIXME do the pattern matching stuff in awk
     
     ##### get the list of files on the site #####
     
@@ -383,47 +478,20 @@ function getlist {
     
 }
 
-
-
-
-
-function dotc_old {
-
-(
-    for map in $(find $outdir -name "*.map" | sort )
-    do
-        if istrue "$doovr" 1
-        then
-            layer=$(grep "$map" -e GROUP | cut -d "'" -f 2 | uniq )
-        else
-            layer=$(grep "$map" -e NAME  | cut -d "'" -f 2 | uniq )
-        fi
-        
-        cat << EOF
-
-[${layer}]
-type=WMS
-url=${urlcgibin}?
-layers=${layer}
-extension=png
-tms_type=google
-levels=24
-spherical_mercator=true
-
-EOF
-
-    done
-) > ${basedir}/${dsname}.tilecache.conf
-}
-
 ################################################################################
-# function to get the geotransform
-#
-# usage:
-#       read xo xd xr yo yr yd < <(get_transform "myfile.tif")
+## @brief function to get the geotransform
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the geotransform "xo xd xr yo yr yd"
+##
+## @details
+## read xo xd xr yo yr yd < <(get_transform "myfile.tif")
+##
 ################################################################################
 
-function get_transform {
+get_transform () {
     local infile="$1"
     local xo
     local xd
@@ -455,10 +523,16 @@ function get_transform {
 }
 
 ###############################################################################
-# function to get the size of an image
+## @brief function to get the size of an image
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the size of the image "x y"
+##
 ###############################################################################
 
-function get_size {
+get_size () {
 
     gdalinfo $1 |\
      grep -e "Size is" |\
@@ -467,10 +541,16 @@ function get_size {
 }
 
 ###############################################################################
-# function to get the pixel size
+## @brief function to get the pixel size
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the pixel size "dx dy"
+##
 ###############################################################################
 
-function get_pixelsize {
+get_pixelsize() {
 
     gdalinfo "$1" | 
      grep -e "Pixel Size" |\
@@ -478,10 +558,16 @@ function get_pixelsize {
 }
 
 ###############################################################################
-# function to get the origin
+## @brief function to get the origin
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the origin of the image
+##
 ###############################################################################
 
-function get_origin {
+get_origin () {
 
     gdalinfo "$1" | \
      grep -e "Origin" |\
@@ -489,20 +575,32 @@ function get_origin {
 }
 
 ###############################################################################
-# function to get the number of bands
+## @brief function to get the number of bands
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the number of bands
+##
 ###############################################################################
 
-function get_num_bands {
+get_num_bands () {
     gdalinfo "$1" |\
      grep "^Band " |\
      wc -l
 }
 
 ###############################################################################
-# function to get a bands type
+## @brief function to get a bands type
+##
+## @param image     full path to the image file
+## @param band      band number  
+## @return 0 on success 1 on failure
+## @retval stdout the type
+##
 ###############################################################################
 
-function get_band_type {
+get_band_type () {
     gdalinfo "$1" |\
      grep "^Band $2 " |\
      grep "Type=" |\
@@ -511,10 +609,16 @@ function get_band_type {
 }
 
 ###############################################################################
-# function to get a the srs of an image
+## @brief function to get a the srs of an image
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the srs
+##
 ###############################################################################
 
-function get_srs {
+get_srs () {
     gdalinfo "$1" |\
      sed -n '/PROJCS\|GEOGCS/,${//p;/^   /p;}' |\
      uniq |\
@@ -524,26 +628,22 @@ function get_srs {
 }
 
 ###############################################################################
-# an array of gdal types
+## @brief an array of gdal types
 ###############################################################################
 
-GDAL_TYPES=( Byte UInt16 Int16 UInt32 Int32 
-             Float32 Float64)
+GDAL_TYPES=( Byte UInt16 Int16 UInt32 Int32 Float32 Float64);
 
 ###############################################################################
-# function encode a url
+## @brief encode a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the encoded url
+##
 ###############################################################################
 
-function url_encode_awk {
-    LANG=C awk '
-$1 == "20"                    { printf("%s",   "+"); next } # space becomes plus
-$1 ~  /0[adAD]/               {                      next } # strip newlines
-$2 ~  /^[a-zA-Z0-9.*()\/-]$/  { printf("%s",   $2);  next } # pass through what we can
-                              { printf("%%%s", $1)        } # take hex value of everything else
-'
-}
-
-function url_encode {
+url_encode () {
     if ! [ -n "$1" ]
     then
         return 1
@@ -560,11 +660,26 @@ function url_encode {
 
 }
 
+url_encode_awk () {
+    LANG=C awk '
+$1 == "20"                    { printf("%s",   "+"); next } # space becomes plus
+$1 ~  /0[adAD]/               {                      next } # strip newlines
+$2 ~  /^[a-zA-Z0-9.*()\/-]$/  { printf("%s",   $2);  next } # pass through what we can
+                              { printf("%%%s", $1)        } # take hex value of everything else
+'
+}
+
 ###############################################################################
-# function to get the query part of a url
+## @brief function to get the query part of a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the query
+##
 ###############################################################################
 
-function url_get_query {
+url_get_query () {
     if ! [ -n "$1" ]
     then
         return 1
@@ -581,10 +696,16 @@ function url_get_query {
 }
     
 ###############################################################################
-# function to get the hash part of a url
+## @brief function to get the hash part of a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the hash
+##
 ###############################################################################
 
-function url_get_hash {
+url_get_hash () {
     if ! [ -n "$1" ]
     then
         return 1
@@ -600,10 +721,16 @@ function url_get_hash {
 }
 
 ###############################################################################
-# function to get the path part of a url
+## @brief function to get the path part of a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the path
+##
 ###############################################################################
 
-function url_get_path {
+url_get_path () {
     if ! [ -n "$1" ]
     then
         return 1
@@ -621,10 +748,17 @@ function url_get_path {
 }
 
 ###############################################################################
-# function to get the host part of a url
+## @brief function to get the host part of a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the host
+##
 ###############################################################################
 
-function url_get_host {
+url_get_host () {
+
     if ! [ -n "$1" ]
     then
         return 1
@@ -641,10 +775,16 @@ function url_get_host {
 }
 
 ###############################################################################
-# function to get the host part of a url
+## @brief function to get the proto part of a url
+##
+## @param url   url to parse
+##
+## @return 0 on success
+## @retval stdout the proto
+##
 ###############################################################################
 
-function url_get_proto {
+url_get_proto () {
     if ! [ -n "$1" ]
     then
         return 1
@@ -659,10 +799,16 @@ function url_get_proto {
 }
 
 ###############################################################################
-# function to test if a value is un an array
+## @brief function to test if a value is un an array
+##
+## @param val       value to test
+## @param array     the array
+##
+## @return 0  on true 1 on false
+##
 ###############################################################################
 
-function isinarray {
+isinarray () {
     local val="$1"
     local result=1
     shift
@@ -681,10 +827,16 @@ function isinarray {
 }
 
 ###############################################################################
-# function to get the basename of a file
+## @brief function to get the basename of a file
+##
+## @param input     pathname to parse
+##
+## @return 0 on success
+## @retval stdout the basename
+##
 ###############################################################################
 
-function file_get_basename {
+file_get_basename () {
     local input="$1"
     
     local file="${input##*/}"
@@ -707,10 +859,16 @@ function file_get_basename {
 }
 
 ###############################################################################
-# function to get the extension of a file
+## @brief function to get the extension of a file
+##
+## @param input     pathname to parse
+##
+## @return 0 on success
+## @retval stdout the extension
+##
 ###############################################################################
 
-function file_get_extension {
+file_get_extension () {
     local input="$1"
     
     local file="${input##*/}"
@@ -733,10 +891,16 @@ function file_get_extension {
 }
 
 ###############################################################################
-# function to get the dir of a file
+## @brief function to get the dir of a file
+##
+## @param input     pathname to parse
+##
+## @return 0 on success
+## @retval stdout the dir
+##
 ###############################################################################
 
-function file_get_dir {
+file_get_dir () {
     local input="$1"
     
     local dir="${input%/*}"
@@ -748,10 +912,17 @@ function file_get_dir {
 }
 
 ###############################################################################
-# function to find a band file in an array of files
+## @brief function to find a band file in an array of files
+##
+## @param msb       band to match
+## @param files     array of files 
+##
+## @return 0 on success 1 on failure
+## @retval stdout the matching file
+##
 ###############################################################################
 
-function find_band_file {
+find_band_file () {
     local msb="$1"
     local files=("${@:2}")
     
@@ -769,9 +940,18 @@ function find_band_file {
 }
 
 ###############################################################################
-# function to find a band file in a dir
+## @brief function to find a band file in a dir
+## 
+## @param base  basename of the bands
+## @param msb   band to match
+## @param dir   dir to match files in
+##
+## @return 0 on success 1 on failure
+## @retval stdout the matching file
+##
 ###############################################################################
-function findmatchingfile {
+
+findmatchingfile () {
     local base="$1"
     local msb="$2"
     local dir="$3"

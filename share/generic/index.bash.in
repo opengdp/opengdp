@@ -20,10 +20,20 @@
 # DEALINGS IN THE SOFTWARE.
 
 ###############################################################################
-# function to add a layer to the projects layer index
+## @brief function to add a layer to the projects layer index
+##
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+##
+## @details
+## global vars
+## @param basedir     base dir of the project
+## @param project     name of the project
+## @param dsname      name of the dataset
+##
 ###############################################################################
 
-function index_add_layer {
+index_add_layer () {
     ts="$1"
     extent="$2"
     
@@ -103,10 +113,17 @@ EOF
 }
 
 ###############################################################################
-# function to retreve a list of layers for the ds from the projects layer index
+## @brief function to retreve a list of layers for the ds from the projects layer index
+##
+## @details
+## global vars
+## @param basedir     base dir of the project
+## @param project     name of the project
+## @param dsname      name of the dataset
+##
 ###############################################################################
 
-function index_get_layers {
+index_get_layers () {
 
     sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
 
@@ -120,10 +137,17 @@ EOF
 }
 
 ###############################################################################
-# function to retreve the last 2 layers for the ds from the projects layer index
+## @brief function to retreve the last 2 layers for the ds from the projects layer index
+##
+## @details
+## global vars
+## @param basedir     base dir of the project
+## @param project     name of the project
+## @param dsname      name of the dataset
+##
 ###############################################################################
 
-function index_get_latest_layers {
+index_get_latest_layers () {
 
     sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
 
@@ -139,10 +163,17 @@ EOF
 
 
 ###############################################################################
-# function to drop all the layers for a ds from the projects layer index
+## @brief function to drop all the layers for a ds from the projects layer index
+##
+## @details
+## global vars
+## @param basedir     base dir of the project
+## @param project     name of the project
+## @param dsname      name of the dataset
+##
 ###############################################################################
 
-function index_drop_ds {
+index_drop_ds () {
 
     if [ -f "${basedir}/${project}.db" ]
     then
@@ -153,5 +184,5 @@ WHERE dsname = '${dsname}';
 EOF
 
     fi
-    
+
 }

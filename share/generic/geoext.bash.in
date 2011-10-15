@@ -21,11 +21,21 @@
 
 
 ###############################################################################
-# function to create a js with the layers for openlayers and a geoext folder
+## @brief function to create a js with the layers for openlayers and a geoext folder
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param attribution     html attribution to add to the map
+## @param urlcgibin       url for the projects mapserver cgibin
+## @param dsname          name of the dataset
+## @param htmlbase        path to the local html files for the project
+## 
 ###############################################################################
 
-function dogeoext {
-
+dogeoext () {
+    #FIXME use locals
     if [ -n attribution ]
     then
         attrib=",
@@ -140,12 +150,23 @@ EOF
 
 }
 
-##############################################################################
-# function to create a js with the layers for openlayers and a geoext folder for tilecache
+###############################################################################
+## @brief function to create a js with the layers for openlayers and a geoext
+## folder for tilecache
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param attribution     html attribution to add to the map
+## @param urlcgibin_tc    url for the projects tilecache cgibin
+## @param dsname          name of the dataset
+## @param htmlbase        path to the local html files for the project
+##   
 ###############################################################################
 
-function dogeoext_tc {
-
+dogeoext_tc () {
+    #FIXME use locals
     if [ -n attribution ]
     then
         attrib=",
@@ -227,22 +248,22 @@ EOF
 
 ) > "${htmlbase}/${dsname}_tc.js"
 
-#    ##### make sure the js is loaded by index.html
-#    
-#    if ! grep "${htmlbase}/index.html" -e "${dsname}_tc.js" > /dev/null
-#    then
-#        linenum=$(cat "${htmlbase}/index.html" |\
-#                   grep -n -e "finish.js" |\
-#                   tail -n 1 |\
-#                   cut -d ":" -f 1
-#                 )
-#
-#        ed -s "${htmlbase}/index.html" << EOF
-#${linenum}-1a
-#        <script type="text/javascript" src="${dsname}_tc.js"></script>
-#.
-#w
-#EOF
-#    fi
+ #    ##### make sure the js is loaded by index.html
+ #    
+ #    if ! grep "${htmlbase}/index.html" -e "${dsname}_tc.js" > /dev/null
+ #    then
+ #        linenum=$(cat "${htmlbase}/index.html" |\
+ #                   grep -n -e "finish.js" |\
+ #                   tail -n 1 |\
+ #                   cut -d ":" -f 1
+ #                 )
+ #
+ #        ed -s "${htmlbase}/index.html" << EOF
+ #${linenum}-1a
+ #        <script type="text/javascript" src="${dsname}_tc.js"></script>
+ #.
+ #w
+ #EOF
+ #    fi
 
 }

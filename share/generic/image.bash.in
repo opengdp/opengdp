@@ -19,14 +19,20 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-have_otb="@HAVE_OTB@"
-have_mrsiddecode="@HAVE_MRSIDDECODE@"
+have_otb="@HAVE_OTB@";
+have_mrsiddecode="@HAVE_MRSIDDECODE@";
 
 ###############################################################################
-# function to get the number of bands in an image
+## @brief function to get the number of bands in an image
+##
+## @param img    full path to the image file
+##
+## @return 0 for success 1 for failure
+## stdout the number of bands
+##
 ###############################################################################
 
-function image_get_nbands {
+image_get_nbands () {
     local img="$1"
     
     gdalinfo "$img" |\
@@ -37,12 +43,27 @@ function image_get_nbands {
 }
 
 ###############################################################################
-# function to colar an image
-#
-# returns the dest image
+## @brief function to colar an image
+##
+## @param img        full path to the input image
+## @param tmpram     temp dir to place output in
+## @param info       gdalinfo output for image
+## @param islossy    flag to mark the image as lossy
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+##
+## @details
+## global vars
+## @param ignorealpha     flag to ignore alpha band
+## @param srcnodata       use notadata value as alpha band
+## @param nearwhite       colar image with white border
+## @param nearboth        colar image with black and white border
+##
 ###############################################################################
 
-function image_colar {
+image_colar () {
     local img="$1"
     local tmpram="$2"
     local info="$3"
@@ -132,12 +153,19 @@ function image_colar {
 }
 
 ###############################################################################
-# function to warp an image
-#
-# returns the dest image
+## @brief function to warp an image
+##
+## @param img        full path to the input image
+## @param tmpram     temp dir to place output in
+## @param info       gdalinfo output for image
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+## 
 ###############################################################################
 
-function image_warp {
+image_warp (){
     local img="$1"
     local tmpram="$2"
     local info="$3"
@@ -187,10 +215,29 @@ function image_warp {
 
 
 ###############################################################################
-# function to proccess a single file
+## @brief function to proccess a single file
+##
+## @param img        full path to the input image
+## @param tmpdir     temp dir to place output in
+## @param ts         timestamp of the image
+## @param info       gdalinfo output for image
+## @param islossy    flag to mark the image as lossy
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+##
+## @details
+## global vars
+## @param ramdisk       if set, temp data will be wrote to a new temp dir here
+## @param outdir        datasets output dir
+## @param dsname        name of the dataset
+## @param isoverview    flag to mark the image as an external overview normaly
+##                       set by @see makeoverview
+## @param haveomar      true? tell omar there is a new image
+##
 ###############################################################################
 
-function dosubimg {
+dosubimg () {
     local img="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -204,23 +251,6 @@ function dosubimg {
     local imgdir=$(file_get_dir "$img")
     local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
     
-    ##### if we need a debug do it and return #####
-
-    if [ -n "$DEBUG_dosubimg" ]
-    then            
-        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s\n islossy=%s\n isoriginal=%s\n " \
-              "$img" \
-              "$tmpdir "\
-              "$ts" \
-              "$imgfile" \
-              "$imgbase" \
-              "$imgext" \
-              "$imgdir" \
-              "$islossy" \
-              "$isoriginal"
-        return
-    fi
-
     ###### RAMDISK? #####
 
     if [ -n "$ramdisk" ]
@@ -337,7 +367,7 @@ function dosubimg {
     
 }
 
-function myrescale {
+myrescale () {
     ##### check if the image needs scaled #####
     
     if ! echo "$info" | grep -e Band.1.*Type=Byte > /dev/null && ! [ -n "$rescale" ]
@@ -383,10 +413,30 @@ function myrescale {
 }
 
 ###############################################################################
-# function to bust a larger image into chunks and proccess
+## @brief function to bust a larger image into chunks and proccess
+##
+## @param img        full path to the input image
+## @param tmpdir     temp dir to place output in
+## @param ts         timestamp of the image
+## @param info       gdalinfo output for image
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+##
+## @details
+## global vars
+## @param isoverview    flag to mark the image as an external overview normaly
+##                       set by makeoverview
+## @param haveomar      true? tell omar there is a new image
+## @param s_srs         var to overide set projection
+## @param bnw           flag to mark the image as black n white
+## have_mrsiddecode     flag set by automake if the system has mrsid
+##
+## @see makeoverview
+##
 ###############################################################################
 
-function doimg {
+doimg () {
     local img="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -406,21 +456,6 @@ function doimg {
         info="$(gdalinfo "${tmpdir}/${img}")"
     fi
    
-    ##### if we need a debug do it and return #####
-
-    if [ -n "$DEBUG_doimg" ]
-    then
-        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s \n" \
-               "$img" \
-               "$tmpdir "\
-               "$ts" \
-               "$imgfile" \
-               "$imgbase" \
-               "$imgext" \
-               "$imgdir"
-       return
-    fi
-
     ##### test if the image is in a lossy format #####
      
     if grep -e "COMPRESSION=.*JP" <<< "$info" > /dev/null || \
@@ -612,10 +647,16 @@ function doimg {
 }
 
 ###############################################################################
-# function rebuild the tile indexes for a ds
+## @brief function rebuild the tile indexes for a ds
+##
+## @details
+## global vars
+## @param outdir        datasets output dir
+## @param dsname        name of the dataset
+##
 ###############################################################################
 
-function rebuildtindexs {
+rebuildtindexs () {
 
     ##### remove the old tindexs #####
     
