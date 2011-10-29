@@ -90,8 +90,8 @@ EOF
         
     ##### add the layer to the db #####
     
-    sqlite3 "${basedir}/${project}.db" << EOF || printerror "adding layer to db" ; return
-INSERT OR REPLACE
+    if ! sqlite3 "${basedir}/${project}.db" << EOF
+INSERT
 INTO   layers
        (
               dsname ,
@@ -109,7 +109,16 @@ INTO   layers
               '$gw $gs $ge $gn'
        );
 EOF
+    then
+        sqlite3 "${basedir}/${project}.db" << EOF || printerror "adding layer to db" ; return
+UPDATE layers
+SET extent = '$extent',
+    gextent = '$gw $gs $ge $gn'
+WHERE lname = '${dsname}_${ts}';
+EOF
 
+    fi
+    
 }
 
 ###############################################################################
