@@ -186,6 +186,7 @@ TIFFINC = @TIFFINC@
 TIFFLIB = @TIFFLIB@
 UNZIP = @UNZIP@
 VERSION = @VERSION@
+WWWDISK = @WWWDISK@
 ZINC = @ZINC@
 ZLIB = @ZLIB@
 abs_builddir = @abs_builddir@

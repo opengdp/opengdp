@@ -22,12 +22,12 @@
 wms_srs='EPSG:900913 EPSG:4326 EPSG:3857';
 myprojection='
     PROJECTION
-     'init=epsg:4326'
-     'proj=longlat'
-     'ellps=WGS84'
-     'datum=WGS84'
-     'no_defs'
-     ''
+     "init=epsg:4326"
+     "proj=longlat"
+     "ellps=WGS84"
+     "datum=WGS84"
+     "no_defs"
+     ""
     END
 
 ';

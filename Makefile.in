@@ -226,6 +226,7 @@ TIFFINC = @TIFFINC@
 TIFFLIB = @TIFFLIB@
 UNZIP = @UNZIP@
 VERSION = @VERSION@
+WWWDISK = @WWWDISK@
 ZINC = @ZINC@
 ZLIB = @ZLIB@
 abs_builddir = @abs_builddir@
@@ -285,7 +286,8 @@ SUBDIRS = src \
 	scripts\
 	MRTSwath \
 	crefl \
-	MOD_PRDS
+	MOD_PRDS \
+	js
 
 dwhdocdir = ${prefix}/doc/dwh
 dwhdoc_DATA = \

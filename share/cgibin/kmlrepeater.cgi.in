@@ -31,8 +31,10 @@ Content-Title: map
 
 EOF
 
-dd bs=${limit} count=1 2> /dev/null |\
- sed 's/^kml=//' |\
- sed -e 's/%\([0-9A-Fa-f]\{2\}\)/\\\\\x\1/g' |\
+dd 2> /dev/null |\
+ sed -e 's/^kml=//' \
+     -e 's/%0[aA]/\n/g' \
+     -e 's/%3[eE][+]/>\n+/g' \
+     -e 's/%\([0-9A-Fa-f]\{2\}\)/\\\\\x\1/g' |\
  xargs echo -e |\
  sed -e 's/[+]/ /g'
