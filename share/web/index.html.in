@@ -10,19 +10,19 @@
         <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.3.1/resources/css/ext-all.css" />
         <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.3.1/examples/shared/examples.css" />
 
-        <script type="text/javascript" src="http://www.openlayers.org/api/2.9/OpenLayers.js"></script>
-        <script type="text/javascript" src="../GeoExt/lib/GeoExt.js"></script>
+        <script type="text/javascript" src="/dwh/OpenLayers.js"></script>
+        <script type="text/javascript" src="/dwh/GeoExt.js"></script>
         <script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=sensor=false&amp;key=ABQIAAAASfdqEQTIBj55I22mjTNwhhRztyOfbm35_VK1CAYyThhuOVyq3BQqwp_JkHSBpWPhKuc4Hfy42pQUww"
             ></script>
         <script type="text/javascript" src="proj-def.js"></script>
-        <script type="text/javascript" src="setup.js"></script>
-        <script type="text/javascript" src="kml.js"></script>
-        <script type="text/javascript" src="base.js"></script>
+        <script type="text/javascript" src="/dwh/setup.js"></script>
+        <script type="text/javascript" src="/dwh/kml.js"></script>
+        <script type="text/javascript" src="/dwh/base.js"></script>
 
 
 
-        <script type="text/javascript" src="osm.js"></script>
-        <script type="text/javascript" src="finish.js"></script>
+        <script type="text/javascript" src="/dwh/osm.js"></script>
+        <script type="text/javascript" src="/dwh/finish.js"></script>
     </head>
     <body>
         <div id="mappanel"></div>

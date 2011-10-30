@@ -19,6 +19,21 @@ AC_HEADER_STDC
 AM_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
+
+AC_ARG_WITH(wwwdisk,
+  [AS_HELP_STRING([--with-wwwdisk=/some/path],
+    [base dir to output kml and images])],
+  if test -n "$withval"
+  then
+    WWWDISK="$withval"
+    AC_SUBST(WWWDISK)
+  else
+		[AC_MSG_FAILURE([--with-wwwdisk=/some/path MUST be specified])]
+	fi,
+  [AC_MSG_FAILURE([--with-wwwdisk=/some/path MUST be specified])]
+)
+
+
 cflagsold="$CFLAGS"
 ldflagsold="$LDFLAGS"
 dnl -----------------------------------------------------------------
@@ -588,4 +603,5 @@ MOD_PRDS/Makefile
 MOD_PRDS/data/Makefile
 crefl/Makefile
 crefl/data/Makefile
+js/Makefile
 ])

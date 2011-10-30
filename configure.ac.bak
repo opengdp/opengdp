@@ -19,9 +19,6 @@ AC_HEADER_STDC
 AM_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PROG_FC
-AC_PROG_F77
-
 cflagsold="$CFLAGS"
 ldflagsold="$LDFLAGS"
 dnl -----------------------------------------------------------------
@@ -588,6 +585,7 @@ src/Makefile
 MRTSwath/Makefile
 MRTSwath/data/Makefile
 MOD_PRDS/Makefile
+MOD_PRDS/data/Makefile
 crefl/Makefile
 crefl/data/Makefile
 ])
