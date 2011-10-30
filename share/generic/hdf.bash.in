@@ -88,6 +88,49 @@ listmsbands_cb () {
 ##
 ###############################################################################
 
+listmsbands () {
+   
+    subds_iterator "listmsbands_cb" | sort | uniq
+
+}
+
+###############################################################################
+## @brief callback function to make a complete list of all the msbands of the
+##         subdatasets
+##
+## @return 0 for success
+##
+## @retval stdout list of all the msbands for the current subdataset
+##
+## @details
+## global vars
+## @param msbands*        array of band filename patterns
+##
+###############################################################################
+
+listmsmaskbands_cb () {
+    
+    local msb
+    for msb in "${msmaskbands[@]}"
+    do
+        echo "$msb"
+    done
+}
+
+###############################################################################
+## @brief function to make a complete list of all the msbands of the
+##         subdatasets
+##
+## @return 0 for success
+##
+## @retval stdout list of all the msbands for all the subdatasets
+##
+## @details
+## global vars
+## @param msbands*        array of band filename patterns
+##
+###############################################################################
+
 listmsmaskbands () {
    
     subds_iterator "listmsmaskbands_cb" | sort | uniq
