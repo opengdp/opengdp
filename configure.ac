@@ -604,4 +604,5 @@ MOD_PRDS/data/Makefile
 crefl/Makefile
 crefl/data/Makefile
 js/Makefile
+img/Makefile
 ])
