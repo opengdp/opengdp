@@ -36,6 +36,7 @@ source @GENERICDIR@/geoext.bash
 source @GENERICDIR@/tc.bash
 source @GENERICDIR@/pan.bash
 source @GENERICDIR@/newearthexplorer.bash
+source @GENERICDIR@/mkkey.bash
 
 
 ###############################################################################
