@@ -34,7 +34,7 @@ mkkey () {
 
     ##### does the ds have a scale to do? #####
     
-    if ! [ -n "$msscale" ]
+    if ! [ -n "$mskey" ]
     then
         return
     fi    

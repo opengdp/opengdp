@@ -125,18 +125,19 @@ writemap_nominmax () {
     then
         ##### if dokey #####
         
-        if istrue "$dokey" 0
+        if [ -n "$mskey" ]
         then
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NANE "'"legend"'"
+        NAME "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
+    
         fi
         
-        cat > "${outdir}/${dsname}latest.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
     NAME '${lname}_nominmax'
@@ -162,7 +163,7 @@ EOF
     ##### do we have vector data? #####
 
     else 
-        cat > "${outdir}/${dsname}latest.map" << EOF
+        cat > "${mapfile}" << EOF
         
   LAYER
     NAME '${lname}_nominmax'
@@ -250,17 +251,18 @@ writemap_withover () {
     
         ##### if dokey #####
         
-        if istrue "$dokey" 0
+        if [ -n "$mskey" ]
         then
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NANE "'"legend"'"
+        NAME "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
     
         fi
+
         cat > "${mapfile}" << EOF
         
   LAYER
@@ -397,12 +399,12 @@ writemap_noover () {
     then
         ##### if dokey #####
         
-        if istrue "$dokey" 0
+        if [ -n "$mskey" ]
         then
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NANE "'"legend"'"
+        NAME "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
