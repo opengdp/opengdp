@@ -254,7 +254,7 @@ writemap_withover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        KEYIMAGE "${dsname}.key.png"
+        KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
     
@@ -400,7 +400,7 @@ writemap_noover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        KEYIMAGE "${dsname}.key.png"
+        KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
     
