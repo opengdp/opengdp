@@ -242,6 +242,7 @@ generic_DATA = \
     tc.bash \
     rapidfire_modis.bash \
     newearthexplorer.bash \
+    mkkey.bash \
     google_superoverlay_kml.bash
 
 CLEANFILES = $(generic_DATA)
@@ -263,6 +264,7 @@ EXTRA_DIST = \
     tc.bash.in \
     rapidfire_modis.bash.in \
     newearthexplorer.bash.in \
+    mkkey.bash.in \
     google_superoverlay_kml.bash
 
 do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
@@ -527,6 +529,9 @@ rapidfire_modis.bash: rapidfire_modis.bash.in Makefile
 
 newearthexplorer.bash: newearthexplorer.bash.in Makefile
 	$(do_subst) < $(srcdir)/newearthexplorer.bash.in > newearthexplorer.bash
+
+mkkey.bash: mkkey.bash.in Makefile
+	$(do_subst) < $(srcdir)/mkkey.bash.in > mkkey.bash
 
 google_superoverlay_kml.bash: google_superoverlay_kml.bash.in Makefile
 	$(do_subst) < $(srcdir)/google_superoverlay_kml.bash.in > google_superoverlay_kml.bash

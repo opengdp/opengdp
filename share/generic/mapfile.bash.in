@@ -130,10 +130,11 @@ writemap_nominmax () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        KEYIMAGE "${dsname}.key.png"
+        KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
-    
+        fi
+        
         cat > "${outdir}/${dsname}latest.map" << EOF
         
   LAYER
@@ -257,6 +258,7 @@ writemap_withover () {
     END
     '
     
+        fi
         cat > "${mapfile}" << EOF
         
   LAYER
@@ -391,6 +393,18 @@ writemap_noover () {
     
     if ! istrue "$vector"
     then
+        ##### if dokey #####
+        
+        if istrue "$dokey" 0
+        then
+            #FIXME are keyimages reletive to included mapfile or root?
+            class='
+    CLASS
+        KEYIMAGE "${dsname}.key.png"
+    END
+    '
+    
+        fi
         cat > "${mapfile}" << EOF
         
   LAYER
@@ -411,6 +425,7 @@ writemap_noover () {
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     $offsite
     PROCESSING "RESAMPLE=AVERAGE"
+    $class
   END
 
 EOF
