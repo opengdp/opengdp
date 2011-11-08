@@ -144,7 +144,8 @@ mainloop () {
 usage () {
 #FIXME add --reindex
 echo "$1 [ -h ] || [ -v ] || | [ -rebuild ] || [ -readdo ] || [ -retindex ] ||"
-echo "                            [ -reover ] || [ -remapfile || [ -regeoext ]"
+echo "                           [ -reindex ] ||  [ -reover ] || [ -remapfile ||"
+echo "                           [ -regeoext ]"
 }
 
 ###############################################################################
@@ -161,7 +162,7 @@ opt_reindex=4
 opt_reover=5
 opt_remapfile=6
 opt_regeoext=7
-opt_none=0
+opt_rekey=8
 
 function sub_main {
     local ts
@@ -206,6 +207,10 @@ function sub_main {
                 ;;
             -regeoext|--regeoext)
                 ((stage=opt_regeoext))
+                shift
+                ;;
+            -rekey|--rekey)
+                ((stage=opt_rekey))
                 shift
                 ;;
             -stop|--stop)
@@ -590,7 +595,7 @@ function sub_main {
     #####  write out a js file for geoext #####
     
     if (( stage <= opt_regeoext))
-    then        
+    then
         
         ##### loop over the subdatasets if any #####
         
@@ -614,6 +619,36 @@ function sub_main {
 
                 dotc
                 
+            )
+        done
+        
+        istrue $stop && exit
+    fi
+    
+    ##### stage rekey and before #####
+    ##### write a map legend key image #####
+    
+    if (( stage <= opt_rekey))
+    then
+        
+        ##### loop over the subdatasets if any #####
+        
+        if [[ ${#subdsnames[@]} == 0 ]]
+        then
+            local subdsnames=( "" )
+        fi
+        
+        local sub
+        for sub in "${subdsnames[@]}"
+        do
+            (
+                outdir="${outdir}${sub}"
+                dsname="${dsname}${sub}"
+                mskey="${mskey}${sub}"
+                mskeylabel="${mskeylabel}${sub}"
+
+                mkkey
+
             )
         done
         

@@ -32,6 +32,51 @@ myprojection='
 
 ';
 
+mapfile_oformat_jpeg_old='
+  OUTPUTFORMAT
+    NAME jpeg
+    DRIVER "GD/JPEG"
+    MIMETYPE "image/jpeg"
+    IMAGEMODE RGB
+    FORMATOPTION  QUALITY=90
+    EXTENSION "jpg"
+  END
+';
+
+mapfile_oformat_jpeg_new='
+OUTPUTFORMAT
+  NAME "jpeg"
+  DRIVER AGG/JPEG
+  MIMETYPE "image/jpeg"
+  IMAGEMODE RGB
+  EXTENSION "jpg"
+  FORMATOPTION "GAMMA=0.75"
+END
+';
+
+mapfile_oformat_gtiff='
+  OUTPUTFORMAT
+    NAME GTiff
+    DRIVER "GDAL/GTiff"
+    MIMETYPE "image/tiff"
+    IMAGEMODE RGBA
+    FORMATOPTION  TILED=YES
+    EXTENSION "tif"
+    TRANSPARENT ON
+  END
+';
+
+mapfile_oformat_png='
+  OUTPUTFORMAT
+    NAME PNG24
+    DRIVER "GDAL/PNG"
+    MIMETYPE "image/png"
+    EXTENSION PNG
+    IMAGEMODE RGBA
+    TRANSPARENT ON
+  END
+';
+
 ###############################################################################
 ## @brief function to write out a map file with no min max
 ##
@@ -78,6 +123,17 @@ writemap_nominmax () {
     
     if ! istrue "$vector"
     then
+        ##### if dokey #####
+        
+        if istrue "$dokey" 0
+        then
+            #FIXME are keyimages reletive to included mapfile or root?
+            class='
+    CLASS
+        KEYIMAGE "${dsname}.key.png"
+    END
+    '
+    
         cat > "${outdir}/${dsname}latest.map" << EOF
         
   LAYER
@@ -89,9 +145,10 @@ writemap_nominmax () {
     ${myprojection}
     
     METADATA
-      'wms_title'        '${lname}_nominmax'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'	 '$extent'
+      'wms_title'           '${lname}_nominmax'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
     END
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -113,9 +170,10 @@ EOF
     ${myprojection}
 
     METADATA
-      'wms_title'        '${lname}_nominmax'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'       '$extent'
+      'wms_title'           '${lname}_nominmax'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -180,10 +238,25 @@ writemap_withover () {
         local mapfile="${outdir}/${dsname}${ts}.map"
 
     fi
+    
+    
+    
     ##### do we have image data? #####
     
     if ! istrue "$vector"
     then
+    
+        ##### if dokey #####
+        
+        if istrue "$dokey" 0
+        then
+            #FIXME are keyimages reletive to included mapfile or root?
+            class='
+    CLASS
+        KEYIMAGE "${dsname}.key.png"
+    END
+    '
+    
         cat > "${mapfile}" << EOF
         
   LAYER
@@ -195,9 +268,10 @@ writemap_withover () {
     ${myprojection}
 
     METADATA
-      'wms_title'        '${lname}_hires'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'	 '$extent'
+      'wms_title'           '${lname}_hires'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
     END
 
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -205,6 +279,7 @@ writemap_withover () {
     MAXSCALEDENOM $scale
     $offsite
     PROCESSING "RESAMPLE=AVERAGE"
+    $class
   END
 EOF
 
@@ -221,9 +296,10 @@ EOF
     ${myprojection}
 
     METADATA
-      'wms_title'        '${lname}_hires'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'       '$extent'
+      'wms_title'           '${lname}_hires'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -249,9 +325,10 @@ EOF
     ${myprojection}
 
     METADATA
-      'wms_title'        '${lname}_ovr'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'	 '$extent'
+      'wms_title'           '${lname}_ovr'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
     END
 
     TILEINDEX "${outdir}/overview_${dsname}${ts}.shp"
@@ -325,9 +402,10 @@ writemap_noover () {
     ${myprojection}
 
     METADATA
-      'wms_title'        '${lname}'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'	     '$extent'
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -350,9 +428,10 @@ EOF
     ${myprojection}
     
     METADATA
-      'wms_title'        '${lname}'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'       '$extent'
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -397,9 +476,10 @@ writemap_NewWorld () {
     ${myprojection}
     
     METADATA
-      'wms_title'        '${dsname}_${ts}'
-      'wms_srs'          '${wms_srs}'
-      'wms_extent'	 '$extent'
+      'wms_title'           '${dsname}_${ts}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"   "*"
     END
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
@@ -574,7 +654,21 @@ addinclude_NewWorld () {
 ##
 ###############################################################################
 
+
+
+
 write_main_map () {
+
+    IFS=".-"
+    read major minor rev < <( ${mapserverpath}/mapserver-config --version )
+    unset IFS
+
+    mapfile_oformat_jpeg="$mapfile_oformat_jpeg_new"
+    
+    if ((major < 6 ))
+    then
+        mapfile_oformat_jpeg="$mapfile_oformat_jpeg_old"
+    fi
 
 cat > "$mapfile" << EOF
 
@@ -596,42 +690,9 @@ ${myprojection}
   IMAGEQUALITY 95
   IMAGETYPE png24
 
-#  OUTPUTFORMAT
-#    NAME png
-#    DRIVER "GD/PNG"
-#    TRANSPARENT ON
-#    MIMETYPE "image/png"
-#    IMAGEMODE PC256
-#    EXTENSION "png"
-#  END  
-
-  OUTPUTFORMAT
-    NAME jpeg
-    DRIVER 'GD/JPEG'
-    MIMETYPE 'image/jpeg'
-    IMAGEMODE RGB
-    FORMATOPTION  QUALITY=90
-    EXTENSION 'jpg'
-  END
-
-  OUTPUTFORMAT
-    NAME GTiff
-    DRIVER "GDAL/GTiff"
-    MIMETYPE "image/tiff"
-    IMAGEMODE RGBA
-    FORMATOPTION  TILED=YES
-    EXTENSION "tif"
-    TRANSPARENT ON
-  END
-
-  OUTPUTFORMAT
-    NAME PNG24
-    DRIVER "GDAL/PNG"
-    MIMETYPE "image/png"
-    EXTENSION PNG
-    IMAGEMODE RGBA
-    TRANSPARENT ON
-  END
+$mapfile_oformat_jpeg
+$mapfile_oformat_gtiff
+$mapfile_oformat_png
 
   # Legend
   LEGEND
@@ -658,9 +719,10 @@ ${myprojection}
 
     # WMS server settings
     METADATA
-      'wms_title'           '${project}'
-      'wms_onlineresource'  '${urlcgibin}?SERVICE=WMS'
-      'wms_srs'             '${wms_srs}'
+      'wms_title'            '${project}'
+      'wms_onlineresource'   '${urlcgibin}?SERVICE=WMS'
+      'wms_srs'              '${wms_srs}'
+      "ows_enable_request"   "*"
     END
 #   LOG '/var/www/html/mapserver.log'
     #Scale range at which web interface will operate

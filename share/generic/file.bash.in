@@ -931,7 +931,9 @@ dokmz () {
 ## @param mscalc*         ITK calculation to build a product
 ## @param lut*            lut to recale output
 ## @param msgradient*     gradient to colorize single band image
-##   
+## @param mskey*          scale to use building a key image
+## @param mskeylabel*     units label to add to the key image
+## 
 ###############################################################################
 
 subds_iterator () {
@@ -988,6 +990,16 @@ subds_iterator () {
                 local tmp
                 eval tmp=\"\$msgradient$sub\"
                 local msgradient="$tmp"
+                unset tmp
+                
+                local tmp
+                eval tmp=\"\$mskey$sub\"
+                local mskey="$tmp"
+                unset tmp
+                
+                local tmp
+                eval tmp=\"\$mskeylabel$sub\"
+                local mskeylabel="$tmp"
                 unset tmp
                 
                 "$cbfunc" "${cbargs[@]}" || return

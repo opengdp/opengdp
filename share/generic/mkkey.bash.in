@@ -1,0 +1,122 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+###############################################################################
+## @brief function to make a keyimage for a layer
+##
+## @details
+## global vars
+## @param mskey         scale info "value hex"
+## @param mskeylabel    unit label to add to the key
+## @param dsname        name of the dataset
+##
+###############################################################################
+ 
+mkkey () {
+
+    ##### does the ds have a scale to do? #####
+    
+    if ! [ -n "$msscale" ]
+    then
+        return
+    fi    
+    
+    local output="${outdir}/${dsname}.key.png"
+
+    local count=0
+    local last=0
+    local x=5
+    local cwidth=20
+    local len=0
+
+    ##### count colors  and get max text width #####
+    
+    local value color
+    while read value color
+    do
+	    ((count++))
+	    if (( ${#value} > len ))
+        then
+            len=${#value}
+        fi
+    
+    done <<< "$mskey"
+
+    ##### figure out width of image #####
+    
+    local width
+    (( width = count * cwidth + 15 ))
+
+    if (( width >  720 ))
+    then
+        (( cwidth = 720 / count ))
+        (( width = count * cwidth + 15 ))
+    fi
+
+    ##### get label start pos #####
+    
+    local stx
+    (( stx = width - 7 - 4 * ${#mskeylabel} ))
+
+    local args=( -size ${width}x36 
+                 xc:white )
+
+    local last x xx
+    while read value color
+    do
+        (( xx = x + cwidth ))
+        
+        ##### draw color #####
+        
+        args=( "${args[@]}"
+	           -fill "#$color"
+               -stroke black
+               -draw "rectangle $x,5 $xx,18" )
+        
+        ##### draw value #####
+	    
+        if [ "$(($xx-4-$len*4))" -gt "$last" ] && [ "$(($xx+4+$len*4))" -lt "$stx" ]
+        then
+            local tx
+            (( tx = xx -4 * ${#value} ))
+            
+            args=( "${args[@]}"
+                   -pointsize 14
+                   -fill black
+                   -draw "text ${tx},34 '${value}'" )
+            (( last = xx + 4 * len ))
+        fi
+        
+        x=$xx
+    done <<< "$mskey"
+
+    ##### draw label #####
+
+    args=( "${args[@]}" 
+           -pointsize 12
+           -fill black
+           -draw "text ${stx},33 '${mskeylabel}'" )
+
+    ##### build the image #####
+
+    convert "${args[@]}" $output || { printerror ; return; }
+}
+
