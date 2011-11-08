@@ -130,6 +130,7 @@ writemap_nominmax () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
+        NANE "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
@@ -254,6 +255,7 @@ writemap_withover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
+        NANE "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
@@ -400,6 +402,7 @@ writemap_noover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
+        NANE "'"legend"'"
         KEYIMAGE "'"${dsname}"'.key.png"
     END
     '
