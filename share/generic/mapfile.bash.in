@@ -130,8 +130,8 @@ writemap_nominmax () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NAME "'"legend"'"
-        KEYIMAGE "'"${dsname}"'.key.png"
+        NAME ""
+        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
     END
     '
     
@@ -256,8 +256,8 @@ writemap_withover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NAME "'"legend"'"
-        KEYIMAGE "'"${dsname}"'.key.png"
+        NAME ""
+        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
     END
     '
     
@@ -404,8 +404,8 @@ writemap_noover () {
             #FIXME are keyimages reletive to included mapfile or root?
             class='
     CLASS
-        NAME "'"legend"'"
-        KEYIMAGE "'"${dsname}"'.key.png"
+        NAME ""
+        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
     END
     '
     
@@ -713,19 +713,14 @@ ${myprojection}
 $mapfile_oformat_jpeg
 $mapfile_oformat_gtiff
 $mapfile_oformat_png
-
-  # Legend
+  
+  ##### legend #####
+  
   LEGEND
-      IMAGECOLOR 255 255 255
-    STATUS ON
-    KEYSIZE 18 12
-    LABEL
-      TYPE BITMAP
-      SIZE MEDIUM
-      COLOR 0 0 0
-    END
+    STATUS on
+    KEYSIZE 500 36
   END
-
+  
   # Web interface definition. Only the template parameter
   # is required to display a map. See MapServer documentation
   WEB
@@ -744,10 +739,7 @@ $mapfile_oformat_png
       'wms_srs'              '${wms_srs}'
       "ows_enable_request"   "*"
     END
-#   LOG '/var/www/html/mapserver.log'
-    #Scale range at which web interface will operate
-    # Template and header/footer settings
-    # Only the template parameter is required to display a map. See MapServer documentation
+
   END
 
 
