@@ -1,0 +1,16 @@
+
+runtime options
+
+--rebuild   rebuilds the dataset from source
+--readdo    rebuilds internal overviews
+--retindex  rebuilds the tile indexes
+--reindex   rebuilds the datasets layer index. note: this breaks geoext permalinks, the primary keys change
+--reover    rebuilds external overviews
+--remapfile rebuilds the mapfiles
+--regeoext  rebuilds the geoext js for the layers
+--rekey     rebuilds the key graphic if one is specified for the dataset
+
+    by default if you inter at any stage including normal op (no options), the
+script will contiue to the next sage until the last stage is reached. the 
+--stop flag can be used to stop it from going to the next stage
+
