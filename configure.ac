@@ -117,6 +117,29 @@ else
     AC_SUBST(HAVE_MRSIDDECODE)
 fi
 
+##### pbs / torque #####
+
+AC_ARG_WITH(pbs-config,
+[  --with-pbs-config=PBS_CONFIG    use pbs-config specified ],
+[
+  PBS_CONFIG=$withval;
+  echo "using "$PBS_CONFIG" for pbs-config";
+],[
+  PROG="pbs-config";
+  AC_PATH_PROG(PBS_CONFIG, $PROG, "", $PATH)
+])
+
+if test "x$PBS_CONFIG" != "x"; then
+  PBS_PREFIX=`$PBS_CONFIG --prefix`
+  PBS_BINDIR="$PBS_PREFIX/bin"
+  AC_SUBST(PBS_BINDIR)
+  found_pbs="yes"
+else
+  found_pbs="no"
+fi
+AC_SUBST(HAVE_PBS)
+AM_CONDITIONAL(HAVE_PBS, test "x$PBS_CONFIG" != "x")
+
 ##### tar #####
 
 AC_CHECK_PROGS([TAR], [tar gtar], [:])

@@ -20,7 +20,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-
+have_pbs="@HAVE_PBS@"
 
 source @GENERICDIR@/misc.bash
 source @GENERICDIR@/addo.bash
@@ -37,7 +37,6 @@ source @GENERICDIR@/tc.bash
 source @GENERICDIR@/pan.bash
 source @GENERICDIR@/newearthexplorer.bash
 source @GENERICDIR@/mkkey.bash
-
 
 ###############################################################################
 ## @brief print est completion time meter to stdout
@@ -65,6 +64,99 @@ comp_meter () {
     
     printf "\r%3.0f%% complete. EST. finish at %s" $percdone "$(date -d "@${comp}")"
 }
+
+
+###############################################################################
+## @brief function to spawn a new job
+##
+###############################################################################
+
+
+startjob() {
+    local line="$line"
+    
+    ##### just bg the job? #####
+    
+    if ! [ -n "$have_pbs" ]
+    then
+        dofile "$line"  &
+        
+    ##### does the system have pbs? ##### 
+    
+    else
+                
+        ##### write the batch script #####
+        
+        local tempscript
+        tempscript=$(mktemp -p "$tmp" "${dsname}XXXXXXXXXX.bash") || { printerror ; exit; }
+        
+        cat >> "$tempscript" << EOF
+#!/bin/bash
+# Copyright (c) 2010, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+# the queue to be used.
+#PBS -q batch 
+# specify your project allocation 
+#PBS -A $pbs_account
+# number of nodes and number of processors per node requested
+#PBS -l $pbs_resource
+# requested Wall-clock time. 
+#PBS -l $pbs_wall  
+# name of the standard out file to be "output-file". 
+#PBS -o $pbs_out
+# name of the job
+#PBS -N $pbs_name
+
+##### the current bash enviroment #####
+
+$(typeset -p)
+$(typeset -px)
+
+##### reset the temp dir to the bach job temp dir #####
+
+tmp="\$tmp/\$PBS_JOBID"
+        
+##### cd to the indir #####
+
+cd '$indir'
+
+##### remake the fd to the pipe #####
+
+exec 3<>pipe
+
+#### start the real work
+
+dofile '$line'
+
+##### clean up this temp script before exit #####
+
+rm '$tempscript'
+
+EOF
+        chmod +x "$tempscript"
+        qsub "$tempscript"
+
+    fi
+}
+
 
 ###############################################################################
 ## @brief multi proceessing loop
@@ -107,7 +199,7 @@ mainloop () {
 
         if [ $doing -lt $limit ]
         then
-        	dofile "$line"  &
+        	startjob "$line"
          	((doing++))
          	
         ##### over the limit wait for a job to finish before starting #####
@@ -123,7 +215,7 @@ mainloop () {
 
             comp_meter $started $lines $donelines
             
-            dofile "$line"  &
+            startjob "$line"
          	((doing++))
         fi
 
@@ -819,6 +911,45 @@ main () {
     if ! [ -w "$mapfile" ]
     then
         echo "ERROR: no write access to $mapfile"
+        exit
+    fi
+    
+    ##### pbs vars #####
+    
+    if [ -n "$have_pbs" ] && \
+       { ! [[ -n "${pbs_account}" ]]    ||
+         ! [[ -n "${pbs_resource}" ]]   ||
+         ! [[ -n "${pbs_wall}" ]]       ||
+         ! [[ -n "${pbs_out}" ]]        ||
+         ! [[ -n "${pbs_name}" ]]
+       }  
+    then
+        cat << EOF
+ERROR: some pbs vars not set
+either
+    unset have_pbs after the generic code is sourced to run in a single
+    enviroment
+OR
+    set the following vars to run pbs batch jobs
+    
+# specify your project allocation 
+pbs_account="gue998"
+
+# number of nodes and number of processors per node requested
+# if running any otb apps you may wish to set ppn to 3 or 4
+pbs_resource="nodes=1:ppn=1"
+
+# requested Wall-clock time. 
+# this may need increased if your building alot of subdatasets
+pbs_wall="walltime=01:00:00"
+
+# pathname of the standard out file to be "output-file". 
+pbs_out=/tmp/setme
+
+# name of the job
+pbs_name="$dsname"
+
+EOF
         exit
     fi
     
