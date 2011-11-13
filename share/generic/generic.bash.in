@@ -36,7 +36,7 @@ source @GENERICDIR@/geoext.bash
 source @GENERICDIR@/tc.bash
 source @GENERICDIR@/pan.bash
 source @GENERICDIR@/newearthexplorer.bash
-source @GENERICDIR@/mkkey.bash
+source @GENERICDIR@/mkkey.bas
 
 ###############################################################################
 ## @brief print est completion time meter to stdout
@@ -88,7 +88,7 @@ startjob() {
         ##### write the batch script #####
         
         local tempscript
-        tempscript=$(mktemp -p "$tmp" "${dsname}XXXXXXXXXX.bash") || { printerror ; exit; }
+        tempscript=$(mktemp -p "$localtemp" "${dsname}XXXXXXXXXX") || { printerror ; exit; }
         
         cat >> "$tempscript" << EOF
 #!/bin/bash
@@ -152,7 +152,7 @@ rm '$tempscript'
 
 EOF
         chmod +x "$tempscript"
-        qsub "$tempscript"
+        qsub "$tempscript" || { printerror "qsub" ; exit; }
 
     fi
 }
@@ -236,9 +236,9 @@ mainloop () {
 
 usage () {
 #FIXME add --reindex
-echo "$1 [ -h ] || [ -v ] || | [ -rebuild ] || [ -readdo ] || [ -retindex ] ||"
+echo "$1 [ -h ] || [ -v ] || | ( [ -rebuild ] || [ -readdo ] || [ -retindex ] ||"
 echo "                           [ -reindex ] ||  [ -reover ] || [ -remapfile ||"
-echo "                           [ -regeoext ]"
+echo "                           [ -regeoext ] || [ -rekey ] ) && [ -stop ]"
 }
 
 ###############################################################################
@@ -814,6 +814,19 @@ main () {
         exit
     fi
     
+    ##### localtemp #####
+    
+    localtemp="${basedir}/tmp" 
+    if ! [ -d "$localtemp" ]
+    then
+        mkdir "$localtemp" || { printerror "$localtemp"; exit; }
+    fi
+
+    if ! [ -w "$localtemp" ]
+    then
+        echo "ERROR: no write access to $localtemp"
+        exit
+    fi
     ##### indir #####
     
     if ! [[ -n "${indir}" ]]
