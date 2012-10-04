@@ -36,7 +36,7 @@ source @GENERICDIR@/geoext.bash
 source @GENERICDIR@/tc.bash
 source @GENERICDIR@/pan.bash
 source @GENERICDIR@/newearthexplorer.bash
-source @GENERICDIR@/mkkey.bas
+source @GENERICDIR@/mkkey.bash
 
 ###############################################################################
 ## @brief print est completion time meter to stdout
@@ -128,7 +128,7 @@ startjob() {
 ##### the current bash enviroment #####
 
 $(typeset -p)
-$(typeset -px)
+$(typeset -pf)
 
 ##### reset the temp dir to the bach job temp dir #####
 

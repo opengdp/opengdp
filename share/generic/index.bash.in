@@ -108,9 +108,7 @@ INTO   layers
               '$extent'         ,
               '$gw $gs $ge $gn'
        );
-EOF
-    then
-        sqlite3 "${basedir}/${project}.db" << EOF || printerror "adding layer to db" ; return
+
 UPDATE layers
 SET extent = '$extent',
     gextent = '$gw $gs $ge $gn'

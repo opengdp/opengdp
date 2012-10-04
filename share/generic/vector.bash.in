@@ -20,6 +20,101 @@
 # DEALINGS IN THE SOFTWARE.
 
 ###############################################################################
+## @brief function to add a srs to a vector to a vrt
+##
+## @param img        full path to the input vector
+## @param tmpram     temp dir to place output in
+## @param info       ogrinfo output for vector
+## @param isoriginal flag to mark the vector as original file (dont delete = true)
+##
+## @return 0 for success
+## stdout the full path to the output file
+## 
+###############################################################################
+
+vector_srs () {
+    local img="$1"
+    local tmpram="$2"
+    local info="$3"
+    local isoriginal="$4"
+    
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    
+    local out="${img}"
+
+    if [ -n "$s_srs" ]
+    then
+        out="${tmpram}/srs_${imgbase}.vrt"
+
+        cat > "$out" << EOF
+<OGRVRTDataSource>
+    <OGRVRTLayer name="srs_${imgbase}">
+        <SrcDataSource>${img}</SrcDataSource> 
+        <SrcLayer>${imgbase}</SrcLayer> 
+        <LayerSRS>${s_srs}</LayerSRS>
+    </OGRVRTLayer>
+</OGRVRTDataSource>
+EOF
+    fi
+
+    echo "$out"
+    return 
+}
+
+
+###############################################################################
+## @brief function to translate a vector with a sql to a vrt
+##
+## @param img        full path to the input vector
+## @param tmpram     temp dir to place output in
+## @param info       ogrinfo output for vector
+## @param isoriginal flag to mark the vector as original file (dont delete = true)
+##
+## @return 0 for success
+## stdout the full path to the output file
+## 
+## details
+## global vars
+## @param translate_sql     the sql to translate with. the last part of the
+##                          sql should be from, the basename of the file will
+##                          be tacked on as the tablename
+##
+## translate_sql='select cast(foo as integer) from'
+## see http://www.gdal.org/ogr/ogr_sql.html for more details
+##
+###############################################################################
+
+vector_translate () {
+    local img="$1"
+    local tmpram="$2"
+    local info="$3"
+    local isoriginal="$4"
+    
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    
+    local out="${img}"
+
+    if [[ -n "$translate_sql" ]]
+    then
+        out="${tmpram}/translate_${imgbase}.vrt"
+
+        cat > "$out" << EOF
+<OGRVRTDataSource>
+    <OGRVRTLayer name="translate_${imgbase}">
+        <SrcDataSource>${img}</SrcDataSource>
+        <SrcSQL>$translate_sql $imgbase</SrcSQL>
+    </OGRVRTLayer>
+</OGRVRTDataSource>
+EOF
+    fi
+
+    echo "$out"
+    return 
+}
+
+###############################################################################
 ## @brief function to transform a vector
 ##
 ## @param img        full path to the input vector
@@ -38,6 +133,9 @@ vector_warp () {
     local info="$3"
     local isoriginal="$4"
     
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+
     ##### test the projection #####
        
     if echo $info | grep -v -e "PROJCS" | grep -q 'GEOGCS."GCS_WGS_1984", DATUM."WGS_1984", SPHEROID."WGS[ _]84",6378137,298.257223563\]\]' ||\
@@ -48,8 +146,9 @@ vector_warp () {
     
     else
         
-        ogr2ogr "${tmpram}/translated_${imgbase}.shp" \
+        ogr2ogr "${tmpram}/warp_${imgbase}.shp" \
                 "${img}" \
+                -t_srs "EPSG:4326"
                 > /dev/null || { printerror ; return; }
     fi
         
@@ -58,7 +157,7 @@ vector_warp () {
         rm "${img}"
     fi
     
-    echo "${tmpram}/translated_${imgbase}.shp"
+    echo "${tmpram}/warp_${imgbase}.shp"
     
     return
 }
@@ -109,6 +208,7 @@ dovector () {
     then
         info="$(ogrinfo "${tmpdir}/${img}")"
     fi
+
     ###### RAMDISK? #####
 
     if [ -n "$ramdisk" ]
@@ -119,29 +219,22 @@ dovector () {
     fi
     
     ##### do we need to add a srs to the vector #####
-    
-    if  [ -n "$s_srs" ]
-    then
-    
-        ##### translate to a shape file to do this #####
-        
-        ogr2ogr -a_srs "$s_srs" \
-                "${tmpdir}/${imgdir}${imgbase}_srs.shp" \
-                "${tmpdir}/${img}" \
-                > /dev/null || { printerror ; return; }
 
-        img="${tmpdir}/${imgdir}${imgbase}_srs.shp"
-        imgfile="${img##*/}"
-        imgbase="${imgfile%.*}"
-        imgext="${imgfile##*.}"
-        info="$(ogrinfo -so -al "${tmpdir}/${imgdir}${imgbase}_srs.shp")"
-        
+    local srsed
+    srsed=$(vector_srs "$img" "${tmpram}" \
+                        "$info" "$isoriginal" ) || return
+    
+    if istrue "$isoriginal" 1 && [[ "$srsed" != "${tmpdir}/${img}" ]]
+    then
+        isoriginal="no"
     fi
-    
-    ##### transform the vectors #####
-    
-    local warped
-    warped=$(vector_warp "$img" "${tmpram}" \
+
+    info="$(ogrinfo -so -al "$srsed")"
+        
+    ##### translate? #####
+
+    local translated
+    translated=$(vector_translate "$srsed" "${tmpram}" \
                         "$info" "$isoriginal" ) || return
     
     if istrue "$isoriginal" 1 && [[ "$warped" != "${tmpdir}/${img}" ]]
@@ -149,6 +242,23 @@ dovector () {
         isoriginal="no"
     fi
     
+    info="$(ogrinfo -so -al "$translated")"
+
+    ##### transform the vectors #####
+    
+    local warped
+    warped=$(vector_warp "$translated" "${tmpram}" \
+                        "$info" "$isoriginal" ) || return
+    
+    if istrue "$isoriginal" 1 && [[ "$warped" != "${tmpdir}/${img}" ]]
+    then
+        isoriginal="no"
+    fi
+    
+    info="$(ogrinfo -so -al "$warped")"
+
+    ##### final output #####
+
     ogr2ogr "${tmpram}/final_${imgbase}.shp" \
             "$warped" \
             > /dev/null || { printerror ; return; }

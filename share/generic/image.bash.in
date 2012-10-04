@@ -249,7 +249,7 @@ dosubimg () {
     local imgext=$(file_get_extension "$imgfile")
     local imgbase=$(file_get_basename "$imgfile")
     local imgdir=$(file_get_dir "$img")
-    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
+    local imgextlower=$(tr "[A-Z]" "[a-z]" <<< "$imgext")
     
     ###### RAMDISK? #####
 
@@ -412,6 +412,201 @@ myrescale () {
     fi
 }
 
+
+image_cutup_cb () {
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
+    local isoriginal="$5"
+    local islossy="$6"
+    local xoff="$7"
+    local yoff="$8"
+    local xend="$9"
+    local yend="${10}"
+    
+    local imgfile="${img##*/}"
+    local imgext=$(file_get_extension "$imgfile")
+    local imgbase=$(file_get_basename "$imgfile")
+    local imgdir=$(file_get_dir "$img")
+    local imgextlower=$(tr "[A-Z]" "[a-z]" <<< "$imgext")
+    
+    local tmpram
+    tmpram=$(mkramtmpdir) || return
+    
+    ##### translate #####
+    
+    if [[ "$imgextlower" == "sid" ]]
+    then
+        if ! [ -n "$have_mrsiddecode" ]
+        then
+            printerror "dwh is built without mrsiddecode"
+            return 1
+        fi
+        
+        mrsiddecode -ulxy $xoff $yoff \
+                    -wh $xend $yend \
+                    -s 0 \
+                    -i "${tmpdir}/${img}" \
+                    -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
+                    > /dev/null || { printerror ; return; }
+
+        ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
+            
+        if grep -e "PROJCS.*\]\][^,]" <<< $info > /dev/null
+        then
+            local srs="$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)"
+            gdal_translate -of VRT \
+                           -a_srs "$srs" \
+                           "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
+                           "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" \
+                           > /dev/null || { printerror ; return; }
+        else
+            echo "ERROR: no srs for ${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
+            ls -l ${tmpram}/
+            rm -rf "$tmpram"
+            return
+        fi
+
+        dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
+                 "$tmpram" "$ts" \
+                 "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
+                 "$islossy" "no" || return
+        
+        ###### rm the tif #####
+
+        rm "${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
+    
+    ##### if its ecw then use a tif for the temp step. libecw + nearblack = fail #####
+
+    elif [[ "$imgextlower" == "ecw" ]] || [[ "$imgextlower" == "vrt" ]] && grep "${tmpdir}/${img}" -e "SourceFilename.*[.]ecw<" > /dev/null
+    then
+        gdal_translate -srcwin $xoff $yoff $xend $yend \
+                       "${tmpdir}/${img}"\
+                       "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
+                       > /dev/null || { printerror ; return; }
+    
+        dosubimg "${imgbase}_${xoff}_${yoff}.tif" \
+                 "$tmpram" "$ts" \
+                 "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.tif")" \
+                 "true" "no" || return
+        
+    ##### any other kind of image #####
+
+    else
+        gdal_translate -of VRT -srcwin $xoff $yoff $xend $yend  \
+                       "${tmpdir}/${img}"\
+                       "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" \
+                       > /dev/null || { printerror ; return; }
+    
+        dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
+                 "$tmpram" "$ts" \
+                 "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
+                 "$islossy" "no" || return
+    fi
+    
+    rm -rf "$tmpram"
+
+}
+
+###############################################################################
+## @brief function to bust a larger image into chunks and proccess
+##
+## @param img        full path to the input image
+## @param tmpdir     temp dir to place output in
+## @param ts         timestamp of the image
+## @param info       gdalinfo output for image
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+##
+###############################################################################
+
+image_cutup () {    
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
+    local islossy="$5"
+    local isoriginal="$6"
+    local cutup_func="$7"
+    local doimg_func="$8"
+    
+    local imgfile="${img##*/}"
+    local imgext=$(file_get_extension "$imgfile")
+    local imgbase=$(file_get_basename "$imgfile")
+    local imgdir=$(file_get_dir "$img")
+    local imgextlower=$(tr "[A-Z]" "[a-z]" <<< "$imgext")
+    
+    ##### get the xy size in pixels #####
+    
+    local x y
+    read x y < <(get_size "" "$info")
+    
+    local cutat=16384
+    
+    ##### is the img too big? #####
+
+    if (( x > cutat )) || (( y > cutat ))
+    then
+        
+        ##### loop over x #####
+        
+        local xsize xoff xend
+        xsize=$cutat
+        
+        
+        for ((xoff = 0; xoff < x; xoff += cutat))
+        do
+            
+            ##### set the x size of the sub img #####
+            
+            if ((xoff + xsize >= x))
+            then
+                ((xsize = x - xoff))
+            fi
+            
+            ##### calc xend #####
+            
+            (( xend = xoff + xsize < x ? xsize + 1 : xsize ))
+            
+            ##### loop over y #####
+            
+            local ysize yoff yend
+            ysize=$cutat
+            for ((yoff = 0; yoff < y; yoff += cutat))
+            do
+                
+                ##### set the y size of the sub img #####
+                
+                if ((yoff + ysize >= y))
+                then
+                    ((ysize = y - yoff))
+                fi
+                
+                ##### calc yend #####
+                
+                (( yend = yoff + ysize < y ? ysize + 1 : ysize))
+
+                ##### proccess #####
+                
+                "$cutup_func" "${img}" "$tmpdir" "$ts" \
+                              "$info" "$isoriginal" "$islossy" \
+                              "$xoff" "$yoff" "$xend" "$yend" || return
+                
+            done
+        done
+    
+    ##### its not too big do the image as is #####
+    
+    else
+    
+        "$doimg_func" "${img}" "$tmpdir" "$ts" \
+                      "$info" "$islossy" "$isoriginal" || return
+    fi
+
+}
+
 ###############################################################################
 ## @brief function to bust a larger image into chunks and proccess
 ##
@@ -447,7 +642,7 @@ doimg () {
     local imgext=$(file_get_extension "$imgfile")
     local imgbase=$(file_get_basename "$imgfile")
     local imgdir=$(file_get_dir "$img")
-    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
+    local imgextlower=$(tr "[A-Z]" "[a-z]" <<< "$imgext")
     
     ##### double check the info #####
     
@@ -495,154 +690,9 @@ doimg () {
         info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
     fi
     
-    ##### get the xy size in pixels #####
-    
-    local x
-    local y
-
-    read x y < <(echo "$info" | grep -e "Size is"  | sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/' )
-
-    
-    ##### is the img too big? #####
-    
-    ((cutat=16384))
-    
-    if [[ $x -gt $cutat ]] || [[ $y -gt $cutat ]]
-    then
+    image_cutup "${img}" "$tmpdir" "$ts" \
+                "$info" "$islossy" "$isoriginal" "image_cutup_cb" "dosubimg"
         
-        ##### loop over x #####
-
-        local xsize
-        local xoff
-
-        ((xsize = $cutat))
-        for ((xoff = 0; xoff < x; xoff += $cutat))
-        do
-            
-            ##### set the x size of the sub img #####
-            
-            if ((xoff + xsize >= x))
-            then
-                ((xsize = x - xoff))
-            fi
-                
-            ##### loop over y #####
-            
-            local ysize
-            local yoff
-            
-            ((ysize = $cutat))
-            for ((yoff = 0; yoff < y; yoff += $cutat))
-            do
-                
-                ##### set the y size of the sub img #####
-            
-                if ((yoff + ysize >= y))
-                then
-                    ((ysize = y - yoff))
-                fi
-
-                local myislossy="$islossy"
-
-#                ##### make sure if were in the center of the img we turn off islossy #####
-#                
-#                if [[ "$islossy" == "yes" ]] && \
-#                   ((yoff > 0 )) && (( ysize + yoff < y )) && \
-#                   ((xoff > 0 )) && (( xsize + xoff < x ))
-#                then
-#                    myislossy="no"
-#                fi
-                
-                if [ -n "$ramdisk" ]
-                then
-                    local tmpram=$(mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX")
-                else
-                    local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
-                fi
-                
-                ##### translate #####
-                
-                if [[ "$imgextlower" == "sid" ]]
-                then
-                    if ! [ -n "$have_mrsiddecode" ]
-                    then
-                        printerror "dwh is built without mrsiddecode"
-                        return 1
-                    fi
-                    
-                    mrsiddecode -ulxy $xoff $yoff -wh \
-                                $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
-                                $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
-                                -s 0 \
-                                -i "${tmpdir}/${img}" \
-                                -o "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || { printerror ; return; }
-
-                    ##### mrsiddecode does not copy the srs if the srs is in a aux file so we need to copy it #####
-                    
-                    if grep -e "PROJCS.*\]\][^,]" <<< $info > /dev/null
-                    then
-                        gdal_translate -of VRT \
-                                        -a_srs "$(sed s/'.*\(PROJCS.*\]\][^,]\).*/\1/' <<< $info)" \
-                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" \
-                                        "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || { printerror ; return; }
-                    else
-                        echo "ERROR: no srs for ${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
-                        ls -l ${tmpram}/
-                        rm -rf "$tmpram"
-                        return
-                    fi
-
-                    dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
-                             "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
-                             "$myislossy" "no" || return
-                    
-                    ###### rm the tif #####
-
-                    rm "${tmpram}/${imgbase}_${xoff}_${yoff}.tif"
-                
-                ##### if its ecw then use a tif for the temp step. libecw + nearblack = fail #####
-
-                elif [[ "$imgextlower" == "ecw" ]] || [[ "$imgextlower" == "vrt" ]] && grep "${tmpdir}/${img}" -e "SourceFilename.*[.]ecw<" > /dev/null
-                then
-                    gdal_translate -srcwin $xoff $yoff \
-                                   $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
-                                   $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
-                                   "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.tif" > /dev/null || { printerror ; return; }
-            
-                    dosubimg "${imgbase}_${xoff}_${yoff}.tif" \
-                             "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.tif")" \
-                             "true" "no" || return
-                
-                ##### any other kind of image #####
-
-                else
-                    gdal_translate -of VRT -srcwin $xoff $yoff \
-                                   $(($xoff + $xsize < $x ? $xsize + 1 : $xsize)) \
-                                   $(($yoff + $ysize < $y ? $ysize + 1 : $ysize)) \
-                                   "${tmpdir}/${img}"\
-                                   "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt" > /dev/null || { printerror ; return; }
-            
-                    dosubimg "${imgbase}_${xoff}_${yoff}.vrt" \
-                             "$tmpram" "$ts" \
-                             "$(gdalinfo "${tmpram}/${imgbase}_${xoff}_${yoff}.vrt")" \
-                             "$myislossy" "no" || return
-                fi
-                
-                rm -rf "$tmpram"
-
-            done
-        done
-    
-    ##### its not too big do the image as is #####
-    
-    else
-    
-        dosubimg "${img}" "$tmpdir" "$ts" \
-                 "$info" "$islossy" "$isoriginal" || return
-    fi
 
 }
 

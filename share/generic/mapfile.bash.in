@@ -77,125 +77,7 @@ mapfile_oformat_png='
   END
 ';
 
-###############################################################################
-## @brief function to write out a map file with no min max
-##
-## @param ts        timestamp of the layer
-## @param extent    extent of the layer
-## @param latest    "latest" or "previous" if we are making lateste or previous
-##                     map
-##
-## @return 0 for success
-##
-## @details
-## global vars
-## @param vector          flag to mark the data as vector not raster
-## @param dsname          name of the dataset
-## @param wms_srs         wms_srs metadata
-## @param myprojection    mapserver projection tags
-## @param outdir          dataset output dir 
-## @param vectorstyle     mapserver STYLE tags for vector data
-## @param offsite         mapserver OFFSITE tags
-## 
-###############################################################################
 
-writemap_nominmax () {
-    local ts="$1"
-    local extent="$2"
-    local latest="$3"
-    
-    if [[ "$latest" == "latest" ]]
-    then
-        local lname="${dsname}_latest"
-        local mapfile="${outdir}/${dsname}latest.map"
-
-    elif [[ "$latest" == "previous" ]]
-    then
-        local lname="${dsname}_previous"
-        local mapfile="${outdir}/${dsname}previous.map"
-        
-    else
-        local lname="${dsname}_${ts}"
-        local mapfile="${outdir}/${dsname}${ts}.map"
-
-    fi
-    ##### do we have image data? #####
-    
-    if ! istrue "$vector"
-    then
-        ##### if dokey #####
-        
-        if [ -n "$mskey" ]
-        then
-            #FIXME are keyimages reletive to included mapfile or root?
-            class='
-    CLASS
-        NAME ""
-        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
-    END
-    '
-    
-        fi
-        
-        cat > "${mapfile}" << EOF
-        
-  LAYER
-    NAME '${lname}_nominmax'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-
-    ${myprojection}
-    
-    METADATA
-      'wms_title'           '${lname}_nominmax'
-      'wms_srs'             '${wms_srs}'
-      'wms_extent'	        '$extent'
-      "ows_enable_request"  "*"
-    END
-
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    $offsite
-    PROCESSING "RESAMPLE=AVERAGE"
-  END
-EOF
-
-    ##### do we have vector data? #####
-
-    else 
-        cat > "${mapfile}" << EOF
-        
-  LAYER
-    NAME '${lname}_nominmax'
-    STATUS ON
-    TYPE POLYGON
-    
-    ${myprojection}
-
-    METADATA
-      'wms_title'           '${lname}_nominmax'
-      'wms_srs'             '${wms_srs}'
-      'wms_extent'          '$extent'
-      "ows_enable_request"  "*"
-    END
-    
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    
-    CLASS
-      NAME "Countries"
-      OUTLINECOLOR 255 0 0
-      COLOR 255 0 0
-    END
-
-${vectorstyle}
-
-  END  # layer
-
-EOF
-
-    fi
-
-}
 
 ###############################################################################
 ## @brief function to write out a map file with overview
@@ -350,6 +232,289 @@ EOF
 }
 
 ###############################################################################
+## @brief function to write out a map file without a overview layer for vector
+##         data with a fixed style
+##
+## @param lname     layer name
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param mapfile   full path to the mapfile
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vectorstyle     mapserver STYLE tags for vector data
+##
+#################################################################################
+
+writemap_vector_fixedstyle () {
+    local lname="$1"
+    local ts="$2"
+    local extent="$3"
+    local mapfile="$4"
+                
+    
+cat > "${mapfile}" << EOF
+        
+  LAYER
+    NAME '${lname}'
+    STATUS ON
+    TYPE POLYGON
+
+    ${myprojection}
+    
+    METADATA
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
+    END
+    
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    
+${vectorstyle}
+
+  END  # layer
+
+EOF
+    
+}
+
+###############################################################################
+## @brief function to write out a map file without a overview layer for vector
+##         data with a gradient style
+##
+## @param lname     layer name
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param mapfile   full path to the mapfile
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vector_gradient
+## @param vector_gradient_field
+##
+###############################################################################
+
+writemap_vector_gradient () {
+    local lname="$1"
+    local ts="$2"
+    local extent="$3"
+    local mapfile="$4"
+                
+    cat > "${mapfile}" << EOF
+        
+  LAYER
+    NAME '${lname}'
+    STATUS ON
+    TYPE POLYGON
+
+    ${myprojection}
+    
+    METADATA
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
+    END
+    
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    
+    CLASSITEM '${vector_gradient_field}'
+
+EOF
+
+    local v r g b label
+    while read v r g b label
+    do
+        cat >> "${mapfile}" << EOF
+    CLASS
+      NAME '$label'
+      #TEMPLATE 
+      EXPRESSION ([${vector_gradient_field}] <= ${v} )
+      STYLE
+        COLOR $r $g $b
+        WIDTH 2
+      END
+      #SYMBOL 'circle'
+    END
+
+EOF
+
+    done <<< "$vector_gradient"
+
+
+    cat >> "${mapfile}" << EOF
+  END  # layer
+
+EOF
+
+
+}
+
+###############################################################################
+## @brief function to write out a map file without a overview layer for vector
+##         data with a fixed scale style
+##
+## @param lname     layer name
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param mapfile   full path to the mapfile
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param vector_scale
+## @param vector_scale_field
+##
+###############################################################################
+
+writemap_vector_fixed_scale () {
+    local lname="$1"
+    local ts="$2"
+    local extent="$3"
+    local mapfile="$4"
+                
+    cat > "${mapfile}" << EOF
+        
+  LAYER
+    NAME '${lname}'
+    STATUS ON
+    TYPE POLYGON
+
+    ${myprojection}
+    
+    METADATA
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'          '$extent'
+      "ows_enable_request"  "*"
+    END
+    
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    
+    CLASSITEM '${vector_scale_field}'
+
+EOF
+
+    local v r g b label
+    while read v r g b label
+    do
+        cat >> "${mapfile}" << EOF
+    CLASS
+      NAME '$label'
+      #TEMPLATE 
+      EXPRESSION "${v}"
+      STYLE
+        COLOR $r $g $b
+        WIDTH 2
+      END
+      #SYMBOL 'circle'
+    END
+
+EOF
+
+    done <<< "$vector_fixed_scale"
+
+
+    cat >> "${mapfile}" << EOF
+  END  # layer
+
+EOF
+
+
+}
+
+
+###############################################################################
+## @brief function to write out a map file without a overview layer for raster
+##         data
+##
+## @param lname     layer name
+## @param ts        timestamp of the layer
+## @param extent    extent of the layer
+## @param mapfile   full path to the mapfile
+##
+## @return 0 for success
+##
+## @details
+## global vars
+## @param vector          flag to mark the data as vector not raster
+## @param dsname          name of the dataset
+## @param wms_srs         wms_srs metadata
+## @param myprojection    mapserver projection tags
+## @param outdir          dataset output dir 
+## @param mkkey           if set the it uses a fixed legend image
+## @param offsite         mapserver OFFSITE tags
+##
+###############################################################################
+
+writemap_raster () {
+    local lname="$1"
+    local ts="$2"
+    local extent="$3"
+    local mapfile="$4"
+    
+    ##### if dokey #####
+    
+    if [ -n "$mskey" ]
+    then
+        #FIXME are keyimages reletive to included mapfile or root?
+        class='
+    CLASS
+        NAME ""
+        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
+    END
+    '
+    
+    fi
+    
+    cat > "${mapfile}" << EOF
+        
+  LAYER
+    NAME '${lname}'
+    TYPE RASTER
+    STATUS ON
+    DUMP TRUE
+
+    ${myprojection}
+
+    METADATA
+      'wms_title'           '${lname}'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
+    END
+    
+    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    $offsite
+    PROCESSING "RESAMPLE=AVERAGE"
+    $class
+  END
+
+EOF
+
+}
+###############################################################################
 ## @brief function to write out a map file without a overview layer
 ##
 ## @param ts        timestamp of the layer
@@ -369,8 +534,10 @@ EOF
 ## @param outdir          dataset output dir 
 ## @param vectorstyle     mapserver STYLE tags for vector data
 ## @param offsite         mapserver OFFSITE tags
-##
-#################################################################################
+## @param vector_gradient
+## @param vector_gradient_field
+## @param writemap_vector_fixed_scale 
+###############################################################################
 
 writemap_noover () {
     local ts="$1"
@@ -397,71 +564,32 @@ writemap_noover () {
     
     if ! istrue "$vector"
     then
-        ##### if dokey #####
         
-        if [ -n "$mskey" ]
-        then
-            #FIXME are keyimages reletive to included mapfile or root?
-            class='
-    CLASS
-        NAME ""
-        KEYIMAGE "'"done/${dsname}/${dsname}.key.png"'"
-    END
-    '
+        writemap_raster "${lname}" "$ts" "$extent" "$mapfile"
     
-        fi
-        cat > "${mapfile}" << EOF
-        
-  LAYER
-    NAME '${lname}'
-    TYPE RASTER
-    STATUS ON
-    DUMP TRUE
-
-    ${myprojection}
-
-    METADATA
-      'wms_title'           '${lname}'
-      'wms_srs'             '${wms_srs}'
-      'wms_extent'	        '$extent'
-      "ows_enable_request"  "*"
-    END
+    ##### vector with fixed style #####
     
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
-    $offsite
-    PROCESSING "RESAMPLE=AVERAGE"
-    $class
-  END
-
-EOF
-
-    ##### do we have vector data? #####
-
-    else 
-        cat > "${mapfile}" << EOF
-        
-  LAYER
-    NAME '${lname}'
-    STATUS ON
-    TYPE POLYGON
-
-    ${myprojection}
+    elif [ -n "${vectorstyle}" ]
+    then
     
-    METADATA
-      'wms_title'           '${lname}'
-      'wms_srs'             '${wms_srs}'
-      'wms_extent'          '$extent'
-      "ows_enable_request"  "*"
-    END
+        writemap_vector_fixedstyle "${lname}" "$ts" "$extent" "$mapfile"
     
-    TILEINDEX '${outdir}/${dsname}${ts}.shp'
+    ##### vector with gradient #####
     
-${vectorstyle}
-
-  END  # layer
-
-EOF
+    elif [ -n "${vector_gradient}" ]
+    then
+    
+        writemap_vector_gradient "${lname}" "$ts" "$extent" "$mapfile"
+    
+    ##### vector with fixed style #####
+    
+    elif [ -n "${vector_fixed_scale}" ]
+    then
+    
+        writemap_vector_fixed_scale  "${lname}" "$ts" "$extent" "$mapfile"
+    
     fi
+     
 }
 
 ###############################################################################
@@ -513,8 +641,6 @@ writemap_NewWorld () {
 
 EOF
 
-
-    
 }
 
 ##############################################################################
@@ -673,9 +799,6 @@ addinclude_NewWorld () {
 ## @param urlcgibin       url for the projects mapserver cgibin
 ##
 ###############################################################################
-
-
-
 
 write_main_map () {
 

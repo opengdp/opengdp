@@ -594,6 +594,12 @@ dozip () {
         then
             iext="[Gg][Ii][Ff]"
         
+        ##### grd #####
+        
+        elif grep -i -e "[.]grd$" <<<"$zipinfo" > /dev/null
+        then
+            iext="[Gg][Rr][Dd]"
+
         ##### no match, bail #####
         
         else
@@ -776,6 +782,12 @@ dotar () {
         then
             iext="[Gg][Ii][Ff]"
         
+        ##### grd #####
+        
+        elif grep -i -e "[.]grd$" <<<"$zipinfo" > /dev/null
+        then
+            iext="[Gg][Rr][Dd]"
+
         ##### no match, bail #####
         
         else
@@ -1275,7 +1287,7 @@ dofile () {
     local ext=$(file_get_extension "$file")
     local base=$(file_get_basename "$file")
     
-    local ts=$(${datefunc} <<< "$myline")
+    local ts=$(dodate <<< "$myline")
     
     if istrue "$DEBUG_dofile"
     then
@@ -1360,3 +1372,4 @@ dofile () {
     return $status
     
 }
+

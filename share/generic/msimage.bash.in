@@ -189,30 +189,10 @@ mk_3of1_vrt () {
     infile=$1
     outvrt=$2
     
-    ##### make a temp dir #####
+    gdalbuildvrt -separate "$outvrt" \
+                 "$infile" "$infile" "$infile" \
+                 > /dev/null || { printerror ; return; }
     
-    local tmpdir
-    tmpdir=$(mktemp -d -p "$tmp" "${dsname}XXXXXXXXXX") || { printerror ; return; }
-    
-    ##### build a temp vrt to get most of our info from #####
-
-    gdal_translate -of VRT "$infile" "${tmpdir}/mk_3of1_vrt.vrt" || { printerror ; return; }
-    
-    ##### get the band type #####
-    
-    local type=$(get_band_type "$infile" 1)
-
-    keep=$(sed "${tmpdir}/mk_3of1_vrt.vrt" -e 's:</VRTDataset>::')
-    
-    cat > "$outvrt" << EOF
-$keep
-  <VRTRasterBand dataType="$type" band="2">
-  </VRTRasterBand>
-  <VRTRasterBand dataType="$type" band="3">
-  </VRTRasterBand>
-</VRTDataset>
-EOF
-
 }
 
 ###############################################################################

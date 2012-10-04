@@ -59,7 +59,31 @@ printerror () {
     return $ecode
 }
 
+###############################################################################
+## @brief function to mk a temp dir in ramdisk if the optgion is set or regular
+##        temp dir if not
+## 
+## @return 0 for success 1 for failure
+## @retval stdout   the full path to the new temp dir
+##
+## @details
+## global vars
+## @param ramdisk   if set the dir will be made here
+## @param tmpdir    the dir will be made here if ramdisk not set
+## @param 
+##
+###############################################################################
 
+mkramtmpdir () {
+    
+    if [ -n "$ramdisk" ]
+    then
+        mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX" || { printerror ; return; }
+    else
+        mktemp -d -p "${tmpdir}"  "${dsname}XXXXXXXXXX" || { printerror ; return; }
+    fi
+}
+    
 ###############################################################################
 ## @brief function to test for true
 ##
@@ -145,6 +169,14 @@ getextent () {
     ts="$1"
 
     ogrinfo -so -al "${outdir}/${dsname}${ts}.shp" |\
+     grep Extent: |\
+     sed -e 's/) - (/ /' -e 's/Extent: (//' -e 's/,//g' -e 's/)//'
+}
+
+getextent2 () {
+    file="$1"
+
+    ogrinfo -so -al "${file}" |\
      grep Extent: |\
      sed -e 's/) - (/ /' -e 's/Extent: (//' -e 's/,//g' -e 's/)//'
 }
@@ -527,6 +559,7 @@ get_transform () {
 ## @brief function to get the size of an image
 ##
 ## @param   image   full path to the image file
+## @param   info    cached gdalinfo string
 ##
 ## @return 0 on success 1 on failure
 ## @retval stdout the size of the image "x y"
@@ -534,9 +567,16 @@ get_transform () {
 ###############################################################################
 
 get_size () {
-
-    gdalinfo $1 |\
-     grep -e "Size is" |\
+    local img="$1"
+    local info="$2"
+    
+    if [[ -n "$info" ]]
+    then
+        grep -e "Size is" <<< "$info"
+    else
+        gdalinfo "$img" |\
+         grep -e "Size is"
+    fi |\
      sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/'
 
 }
@@ -626,6 +666,17 @@ get_srs () {
      tr "\n" " " |\
      sed -e 's/[ ]*//g' \
          -e 's/"/&quot;/'
+}
+
+get_minmax () {
+    local img="$1"
+    local band="$2"
+
+    gdalinfo -mm "$img" |\
+     grep -A1 "^Band $band" |\
+     grep "Min/Max" |\
+     sed 's|.*Min/Max=\([-.0-9]*\),\([-.0-9]*\).*|\1 \2|'
+
 }
 
 ###############################################################################
@@ -846,8 +897,8 @@ file_get_basename () {
     local base2="${base%.*}"
     local ext="${file##*.}"
     local ext2="${base##*.}"
-    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+    local ext=$(tr "[A-Z]" "[a-z]" <<< "$ext")
+    local ext2=$(tr "[A-Z]" "[a-z]" <<< "$ext2")
 
     if [[ "$ext2" == "tar" ]]
     then
@@ -878,8 +929,8 @@ file_get_extension () {
     local base2="${base%.*}"
     local ext="${file##*.}"
     local ext2="${base##*.}"
-    local ext="$(tr [A-Z] [a-z] <<< "$ext")"
-    local ext2="$(tr [A-Z] [a-z] <<< "$ext2")"
+    local ext=$( tr "[A-Z]" "[a-z]" <<< "$ext")
+    local ext2=$(tr "[A-Z]" "[a-z]" <<< "$ext2")
 
     if [[ "$ext2" == "tar" ]]
     then
