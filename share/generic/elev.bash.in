@@ -1,0 +1,479 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+###############################################################################
+## @brief function to warp an elev image
+##
+## @param img        full path to the input image
+## @param tmpram     temp dir to place output in
+## @param info       gdalinfo output for image
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+## 
+###############################################################################
+
+elev_warp (){
+    local img="$1"
+    local tmpram="$2"
+    local info="$3"
+    local isoriginal="$4"
+    
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+
+    ##### is it already 4326? #####
+       
+    if echo $info | grep 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]' > /dev/null
+    then
+        
+        ##### is it 0-360? #####
+
+        if is_0to360 "${img}"
+        then
+            
+            ##### warp to -180 - 180 #####
+
+            local xs ys
+            read xs ys < <(get_pixelsize "${img}")
+            gdalwarp --config CENTER_LONG 0 \
+                     -tr $xs $ys -wo INIT_DEST=-9999 -dstnodata -9999 \
+                     -co TILED=YES -t_srs EPSG:4326 \
+                     "${img}" \
+                     "${tmpram}/warped_${imgbase}.tif" \
+                     > /dev/null || { printerror ; return; }
+        
+        ##### does not need warped #####
+
+        else                        
+            echo "${img}"
+            return
+        fi
+    
+    ##### PROJ IS NOT 4326 #####    
+    
+    else
+        
+        ##### no projection and 0-360? #####
+
+        if echo "$info" | grep -q "Coordinate System is \`'" && is_0to360 "${img}"
+        then
+
+            ##### warp to -180 - 180 #####
+
+            local xs ys
+            read xs ys < <(get_pixelsize "${img}")
+            gdalwarp --config CENTER_LONG 0 \
+                     -tr $xs $ys -wo INIT_DEST=-9999 -dstnodata -9999 \
+                     -s_srs "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" \
+                     -co TILED=YES -t_srs EPSG:4326 \
+                     "${img}" \
+                     "${tmpram}/warped_${imgbase}.tif" \
+                     > /dev/null || { printerror ; return; }
+        
+        ##### normal warp #####
+
+        else
+            
+            gdalwarp -co TILED=YES -t_srs EPSG:4326 \
+                     "${img}" \
+                     "${tmpram}/warped_${imgbase}.tif" \
+                     > /dev/null || { printerror ; return; }
+        
+        fi
+    fi
+    
+    if ! istrue "$isoriginal" 1
+    then
+        rm "${img}"
+    fi
+    
+    echo "${tmpram}/warped_${imgbase}.tif"
+    
+    return
+}
+
+
+mk_1band_lut_vrt () {
+    local infile="$1"
+    local outvrt="$2"
+    local lut="$3"
+    local outtype="$4"
+
+    local xs
+    local ys
+    read xs ys < <(get_size "$infile")
+    
+    local xo
+    local yo
+    read xo yo < <(get_origin "$infile")
+    
+    local xd
+    local yd
+    read xd yd < <(get_pixelsize "$infile")
+    
+    local srs
+    read srs < <(get_srs "$infile")
+    
+    cat > "$outvrt" << EOF
+<VRTDataset rasterXSize="$xs" rasterYSize="$ys">
+  <SRS>$srs</SRS>
+  <GeoTransform>$xo,  $xd,  0.0,  $yo,  0.0, $yd</GeoTransform>
+  <VRTRasterBand dataType="${outtype}" band="1">
+    <Metadata />
+    <ComplexSource>
+      <SourceFilename relativeToVRT="0">$infile</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <DstRect xOff="0" yOff="0" xSize="$xs" ySize="$ys" />
+      <LUT>$lut</LUT>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>
+EOF
+
+}
+
+###############################################################################
+## @brief function to produce a colored hillshade image
+##
+## @param img       input image
+## @param tmpdir    dir to use for temp files
+## 
+## @detail as for now this assumes nodata is the lowest value in the dem
+###############################################################################
+
+do_hillshade_all () {
+    local img="$1"
+    local tempdir="$2"
+    
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+    
+    ##### get the dem's min max values #####
+
+    local min max
+    read min max < <(get_minmax "$img" 1) || return
+    
+    ##### make a 8 bit copy of the dem #####
+    
+    gdal_translate -scale $min $max -ot byte \
+                   "$img" \
+                   "${tempdir}/${imgbase}_byte.tif" \
+                   > /dev/null || { printerror ; return; }
+    
+    ##### collar the copy  we need an extra  2 pix #####
+    ##### to remove artifacts around the hillshade #####
+
+    nearblack -setalpha -of gtiff -near 0 -nb 2 \
+              "${tempdir}/${imgbase}_byte.tif" \
+              -o "${tempdir}/${imgbase}_nb.tif" \
+              > /dev/null || { printerror ; return; }
+    
+    ##### extract the alapha band #####
+    
+    gdal_translate -b 2 -of VRT \
+                   "${tempdir}/${imgbase}_nb.tif" \
+                   "${tempdir}/${imgbase}_alpha.vrt" \
+                   > /dev/null || { printerror ; return; }
+
+    ##### write the gradient out to a tempfile #####
+
+    echo "$hillshade_gradient" > "${tempdir}/hillshade_gradient.txt" || { printerror ; return; }
+
+    ##### build a color relief image #####
+
+    gdaldem color-relief -alpha \
+                         "$img" \
+                         "${tempdir}/hillshade_gradient.txt" \
+                         "${tempdir}/${imgbase}_colored.tif" \
+                         > /dev/null || { printerror ; return; }
+    
+    ##### build a hillshade image #####
+
+    gdaldem hillshade -z 5 -s 111120 \
+                      "$img" \
+                      "${tempdir}/${imgbase}_hillshade.tif" \
+                      > /dev/null || { printerror ; return; }
+    
+    ##### copy the hilshade output to all 3 bands in a rgb vrt #####
+
+    mk_3of1_vrt "${tempdir}/${imgbase}_hillshade.tif" \
+                "${tempdir}/${imgbase}_hillshade_3band.vrt" > /dev/null || return
+
+    ##### combine the color relief image and the hillshade image #####
+
+    gdalwarp "${tempdir}/${imgbase}_hillshade_3band.vrt" \
+             "${tempdir}/${imgbase}_colored.tif" \
+             "${tempdir}/${imgbase}_colored_hillshade.tif" \
+             > /dev/null || { printerror ; return; }
+
+    ##### add the alpha band (collar) to the coloed hillshade image #####
+    
+    local rgba
+    rgba=$(combine_rgb_a "${imgbase}_colored_hillshade" \
+                         "${tempdir}" \
+                         "${tempdir}/${imgbase}_colored_hillshade.tif" \
+                         "${tempdir}/${imgbase}_alpha.vrt") || return
+
+    echo "$rgba"
+
+}
+
+
+###############################################################################
+## @brief function to produce a colored hillshade image
+##
+## @param img       input image
+## @param tmpdir    dir to use for temp files
+## 
+## @detail as for now this assumes nodata is the lowest value in the dem
+###############################################################################
+
+do_hillshade_maskland () {
+    local img="$1"
+    local tempdir="$2"
+    
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+    
+    ##### get the dem's min max values #####
+
+    local min max
+    read min max < <(get_minmax "$img" 1) || return
+    local lowest=$(fcalc "$min + 1")
+    
+    local lut
+    lut="${min}:0,${lowest}:255,0:255,1:0,${max}:0"
+    mk_1band_lut_vrt "$img" "${tempdir}/${imgbase}_alpha.vrt" "$lut" "Byte" || return
+
+    #mk_elev_land_mask_vrt "$img" "${tempdir}/${imgbase}_alpha2.vrt"
+
+    ##### get the dem's min max values #####
+
+    #local min max
+    #read min max < <(get_minmax "$img" 1) || return
+    
+    ##### make a 8 bit copy of the dem #####
+    
+    #gdal_translate -scale $min $max -ot byte \
+    #               "$img" \
+    #               "${tempdir}/${imgbase}_byte.tif" \
+    #               > /dev/null || { printerror ; return; }
+    
+    ##### collar the copy  we need an extra  2 pix #####
+    ##### to remove artifacts around the hillshade #####
+
+    #nearblack -setalpha -of gtiff -near 0 -nb 2 \
+    #          "${tempdir}/${imgbase}_byte.tif" \
+    #          -o "${tempdir}/${imgbase}_nb.tif" \
+    #          > /dev/null || { printerror ; return; }
+
+    ##### extract the alapha band #####
+    
+    #gdal_translate -b 2 -of VRT \
+    #               "${tempdir}/${imgbase}_nb.tif" \
+    #               "${tempdir}/${imgbase}_alpha.vrt" \
+    #               > /dev/null || { printerror ; return; }
+    
+    ##### and the mask bands together #####
+
+    #local finalmask
+    #finalmask=$(combine_masks "${imgbase}" "${tempdir}" "${imgbase}_alpha.vrt" "${imgbase}_alpha2.vrt") || return
+
+    ##### write the gradient out to a tempfile #####
+
+    echo "$hillshade_gradient" > "${tempdir}/hillshade_gradient.txt" || { printerror ; return; }
+
+    ##### build a color relief image #####
+
+    gdaldem color-relief -alpha \
+                         "$img" \
+                         "${tempdir}/hillshade_gradient.txt" \
+                         "${tempdir}/${imgbase}_colored.tif" \
+                         > /dev/null || { printerror ; return; }
+    
+    ##### build a hillshade image #####
+
+    gdaldem hillshade -z 5 -s 111120 \
+                      "$img" \
+                      "${tempdir}/${imgbase}_hillshade.tif" \
+                      > /dev/null || { printerror ; return; }
+    
+    ##### copy the hilshade output to all 3 bands in a rgb vrt #####
+
+    mk_3of1_vrt "${tempdir}/${imgbase}_hillshade.tif" \
+                "${tempdir}/${imgbase}_hillshade_3band.vrt" > /dev/null || return
+
+    ##### combine the color relief image and the hillshade image #####
+
+    gdalwarp "${tempdir}/${imgbase}_hillshade_3band.vrt" \
+             "${tempdir}/${imgbase}_colored.tif" \
+             "${tempdir}/${imgbase}_colored_hillshade.tif" \
+             > /dev/null || { printerror ; return; }
+
+    ##### add the alpha band (collar) to the coloed hillshade image #####
+    
+    local rgba
+    rgba=$(combine_rgb_a "${imgbase}_colored_hillshade" \
+                         "${tempdir}" \
+                         "${tempdir}/${imgbase}_colored_hillshade.tif" \
+                         "${tempdir}/${imgbase}_alpha.vrt") || return
+
+    echo "$rgba"
+
+}
+
+do_hillshade () {
+    local img="$1"
+    local tempdir="$2"
+
+    if istrue "$maskland"
+    then
+        do_hillshade_maskland "$@"
+    else
+        do_hillshade_all "$@"
+    fi
+}
+
+
+do_contour_all () {
+    local img="$1"
+    local tempdir="$2"
+    
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+
+    local elev junk
+    local levels=()
+    while read elev junk
+    do
+        levels=( "${levels[@]}" "$elev" )
+    done <<< "$hillshade_gradient"
+
+    gdal_contour -b 1 -a elev -fl "${levels[@]}" \
+                 "$img" \
+                 "${tempdir}/${imgbase}_contours.shp" \
+                 > /dev/null || { printerror ; return; }
+
+    
+    echo "${tempdir}/${imgbase}_contours.shp"
+}
+
+
+
+
+do_contour_maskland () {
+    local img="$1"
+    local tempdir="$2"
+    
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+
+    ##### get the dem's min max values #####
+
+    local min max
+    read min max < <(get_minmax "$img" 1) || return
+    
+
+    local lut
+    lut="-9999:-9999,${min}:${min},0:0,${max}:0"
+    
+    mk_1band_lut_vrt "$img" \
+                     "${tempdir}/${imgbase}_landmask.vrt" \
+                     "$lut" \
+                     $(get_band_type "$img" 1) || return
+
+    local elev junk
+    local levels=()
+    while read elev junk
+    do
+        levels=( "${levels[@]}" "$elev" )
+    done <<< "$hillshade_gradient"
+
+    gdal_contour -b 1 -a elev -snodata -9999 -fl "${levels[@]}" \
+                 "${tempdir}/${imgbase}_landmask.vrt" \
+                 "${tempdir}/${imgbase}_contours.shp" \
+                 > /dev/null || { printerror ; return; }
+
+    
+    echo "${tempdir}/${imgbase}_contours.shp"
+}
+
+do_contour () {
+    local img="$1"
+    local tempdir="$2"
+
+    if istrue "$maskland"
+    then
+        do_contour_maskland "$@"
+    else
+        do_contour_all "$@"
+    fi
+}
+
+doimg () {
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
+    local isoriginal="$5"
+
+    local imgfile="${img##*/}"
+    local imgbase=$(file_get_basename "$imgfile")
+    
+    local warped
+    warped=$(elev_warp "${tmpdir}/${img}" \
+                       "$tmpdir" \
+                       "$info" \
+                       "yes" ) || return
+
+    local hs
+    hs=$(do_hillshade "${warped}" "$tmpdir") || return
+    
+    gdal_translate "${hs}" \
+                   "${outdir}/${ts}/${imgbase}_hillshade.tif"  \
+                   > /dev/null || { printerror ; return; }
+    
+    gdal_translate "${warped}" \
+                   "${outdir}/${ts}/${imgbase}.tif" \
+                   > /dev/null || { printerror ; return; }
+
+    contour=$(do_contour "${warped}" "$tmpdir") || return
+
+    ogr2ogr -wrapdateline -clipdst -180 -85 180 85 \
+            "${outdir}/${ts}/${imgbase}_contour.shp" \
+            "${contour}" \
+            > /dev/null || { printerror ; return; }
+
+    (
+        cd ${outdir}
+            gdaltindex "${dsname}_hillshade${ts}.shp" "${ts}/${imgbase}_hillshade.tif"  > /dev/null
+            gdaltindex "${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
+    )
+
+    ogrtindex "${outdir}/${dsname}_contour${ts}.shp" "${outdir}/${ts}/${imgbase}_contour.shp"  > /dev/null
+
+    return $status
+
+}
+
