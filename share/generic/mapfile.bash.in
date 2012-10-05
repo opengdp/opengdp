@@ -797,6 +797,8 @@ addinclude_NewWorld () {
 ## @param wms_srs         wms_srs metadata
 ## @param myprojection    mapserver projection tags
 ## @param urlcgibin       url for the projects mapserver cgibin
+## @param legend          custom legend section
+## @param fonset          fontset path
 ##
 ###############################################################################
 
@@ -813,7 +815,7 @@ write_main_map () {
         mapfile_oformat_jpeg="$mapfile_oformat_jpeg_old"
     fi
 
-cat > "$mapfile" << EOF
+    cat > "$mapfile" << EOF
 
 MAP
   NAME '${project}'
@@ -836,14 +838,28 @@ ${myprojection}
 $mapfile_oformat_jpeg
 $mapfile_oformat_gtiff
 $mapfile_oformat_png
-  
+
+EOF
+    if ! [ -n "$legend" ]
+    then
+        cat >> "$mapfile" << EOF
   ##### legend #####
   
   LEGEND
     STATUS on
     KEYSIZE 500 36
   END
-  
+
+EOF
+
+    else
+        cat >> "$mapfile" << EOF
+$legend
+
+EOF
+    fi
+
+    cat >> "$mapfile" << EOF
   # Web interface definition. Only the template parameter
   # is required to display a map. See MapServer documentation
   WEB
@@ -865,7 +881,14 @@ $mapfile_oformat_png
 
   END
 
+EOF
 
+    if [ -n "$fontset" ]
+    then
+        cat >> "$mapfile" << EOF
+  FONTSET "$fontset"
+EOF
+        cat >> "$mapfile" << EOF
 
 END
 
