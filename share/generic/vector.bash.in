@@ -19,6 +19,20 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+vector_getsrs () {
+    file="$1"
+    tmpdir="$2"
+
+    ogrinfo "$file" -al -so > "${tmpdir}/vector_getsrs_info"
+    
+    ed -s "${tmpdir}/vector_getsrs_info" << EOF
+/SRS WKT/+  
+/^[[:blank:]]/,/^[^[:blank:]]/-p
+EOF
+    
+    rm "${tmpdir}/vector_getsrs_info"
+}
+
 ###############################################################################
 ## @brief function to add a srs to a vector to a vrt
 ##
@@ -148,7 +162,7 @@ vector_warp () {
         
         ogr2ogr "${tmpram}/warp_${imgbase}.shp" \
                 "${img}" \
-                -t_srs "EPSG:4326"
+                -t_srs "EPSG:4326" \
                 > /dev/null || { printerror ; return; }
     fi
         
@@ -221,7 +235,7 @@ dovector () {
     ##### do we need to add a srs to the vector #####
 
     local srsed
-    srsed=$(vector_srs "$img" "${tmpram}" \
+    srsed=$(vector_srs "${tmpdir}/${img}" "${tmpram}" \
                         "$info" "$isoriginal" ) || return
     
     if istrue "$isoriginal" 1 && [[ "$srsed" != "${tmpdir}/${img}" ]]
@@ -243,6 +257,107 @@ dovector () {
     fi
     
     info="$(ogrinfo -so -al "$translated")"
+
+    ##### pole fix?  #####
+
+    local xmin ymin xmax ymax
+    read xmin ymin xmax ymax < <(getextent2 "$translated")
+    
+    if vector_getsrs "$translated" "${tmpram}" | grep -q "Polar_Stereographic"
+    then
+        local transfile="${translated##*/}" 
+        local transbase="${transfile%.*}" 
+
+        local xstart xend
+        xstart="$xmin"
+        while fcmp "$xstart < $xmax"
+        do
+            if fcmp "$xstart < 0" && fcmp "$xstart < -10000"
+            then
+                xend=-10000
+            elif fcmp "$xstart < -.000001"
+            then
+                xend=-.000001
+            elif fcmp "$xstart < 10000"
+            then
+                xstart=.000001
+                xend=10000
+            else
+                xend=$xmax
+            fi
+            
+            local ystart yend
+            ystart="$ymin"
+            while fcmp "$ystart < $ymax"
+            do
+                yend=$(fcalc "$ystart + $yincr")
+
+                if fcmp "$ystart < 0" && fcmp "$ystart < -10000"
+                then
+                    yend=-10000
+                elif fcmp "$ystart < 0"
+                then
+                    yend=0
+                elif fcmp "$ystart < 10000"
+                then
+                    ystart=0
+                    yend=10000
+                else
+                    yend=$ymax
+                fi
+
+                if ! [ -f "${tmpram}/${transbase}_cutup.shp" ]
+                then
+                    ogr2ogr -clipsrc $xstart $ystart $xend $yend \
+                            "${tmpram}/${transbase}_cutup.shp" \
+                            "$translated" > /dev/null || { printerror ; return; }
+                else
+                    ogr2ogr -update -append \
+                            -sql "select * from ${transbase} ${transbase}_cutup" \
+                            -clipsrc $xstart $ystart $xend $yend \
+                            "${tmpram}/${transbase}_cutup.shp" \
+                            "$translated" > /dev/null || { printerror ; return; }
+                fi
+
+                ystart=$yend
+            done
+
+            xstart=$xend
+             
+        done
+        
+        info="$(ogrinfo -so -al "${tmpram}/${transbase}_cutup.shp")"
+
+        dovector_sub "${tmpram}/${transbase}_cutup.shp" \
+                     "${imgbase}_cutup" \
+                     "$tmpram" \
+                     "$ts" \
+                     "$info" \
+                     "yes" || return
+
+    ##### does not cross the dateline #####
+
+    else
+        
+        dovector_sub "$translated" \
+                     "${imgbase}" \
+                     "$tmpram" \
+                     "$ts" \
+                     "$info" \
+                     "no" || return
+        
+    fi
+
+    rm -rf "${tmpram}"
+}
+
+dovector_sub () {
+    local translated="$1"
+    local imgbase="$2"
+    local tmpram="$3"
+    local ts="$4"
+    local info="$5"
+    local isoriginal="$6"
 
     ##### transform the vectors #####
     
@@ -282,7 +397,7 @@ dovector () {
         mv "$final" "$outdir/${ts}/${imgbase}.${finalext}" || { printerror ; return; }
     done
     
-    rm -rf "${tmpram}"
+
     
     ##### add the file to the tile index #####
     
