@@ -345,7 +345,7 @@ function sub_main {
     if (( stage == opt_rebuild ))
     then
         echo "rebuilding"
-        DWH_REBUILD="TRUE"
+        OPENGDP_REBUILD="TRUE"
         if ! mv "$indir" "${indir/%\//}.old"
         then
             exit

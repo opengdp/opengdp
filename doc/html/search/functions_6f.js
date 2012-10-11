@@ -1,0 +1,14 @@
+var searchData=
+[
+  ['open_5fgeotiff',['Open_GEOTIFF',['../filegeo_8c.html#a84f29b697b2602a5fc53af6ecc919057',1,'Open_GEOTIFF(void *params):&#160;filegeo.c'],['../filegeo_8cpp.html#a84f29b697b2602a5fc53af6ecc919057',1,'Open_GEOTIFF(void *params):&#160;filegeo.cpp'],['../geowrpr_8h.html#a4193224441ec64bac8b007f3a1dbbee2',1,'Open_GEOTIFF(void *ParamList):&#160;filegeo.c']]],
+  ['opengeolocswath',['OpenGeolocSwath',['../geo__space_8h.html#af26fb9ff8816ef12d3b034a69193da5d',1,'OpenGeolocSwath(char *file_name):&#160;geoloc.c'],['../geoloc_8c.html#af26fb9ff8816ef12d3b034a69193da5d',1,'OpenGeolocSwath(char *file_name):&#160;geoloc.c'],['../geoloc_8h.html#af26fb9ff8816ef12d3b034a69193da5d',1,'OpenGeolocSwath(char *file_name):&#160;geoloc.c']]],
+  ['opengeotifffile',['OpenGeoTIFFFile',['../_geo_s2_g_8h.html#afc5ea0051acaa6297d5fc5126ef3f9a7',1,'OpenGeoTIFFFile(Param_t *ParamList, GeoTIFFFD *MasterGeoMem):&#160;InitGeoTiff.c'],['../_init_geo_tiff_8c.html#afc5ea0051acaa6297d5fc5126ef3f9a7',1,'OpenGeoTIFFFile(Param_t *ParamList, GeoTIFFFD *MasterGeoMem):&#160;InitGeoTiff.c']]],
+  ['openinimagemosaic',['OpenInImageMosaic',['../loc__prot__mosaic_8h.html#a6b2e06ed893a9450eb39c9eba8d02d2e',1,'loc_prot_mosaic.h']]],
+  ['openinput',['OpenInput',['../input_8c.html#a38dd00bee99b1f7ba5b5ed409612a955',1,'OpenInput(char *file_name, char *sds_name, int iband, int rank, int *dim, char *errstr):&#160;input.c'],['../input_8h.html#a38dd00bee99b1f7ba5b5ed409612a955',1,'OpenInput(char *file_name, char *sds_name, int iband, int rank, int *dim, char *errstr):&#160;input.c']]],
+  ['openmultifilemosaic',['OpenMultiFileMosaic',['../loc__prot__mosaic_8h.html#a452c0dc17ea107a25d0a4f3a6c544b08',1,'loc_prot_mosaic.h']]],
+  ['openoutimagemosaic',['OpenOutImageMosaic',['../loc__prot__mosaic_8h.html#a5ddb2193c56b44f451711faaf6938eb4',1,'loc_prot_mosaic.h']]],
+  ['osr_5ffor',['osr_for',['../gctp__wrap_8c.html#a4e6e3b25c0fc6c0f533fa05c0f63e0fc',1,'osr_for(double lon, double lat, double *x, double *y):&#160;gctp_wrap.c'],['../gctp__wrap_8h.html#a4e6e3b25c0fc6c0f533fa05c0f63e0fc',1,'osr_for(double lon, double lat, double *x, double *y):&#160;gctp_wrap.c']]],
+  ['osr_5finv',['osr_inv',['../gctp__wrap_8c.html#af43d8077b2eba698afaf6ee7c1d0903d',1,'osr_inv(double x, double y, double *lon, double *lat):&#160;gctp_wrap.c'],['../gctp__wrap_8h.html#af43d8077b2eba698afaf6ee7c1d0903d',1,'osr_inv(double x, double y, double *lon, double *lat):&#160;gctp_wrap.c']]],
+  ['outputfile',['OutputFile',['../output_8c.html#a7d78d814d63de9f7f7561b1faca58b38',1,'OutputFile(char *file_name, char *sds_name, int output_data_type, Space_def_t *space_def):&#160;output.c'],['../output_8h.html#a7d78d814d63de9f7f7561b1faca58b38',1,'OutputFile(char *file_name, char *sds_name, int output_data_type, Space_def_t *space_def):&#160;output.c']]],
+  ['outputhdrmosaic',['OutputHdrMosaic',['../loc__prot__mosaic_8h.html#a7515b9134f93787feab07408e4659abd',1,'loc_prot_mosaic.h']]]
+];

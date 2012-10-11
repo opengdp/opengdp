@@ -474,7 +474,7 @@ pansharpen () {
     
     if ! [ -n "$have_otb" ]
     then
-        printerror "dwh is built without otb"
+        printerror "opengdp is built without otb"
         return 1
     fi
     
@@ -827,7 +827,7 @@ doimg_multiband_cb () {
     #then
     #    if ! [ -n "$have_otb" ]
     #    then
-    #        printerror "dwh is built without otb"
+    #        printerror "opengdp is built without otb"
     #        return 1
     #    fi
         

@@ -1153,7 +1153,7 @@ dofile_sub () {
                 then
                     dohdf "${file}" "$tmpdir" "$ts" "$origdir" ${files[@]}
                 else
-                     printerror "dwh is built without hdf support"
+                     printerror "opengdp is built without hdf support"
                 fi
             fi
             
@@ -1218,7 +1218,7 @@ dofile_sub () {
 ## @param outdir                  dir to place the output in
 ## @param NewEarthExplorer_user   username for the NewEarthExplorer login if this is
 ##                            set myline is assumed to be a NewEarthExplorer url
-## @param DWH_REBUILD             flag to say if were in rebuild mode -rebuild
+## @param OPENGDP_REBUILD             flag to say if were in rebuild mode -rebuild
 ## @param tmp                     the temp dir
 ## @param ignoredir               flag to ignore ignore the sub dir name files are
 ##                            placed in
@@ -1246,7 +1246,7 @@ dofile () {
     
     ##### new earth explorer #####
     #FIXME add error checking
-    if [ -n "$NewEarthExplorer_user" ] && ! istrue "$DWH_REBUILD"
+    if [ -n "$NewEarthExplorer_user" ] && ! istrue "$OPENGDP_REBUILD"
     then
         local file
         file=$( NewEarthExplorer_get "$myline" "$tmpdir" )
@@ -1305,7 +1305,7 @@ dofile () {
     
     fi
 
-    if istrue "$DWH_REBUILD"
+    if istrue "$OPENGDP_REBUILD"
     then
         local origdir="${indir/%\//}.old/${dir}"
         
@@ -1350,7 +1350,7 @@ dofile () {
 
     status=$?
 
-    if (($? == 0)) && ! istrue "$DWH_REBUILD"
+    if (($? == 0)) && ! istrue "$OPENGDP_REBUILD"
     then
         
         ##### mv the files to the source dir #####

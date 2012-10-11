@@ -28,4 +28,4 @@ img_DATA = \
     zoom-world-mini.png \
     zoombar.png
 
-imgdir = $(wwwdisk)/dwh/img
+imgdir = $(wwwdisk)/opengdp/img

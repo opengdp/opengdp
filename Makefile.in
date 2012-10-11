@@ -85,9 +85,11 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(dwhdocdir)" "$(DESTDIR)$(dwhhtmldir)" \
-	"$(DESTDIR)$(dwhhtmlsearchdir)"
-DATA = $(dwhdoc_DATA) $(dwhhtml_DATA) $(dwhhtmlsearch_DATA)
+am__installdirs = "$(DESTDIR)$(opengdpdocdir)" \
+	"$(DESTDIR)$(opengdphtmldir)" \
+	"$(DESTDIR)$(opengdphtmlsearchdir)"
+DATA = $(opengdpdoc_DATA) $(opengdphtml_DATA) \
+	$(opengdphtmlsearch_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -296,8 +298,8 @@ SUBDIRS = src \
 	js \
 	img
 
-dwhdocdir = ${prefix}/doc/dwh
-dwhdoc_DATA = \
+opengdpdocdir = ${prefix}/doc/opengdp
+opengdpdoc_DATA = \
 	README\
 	COPYING\
 	AUTHORS\
@@ -305,17 +307,17 @@ dwhdoc_DATA = \
 	INSTALL\
 	NEWS
 
-dwhhtmlsearchdir = ${prefix}/doc/dwh/html/search
-dwhhtmldir = ${prefix}/doc/dwh/html
-dwhhtmlsearch_DATA = \
+opengdphtmlsearchdir = ${prefix}/doc/opengdp/html/search
+opengdphtmldir = ${prefix}/doc/opengdp/html
+opengdphtmlsearch_DATA = \
 	doc/html/search/*.*
 
-dwhhtml_DATA = \
+opengdphtml_DATA = \
 	doc/html/*.*
 
-EXTRA_DIST = $(dwhdoc_DATA) \
-    $(dwhhtml_DATA) \
-    $(dwhhtmlsearch_DATA)
+EXTRA_DIST = $(opengdpdoc_DATA) \
+    $(opengdphtml_DATA) \
+    $(opengdphtmlsearch_DATA)
 
 @MAINTAINER_MODE_TRUE@CLEANFILES = \
 @MAINTAINER_MODE_TRUE@	doc/html/search/*.* \
@@ -385,66 +387,66 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
-install-dwhdocDATA: $(dwhdoc_DATA)
+install-opengdpdocDATA: $(opengdpdoc_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(dwhdocdir)" || $(MKDIR_P) "$(DESTDIR)$(dwhdocdir)"
-	@list='$(dwhdoc_DATA)'; test -n "$(dwhdocdir)" || list=; \
+	test -z "$(opengdpdocdir)" || $(MKDIR_P) "$(DESTDIR)$(opengdpdocdir)"
+	@list='$(opengdpdoc_DATA)'; test -n "$(opengdpdocdir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dwhdocdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dwhdocdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(opengdpdocdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(opengdpdocdir)" || exit $$?; \
 	done
 
-uninstall-dwhdocDATA:
+uninstall-opengdpdocDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dwhdoc_DATA)'; test -n "$(dwhdocdir)" || list=; \
+	@list='$(opengdpdoc_DATA)'; test -n "$(opengdpdocdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(dwhdocdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(dwhdocdir)" && rm -f $$files
-install-dwhhtmlDATA: $(dwhhtml_DATA)
+	echo " ( cd '$(DESTDIR)$(opengdpdocdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(opengdpdocdir)" && rm -f $$files
+install-opengdphtmlDATA: $(opengdphtml_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(dwhhtmldir)" || $(MKDIR_P) "$(DESTDIR)$(dwhhtmldir)"
-	@list='$(dwhhtml_DATA)'; test -n "$(dwhhtmldir)" || list=; \
+	test -z "$(opengdphtmldir)" || $(MKDIR_P) "$(DESTDIR)$(opengdphtmldir)"
+	@list='$(opengdphtml_DATA)'; test -n "$(opengdphtmldir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dwhhtmldir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dwhhtmldir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(opengdphtmldir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(opengdphtmldir)" || exit $$?; \
 	done
 
-uninstall-dwhhtmlDATA:
+uninstall-opengdphtmlDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dwhhtml_DATA)'; test -n "$(dwhhtmldir)" || list=; \
+	@list='$(opengdphtml_DATA)'; test -n "$(opengdphtmldir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(dwhhtmldir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(dwhhtmldir)" && rm -f $$files
-install-dwhhtmlsearchDATA: $(dwhhtmlsearch_DATA)
+	echo " ( cd '$(DESTDIR)$(opengdphtmldir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(opengdphtmldir)" && rm -f $$files
+install-opengdphtmlsearchDATA: $(opengdphtmlsearch_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(dwhhtmlsearchdir)" || $(MKDIR_P) "$(DESTDIR)$(dwhhtmlsearchdir)"
-	@list='$(dwhhtmlsearch_DATA)'; test -n "$(dwhhtmlsearchdir)" || list=; \
+	test -z "$(opengdphtmlsearchdir)" || $(MKDIR_P) "$(DESTDIR)$(opengdphtmlsearchdir)"
+	@list='$(opengdphtmlsearch_DATA)'; test -n "$(opengdphtmlsearchdir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(dwhhtmlsearchdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(dwhhtmlsearchdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(opengdphtmlsearchdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(opengdphtmlsearchdir)" || exit $$?; \
 	done
 
-uninstall-dwhhtmlsearchDATA:
+uninstall-opengdphtmlsearchDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dwhhtmlsearch_DATA)'; test -n "$(dwhhtmlsearchdir)" || list=; \
+	@list='$(opengdphtmlsearch_DATA)'; test -n "$(opengdphtmlsearchdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(dwhhtmlsearchdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(dwhhtmlsearchdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(opengdphtmlsearchdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(opengdphtmlsearchdir)" && rm -f $$files
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -761,7 +763,7 @@ check: check-recursive
 all-am: Makefile $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(dwhdocdir)" "$(DESTDIR)$(dwhhtmldir)" "$(DESTDIR)$(dwhhtmlsearchdir)"; do \
+	for dir in "$(DESTDIR)$(opengdpdocdir)" "$(DESTDIR)$(opengdphtmldir)" "$(DESTDIR)$(opengdphtmlsearchdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -812,8 +814,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-dwhdocDATA install-dwhhtmlDATA \
-	install-dwhhtmlsearchDATA
+install-data-am: install-opengdpdocDATA install-opengdphtmlDATA \
+	install-opengdphtmlsearchDATA
 
 install-dvi: install-dvi-recursive
 
@@ -859,8 +861,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dwhdocDATA uninstall-dwhhtmlDATA \
-	uninstall-dwhhtmlsearchDATA uninstall-local
+uninstall-am: uninstall-local uninstall-opengdpdocDATA \
+	uninstall-opengdphtmlDATA uninstall-opengdphtmlsearchDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all \
 	ctags-recursive install-am install-strip tags-recursive
@@ -873,17 +875,17 @@ uninstall-am: uninstall-dwhdocDATA uninstall-dwhhtmlDATA \
 	distclean-libtool distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-dwhdocDATA install-dwhhtmlDATA \
-	install-dwhhtmlsearchDATA install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-opengdpdocDATA install-opengdphtmlDATA \
+	install-opengdphtmlsearchDATA install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-dwhdocDATA \
-	uninstall-dwhhtmlDATA uninstall-dwhhtmlsearchDATA \
-	uninstall-local
+	uninstall uninstall-am uninstall-local \
+	uninstall-opengdpdocDATA uninstall-opengdphtmlDATA \
+	uninstall-opengdphtmlsearchDATA
 
 
 @MAINTAINER_MODE_TRUE@doc/html/*.*: Doxyfile Makefile
@@ -894,7 +896,7 @@ uninstall-am: uninstall-dwhdocDATA uninstall-dwhhtmlDATA \
 
 # Remove doc directory on uninstall
 uninstall-local:
-	-rm -r $(dwhdocdir)
+	-rm -r $(opengdpdocdir)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

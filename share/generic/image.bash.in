@@ -440,7 +440,7 @@ image_cutup_cb () {
     then
         if ! [ -n "$have_mrsiddecode" ]
         then
-            printerror "dwh is built without mrsiddecode"
+            printerror "opengdp is built without mrsiddecode"
             return 1
         fi
         

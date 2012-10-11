@@ -9,8 +9,8 @@ SUBDIRS = src \
 	js \
 	img
 
-dwhdocdir = ${prefix}/doc/dwh
-dwhdoc_DATA = \
+opengdpdocdir = ${prefix}/doc/opengdp
+opengdpdoc_DATA = \
 	README\
 	COPYING\
 	AUTHORS\
@@ -18,18 +18,18 @@ dwhdoc_DATA = \
 	INSTALL\
 	NEWS
 
-dwhhtmlsearchdir = ${prefix}/doc/dwh/html/search
-dwhhtmldir = ${prefix}/doc/dwh/html
+opengdphtmlsearchdir = ${prefix}/doc/opengdp/html/search
+opengdphtmldir = ${prefix}/doc/opengdp/html
 
-dwhhtmlsearch_DATA = \
+opengdphtmlsearch_DATA = \
 	doc/html/search/*.*
 
-dwhhtml_DATA = \
+opengdphtml_DATA = \
 	doc/html/*.*
 
-EXTRA_DIST = $(dwhdoc_DATA) \
-    $(dwhhtml_DATA) \
-    $(dwhhtmlsearch_DATA)
+EXTRA_DIST = $(opengdpdoc_DATA) \
+    $(opengdphtml_DATA) \
+    $(opengdphtmlsearch_DATA)
 
 if MAINTAINER_MODE
 
@@ -47,4 +47,4 @@ endif
 
 # Remove doc directory on uninstall
 uninstall-local:
-	-rm -r $(dwhdocdir)
+	-rm -r $(opengdpdocdir)
