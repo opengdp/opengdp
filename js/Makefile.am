@@ -12,7 +12,7 @@ js_DATA = \
     
 CLEANFILES = $(js_DATA)
 
-jsdir = $(wwwdisk)/dwh
+jsdir = $(wwwdisk)/opengdp
 
 EXTRA_DIST = \
     base.js.in \

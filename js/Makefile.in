@@ -242,7 +242,7 @@ js_DATA = \
     GeoExt.js
 
 CLEANFILES = $(js_DATA)
-jsdir = $(wwwdisk)/dwh
+jsdir = $(wwwdisk)/opengdp
 EXTRA_DIST = \
     base.js.in \
     finish.js.in \
