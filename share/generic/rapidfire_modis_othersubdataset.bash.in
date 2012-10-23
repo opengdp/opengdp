@@ -1,0 +1,105 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+function getlist {
+    local mirrorfile="$1"
+    local patern="$2"
+    
+    (
+
+    ##### loop over the subdatasets we want #####
+    local sd
+    for sd in "${subdatasets[@]}"
+    do
+        i=$startdate
+
+        ##### loop while 
+        local d
+        while d=$(wget "${baseurl}/?project=other&subset=${sd}$( [ -n "$startdate" ] && echo ".${year}$(printf "%03d\n" $i )" )" -O /dev/stdout 2> /dev/null |\
+                  grep "Date: [0-9]\{4\}/[0-9]\{3\}" |\
+                  head -n 1 |\
+                  sed 's|.* \([0-9]\{4\}\)/\([0-9]\{3\}\).*|\1\2|' |\
+                  grep -e "^[0-9]\{7\}$" )
+        do
+            if [ -n "$startdate" ]
+            then
+                ((i++))
+            fi
+            
+            local urltif="${baseurl}/?project=other&subset=${sd}.${d}.${sat}${bandext}.250m.tif"
+            local urltxt="${baseurl}/?project=other&subset=${sd}.${d}.${sat}${bandext}.250m.txt"
+            
+            ##### new file? #####
+            
+            if ! [ -f "${indir}/${sd}.${d}.${sat}.250m.tif" ]
+            then
+                wget -O "${indir}/${sd}.${d}.${sat}.250m.txt" "$urltxt" 2> /dev/null
+                if ! grep -q -e "Error" "${indir}/${sd}.${d}.${sat}.250m.txt"
+                then
+                    echo "get -O ${indir} '$urltif' -o ${sd}.${d}.${sat}.250m.tif"
+                fi
+                
+
+            else
+                
+                ##### if we already have the file, get a new   #####
+                ##### copy of the metadata and look for change #####
+
+                wget -O "${indir}/${sd}.${d}.${sat}.250m.new" \
+                        "${indir}/$urltxt" 2> /dev/null
+                
+                if ! cmp -s "${indir}/${sd}.${d}.${sat}.250m.new" \
+                            "${indir}/${sd}.${d}.${sat}.250m.txt"
+                then
+                    if ! grep -q -e "Error" "${indir}/${sd}.${d}.${sat}.250m.new"
+                    then
+                        echo "get -O ${indir} '$urltif' -o ${sd}.${d}.${sat}.250m.tif"
+                        mv "${indir}/${sd}.${d}.${sat}.250m.new" \
+                           "${indir}/${sd}.${d}.${sat}.250m.txt"
+                    fi
+                fi
+            fi
+
+        done
+    done
+
+    ) > "$mirrorfile"
+}
+
+
+#offsite="OFFSITE 255 255 255"
+nearwhite=true
+
+###############################################################################
+# function to get a ts from a lftp command
+###############################################################################
+
+function dodate {
+     
+     while read line
+     do
+        ts="$(echo "$line" | sed 's:.*\([0-9]\{4\}\)\([0-9]\{3\}\).*:\1 \2:')"
+        date -d "jan 1 $ts days - 1 day" "+%Y%m%d"
+     done
+}
+
+
+
