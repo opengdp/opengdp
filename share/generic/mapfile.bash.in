@@ -840,6 +840,9 @@ $mapfile_oformat_gtiff
 $mapfile_oformat_png
 
 EOF
+
+    ##### legend #####
+
     if ! [ -n "$legend" ]
     then
         cat >> "$mapfile" << EOF
@@ -858,6 +861,8 @@ $legend
 
 EOF
     fi
+
+    ##### web section #####
 
     cat >> "$mapfile" << EOF
   # Web interface definition. Only the template parameter
@@ -883,11 +888,15 @@ EOF
 
 EOF
 
+    ###### dadd a fonrtset? #####
+
     if [ -n "$fontset" ]
     then
         cat >> "$mapfile" << EOF
   FONTSET "$fontset"
 EOF
+    fi
+
         cat >> "$mapfile" << EOF
 
 END
