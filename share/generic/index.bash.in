@@ -41,7 +41,7 @@ index_add_layer () {
     
     if ! sqlite3 "${basedir}/${project}.db" ".tables" | grep -q -e "layers"
     then
-        sqlite3 "${basedir}/${project}.db" << EOF || printerror "creating db" ; return
+        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "creating db" ; return; }
 
 CREATE TABLE layers
              (
@@ -55,7 +55,7 @@ CREATE TABLE layers
 
 EOF
 
-        sqlite3 "${basedir}/${project}.db" << EOF || printerror "creating index" ; return
+        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "creating index" ; return; }
 
 CREATE INDEX lname
 ON layers
@@ -115,7 +115,7 @@ INTO   layers
        );
 EOF
     else
-        sqlite3 "${basedir}/${project}.db" << EOF || printerror "adding layer to db" ; return
+        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "adding layer to db" ; return; }
 UPDATE layers
 SET extent = '$extent',
     gextent = '$gw $gs $ge $gn'
@@ -139,7 +139,7 @@ EOF
 
 index_get_layers () {
 
-    sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
+    sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_get_layers" ; return; }
 
 SELECT *
 FROM   layers
@@ -163,7 +163,7 @@ EOF
 
 index_get_latest_layers () {
 
-    sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_get_layers" ; return
+    sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_get_layers" ; return; }
 
 SELECT *
 FROM   layers
@@ -191,7 +191,7 @@ index_drop_ds () {
 
     if [ -f "${basedir}/${project}.db" ]
     then
-        sqlite3 "${basedir}/${project}.db" << EOF  || printerror "index_drop_ds" ; return
+        sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_drop_ds" ; return; }
 DELETE
 FROM  layers
 WHERE dsname = '${dsname}';
