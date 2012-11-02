@@ -22,6 +22,9 @@
 have_otb="@HAVE_OTB@";
 have_mrsiddecode="@HAVE_MRSIDDECODE@";
 
+export GDAL_CACHEMAX=500
+export GDAL_TIFF_INTERNAL_MASK=YES
+
 ###############################################################################
 ## @brief function to get the number of bands in an image
 ##
