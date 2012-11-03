@@ -703,7 +703,6 @@ doimg () {
         rm "${outdir}/overview_${dsname}${ts}.shp"
     fi
 
-    if 
     image_cutup "${img}" "$tmpdir" "$ts" \
                 "$info" "$islossy" "$isoriginal" "image_cutup_cb" "dosubimg"
         
