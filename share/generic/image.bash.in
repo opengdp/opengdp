@@ -348,15 +348,6 @@ dosubimg () {
         (
             cd ${outdir}
 
-            ##### if the overview tileindex already exists remove it       #####
-            ##### the geometry will not be updated otherwise and mapserver #####
-            ##### may not display the data at some zoom levels             #####
-
-            if [ -f "overview_${dsname}${ts}.shp" ]
-            then
-                rm "overview_${dsname}${ts}.shp"
-            fi
-
             gdaltindex "overview_${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
         )
     else
@@ -703,6 +694,16 @@ doimg () {
         info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
     fi
     
+    ##### if the overview tileindex already exists remove it       #####
+    ##### the geometry will not be updated otherwise and mapserver #####
+    ##### may not display the data at some zoom levels             #####
+
+    if [ -n "$isoverview" ] && [ -f "${outdir}/overview_${dsname}${ts}.shp" ]
+    then
+        rm "${outdir}/overview_${dsname}${ts}.shp"
+    fi
+
+    if 
     image_cutup "${img}" "$tmpdir" "$ts" \
                 "$info" "$islossy" "$isoriginal" "image_cutup_cb" "dosubimg"
         
