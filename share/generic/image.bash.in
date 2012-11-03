@@ -347,6 +347,16 @@ dosubimg () {
     then
         (
             cd ${outdir}
+
+            ##### if the overview tileindex already exists remove it       #####
+            ##### the geometry will not be updated otherwise and mapserver #####
+            ##### may not display the data at some zoom levels             #####
+
+            if [ -f "overview_${dsname}${ts}.shp" ]
+            then
+                rm "overview_${dsname}${ts}.shp"
+            fi
+
             gdaltindex "overview_${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
         )
     else
