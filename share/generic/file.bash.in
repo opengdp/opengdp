@@ -866,6 +866,10 @@ dotar () {
 ##
 ## @return 0 on success, 1 on fail
 ##
+## @details
+## global vars
+## @param baseglob glob to use to search the kmz zip for the kml
+##
 ###############################################################################
 
 dokmz () {
