@@ -629,6 +629,7 @@ image_cutup () {
 ## @param haveomar      true? tell omar there is a new image
 ## @param s_srs         var to overide set projection
 ## @param bnw           flag to mark the image as black n white
+## @param force_islossy flag to force treatment the of image as a lossy format
 ## have_mrsiddecode     flag set by automake if the system has mrsid
 ##
 ## @see makeoverview
@@ -657,7 +658,7 @@ doimg () {
    
     ##### test if the image is in a lossy format #####
      
-    if grep -e "COMPRESSION=.*JP" <<< "$info" > /dev/null || \
+    if istrue "$force_islossy" || grep -e "COMPRESSION=.*JP" <<< "$info" > /dev/null || \
        [[ "$imgextlower" == "sid" ]] || [[ "$imgextlower" == "pdf" ]]
     then
         local islossy=true
