@@ -681,6 +681,38 @@ doimg () {
         info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
     fi
 
+    ##### does the image have a colortable? #####
+
+    if grep -e "Color Table" <<< "$info" > /dev/null
+    then
+
+        local cttype
+
+        ##### rgba #####
+
+        if grep -A1 -e "Color Table" <<< "$info"  |\
+            grep -A1 -e "Color Table" | tail -n 1 |\
+            grep -q -e "[0-9]*,[0-9]*,[0-9]*,[0-9]*"
+        then
+            cttype="rgba"
+        else
+            cttype="rgb"
+        fi
+
+        ##### create a expanded vrt #####
+        
+        gdal_translate -expand "$cttype" \
+                       -of VRT -mask none \
+                       "${tmpdir}/${img}" \
+                       "${tmpdir}/${imgdir}${imgbase}_expand.vrt" > /dev/null || { printerror ; return; }  
+
+        img="${imgdir}${imgbase}_expand.vrt"
+        imgfile="${img##*/}"
+        imgext=$(file_get_extension "$imgfile")
+        imgbase=$(file_get_basename "$imgfile")
+        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
+    fi
+
     ##### is the image bnw? #####
     
     if istrue "$bnw"
