@@ -255,6 +255,7 @@ NEE_curl () {
 ##
 ## @details
 ## global vars
+## @param dsname
 ## @param NewEarthExplorer_user username for login
 ## @param NewEarthExplorer_pass password for login
 ##
