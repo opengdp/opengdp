@@ -1023,3 +1023,27 @@ findmatchingfile () {
     
     return $result
 }
+
+###############################################################################
+## @brief function to make zipinfo portable
+## 
+## @param file  zip filename to get the info on
+## @param glob  globb to search for
+##
+## @return 0 on success 1 on failure
+## @retval stdout the matching files
+##
+###############################################################################
+
+myzipinfo () {
+    file="$1"
+    glob="$2"
+
+    if ! unzip -1 "$file" "$glob" 1> /dev/null 2> /dev/null
+    then
+        zipinfo -1 "$file" "$glob"
+    else
+        unzip -1 "$file" "$glob"
+    fi
+}
+

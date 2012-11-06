@@ -53,7 +53,7 @@ dozip_multiband () {
     local ext=$(file_get_extension "$file")
     local base=$(file_get_basename "$file")
     
-    local zipinfo="$(zipinfo -1 "${origdir}/${zipfile}")"
+    local zipinfo="$(myzipinfo "${origdir}/${zipfile}")"
 
     ##### for now we just assume tiff, id like to make this better later #####
     
@@ -539,7 +539,7 @@ dozip () {
         return
     fi
     
-    zipinfo=$(zipinfo -1 "${origdir}/${zipfile}")
+    zipinfo=$(myzipinfo "${origdir}/${zipfile}")
     
     ##### if exglob is set get a list of those files #####
     
@@ -883,7 +883,7 @@ dokmz () {
     local ext=$(file_get_extension "$file")
     local base=$(file_get_basename "$file")
     
-    for f in $(zipinfo -1 "${origdir}/${zipfile}" "$baseglob.kml")
+    for f in $(myzipinfo "${origdir}/${zipfile}" "$baseglob.kml")
     do
 
         ##### extract the kml #####
