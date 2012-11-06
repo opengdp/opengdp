@@ -916,11 +916,11 @@ dokmz () {
                        -a_ullr $w $n $e $s \
                        -of VRT -mask none \
                        "${tmpdir}/${img}" \
-                       "${tmpdir}/${imgdir}/${zipbase}_${imgbase}.vrt" || { printerror ; return; }
+                       "${tmpdir}/${imgdir}/${base}_${imgbase}.vrt" || { printerror ; return; }
         
         ##### proccess #####
         
-        doimg "${imgdir}/${zipbase}_${imgbase}.vrt" "$tmpdir" "$ts" \
+        doimg "${imgdir}/${base}_${imgbase}.vrt" "$tmpdir" "$ts" \
               "$(gdalinfo "${tmpdir}/${imgdir}/${base}_${imgbase}.vrt")" \
               "no" || return
     done
