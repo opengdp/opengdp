@@ -16,6 +16,7 @@ generic_DATA = \
     rapidfire_modis.bash \
     rapidfire_modis_othersubdataset.bash \
     newearthexplorer.bash \
+    hdds.bash \
     mkkey.bash \
     google_superoverlay_kml.bash
         
@@ -41,6 +42,7 @@ EXTRA_DIST = \
     rapidfire_modis.bash.in \
     rapidfire_modis_othersubdataset.bash.in \
     newearthexplorer.bash.in \
+    hdds.bash.in
     mkkey.bash.in \
     google_superoverlay_kml.bash
 
@@ -101,6 +103,9 @@ rapidfire_modis_othersubdataset.bash: rapidfire_modis_othersubdataset.bash.in Ma
 
 newearthexplorer.bash: newearthexplorer.bash.in Makefile
 	$(do_subst) < $(srcdir)/newearthexplorer.bash.in > newearthexplorer.bash
+
+hdds.bash: hdds.bash.in Makefile
+	$(do_subst) < $(srcdir)/hdds.bash.in > hdds.bash
 
 mkkey.bash: mkkey.bash.in Makefile
 	$(do_subst) < $(srcdir)/mkkey.bash.in > mkkey.bash
