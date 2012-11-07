@@ -679,7 +679,7 @@ doimg () {
         imgfile="${img##*/}"
         imgext=$(file_get_extension "$imgfile")
         imgbase=$(file_get_basename "$imgfile")
-        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
+        info="$(gdalinfo "${tmpdir}/${img}")"
     fi
 
     ##### does the image have a colortable? #####
@@ -711,7 +711,7 @@ doimg () {
         imgfile="${img##*/}"
         imgext=$(file_get_extension "$imgfile")
         imgbase=$(file_get_basename "$imgfile")
-        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
+        info="$(gdalinfo "${tmpdir}/${img}")"
     fi
 
     ##### is the image bnw? #####
@@ -724,7 +724,7 @@ doimg () {
         imgfile="${img##*/}"
         imgext=$(file_get_extension "$imgfile")
         imgbase=$(file_get_basename "$imgfile")
-        info="$(gdalinfo "${tmpdir}/${imgdir}${imgbase}.vrt")"
+        info="$(gdalinfo "${tmpdir}/${img}")"
     fi
     
     ##### if the overview tileindex already exists remove it       #####
