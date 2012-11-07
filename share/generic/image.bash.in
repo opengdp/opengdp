@@ -83,7 +83,7 @@ image_colar () {
     
     ##### does the image already have a mask band? #####
     
-    elif echo "$info" | grep 'Mask Flags: PER_DATASET' && ! echo "$info" | grep 'Mask Flags: PER_DATASET ALPHA' > /dev/null
+    elif echo "$info" | grep -q 'Mask Flags: PER_DATASET' && ! echo "$info" | grep -q 'Mask Flags: PER_DATASET ALPHA'
     then
         echo "${img}"
         return
