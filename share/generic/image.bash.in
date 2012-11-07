@@ -63,6 +63,7 @@ image_get_nbands () {
 ## @param srcnodata       use notadata value as alpha band
 ## @param nearwhite       colar image with white border
 ## @param nearboth        colar image with black and white border
+## @param nearblack_nb    nearblack nb option to be more agressive on lossy
 ##
 ###############################################################################
 
@@ -101,22 +102,29 @@ image_colar () {
     
     elif istrue "$islossy"
     then
+        local nb=0
+
+        if [ -n "$nearblack_nb" ]
+        then
+            local nb="$nearblack_nb"
+        fi
+
         if istrue "$nearwhite"
         then
-            nearblack -co TILED=YES -setmask -nb 0 -white -of GTiff \
+            nearblack -co TILED=YES -setmask -nb "$nb" -white -of GTiff \
                       "${img}" \
                       -o "${tmpram}/prewarp_${imgbase}.tif" \
                       > /dev/null || { printerror ; return; }
         
         elif istrue "$nearboth"
         then
-            nearblack -co TILED=YES -setmask -nb 0 -color 0,0,0 -color 255,255,255 -of GTiff \
+            nearblack -co TILED=YES -setmask -nb "$nb" -color 0,0,0 -color 255,255,255 -of GTiff \
                       "${img}" \
                       -o "${tmpram}/prewarp_${imgbase}.tif" \
                       > /dev/null || { printerror ; return; }
         
         else
-            nearblack -co TILED=YES -setmask -nb 0 -of GTiff \
+            nearblack -co TILED=YES -setmask -nb "$nb" -of GTiff \
                       "${img}" \
                       -o "${tmpram}/prewarp_${imgbase}.tif" \
                       > /dev/null || { printerror ; return; }
