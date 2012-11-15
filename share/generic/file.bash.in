@@ -1273,7 +1273,7 @@ dofile () {
         local line
         while read line
         do
-            files[i++]=$(sed 's:.*/::' <<<"$line" | sed 's/.* -o //')
+            files[i++]=$(sed 's:.*/::' <<<"$line" | sed 's/.* -o //' | sed 's/%20/ /g')
         done < <( tr ";" "\n" <<<"$myline" )
         
         ##### get the last file name #####
