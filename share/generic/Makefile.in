@@ -273,7 +273,9 @@ EXTRA_DIST = \
     rapidfire_modis.bash.in \
     rapidfire_modis_othersubdataset.bash.in \
     newearthexplorer.bash.in \
-    hdds.bash.in
+    hdds.bash.in \
+    mkkey.bash.in \
+    google_superoverlay_kml.bash
 
 do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
                -e 's,[@]HAVE_OTB[@],$(HAVE_OTB),g' \
@@ -490,8 +492,6 @@ uninstall-am: uninstall-genericDATA
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	uninstall uninstall-am uninstall-genericDATA
 
-    mkkey.bash.in \
-    google_superoverlay_kml.bash
 
 generic.bash: generic.bash.in Makefile
 	$(do_subst) < $(srcdir)/generic.bash.in > generic.bash
