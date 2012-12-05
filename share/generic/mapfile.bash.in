@@ -416,6 +416,7 @@ writemap_vector_fixed_scale () {
 
 EOF
 
+    IFS=,
     local v r g b label
     while read v r g b label
     do
@@ -432,9 +433,9 @@ EOF
     END
 
 EOF
-
+    
     done <<< "$vector_fixed_scale"
-
+    unset IFS
 
     cat >> "${mapfile}" << EOF
   END  # layer
@@ -656,7 +657,8 @@ EOF
 ##
 ## @details
 ## global vars
-
+## @param doovr yes/no create external overviews
+##
 ##############################################################################
 
 
