@@ -42,7 +42,7 @@ EXTRA_DIST = \
     rapidfire_modis.bash.in \
     rapidfire_modis_othersubdataset.bash.in \
     newearthexplorer.bash.in \
-    hdds.bash.in
+    hdds.bash.in \
     mkkey.bash.in \
     google_superoverlay_kml.bash
 
