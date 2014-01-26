@@ -3,9 +3,8 @@
 #
 # 
 
+PKGDATADIR="@PKGDATADIR@";
 
-export GDAL_CACHEMAX=500
-export GDAL_TIFF_INTERNAL_MASK=YES
 
 blend_bay_buffers=( 0.02 0.04 0.08 0.10 0.12 )
 
@@ -55,16 +54,16 @@ CREATE EXTENSION postgis;
 CREATE EXTENSION postgis_topology;
 EOF
 
-    #wget "$processed_p_url" -O "${tmpdir}/${processed_p_tar}" > /dev/null || { printerror ; return; }
-    #wget "$water_polygons_url" -O "${tmpdir}/${water_polygons_zip}" > /dev/null || { printerror ; return; }
+    wget "$processed_p_url" -O "${tmpdir}/${processed_p_tar}" > /dev/null || { printerror ; return; }
+    wget "$water_polygons_url" -O "${tmpdir}/${water_polygons_zip}" > /dev/null || { printerror ; return; }
 
-    cp "/home/rush/${processed_p_tar}" "${tmpdir}/" 
-    cp "/home/rush/${water_polygons_zip}" "${tmpdir}/" 
-    cp "/home/rush/${bridges_polygons_zip}" "${tmpdir}/" 
+    #cp "/home/rush/${processed_p_tar}" "${tmpdir}/" 
+    #cp "/home/rush/${water_polygons_zip}" "${tmpdir}/" 
+    #cp "/home/rush/${bridges_polygons_zip}" "${tmpdir}/" 
 
     tar -xjf "${tmpdir}/${processed_p_tar}" -C "${tmpdir}"  > /dev/null || { printerror ; return; }
     unzip "${tmpdir}/${water_polygons_zip}" -d "$tmpdir" > /dev/null || { printerror ; return; }
-    unzip "${tmpdir}/${bridges_zip}" -d "$tmpdir" > /dev/null || { printerror ; return; }
+    unzip "${PKGDATADIR}/data/${bridges_zip}" -d "$tmpdir" > /dev/null || { printerror ; return; }
 
     
     ##### add to the db the landmass polys ######

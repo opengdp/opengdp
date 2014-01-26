@@ -49,6 +49,7 @@ EXTRA_DIST = \
 
 
 do_subst = sed -e 's,[@]GENERICDIR[@],$(pkgdatadir)/generic,g' \
+               -e 's,[@]PKGDATADIR[@],$(pkgdatadir),g' \
                -e 's,[@]HAVE_OTB[@],$(HAVE_OTB),g' \
                -e 's,[@]HAVE_MRSIDDECODE[@],$(HAVE_MRSIDDECODE),g' \
                -e 's,[@]HAVE_PBS[@],$(HAVE_PBS),g' \
