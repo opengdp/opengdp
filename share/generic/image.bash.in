@@ -195,7 +195,7 @@ image_warp (){
     
         if gdalinfo "${img}" | grep 'ColorInterp=Alpha' > /dev/null
         then
-            
+            ##### fixme gdalwarp seems to be ignoring mask bands #####
             ##### convert alpha mask to a mask band #####
             
             gdal_translate -b 1 -b 2 -b 3 -mask 4 -of VRT \
@@ -293,6 +293,14 @@ dosubimg () {
         isoriginal="no"
     fi
     
+    ##### blend the image #####
+
+    local blended="$warped"
+    if istrue "$doblend"
+    then
+        blended=$(blend "$warped" "${tmpram}" "$isoriginal" )
+    fi
+        
     ##### at this point the image should either #####
     ##### have an alpha band or a mask band     #####
     ##### translate to jpeg #####

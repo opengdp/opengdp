@@ -1,0 +1,922 @@
+#!/bin/bash
+# Copyright (c) 2013, Brian Case
+#
+# 
+
+
+export GDAL_CACHEMAX=500
+export GDAL_TIFF_INTERNAL_MASK=YES
+
+blend_bay_buffers=( 0.02 0.04 0.08 0.10 0.12 )
+
+
+opengdp_db="opengdp"
+
+
+processed_p_url="http://planet.openstreetmap.org/historical-shapefiles/processed_p.tar.bz2"
+processed_p_tar="processed_p.tar.bz2"
+processed_p_shp="processed_p.shp"
+processed_p_tbl="processed_p"
+processed_p_idx="processed_p_gidx"
+
+
+water_polygons_url="http://data.openstreetmapdata.com/water-polygons-split-4326.zip"
+water_polygons_zip="water-polygons-split-4326.zip"
+water_polygons_dir="water-polygons-split-4326"
+water_polygons_shp="water_polygons.shp"
+water_polygons_tbl="water_polygons"
+water_polygons_idx="water_polygons_gidx"
+
+bridges_zip="bridges.zip"
+bridges_shp="bridges.shp"
+bridges_tbl="bridges"
+#fixme remove this line
+bridges_tbl="bridges_polygons"
+bridges_idx="bridges_gidx"
+
+
+bmng_tindex_dir="/home/rush/BMNG_TOPO_BATHY"
+bmng_tindex_shp="BMNG_TOPO_BATHY20040801.shp"
+bmng_tindex_tbl="bmng_tindex"
+bmng_tindex_idx="bmng_tindex_gidx"
+
+################################################################################
+# function to setup postgress for the blending
+################################################################################
+
+blend_initdb () {
+
+    tmpdir=$(mktemp -d -p "${tmp}" "${opengdp_db}XXXXXXXXXX") || { printerror ; return; }
+
+    createdb "$opengdp_db" > /dev/null || { printerror ; return; }
+
+    psql "$opengdp_db" << EOF
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;
+EOF
+
+    #wget "$processed_p_url" -O "${tmpdir}/${processed_p_tar}" > /dev/null || { printerror ; return; }
+    #wget "$water_polygons_url" -O "${tmpdir}/${water_polygons_zip}" > /dev/null || { printerror ; return; }
+
+    cp "/home/rush/${processed_p_tar}" "${tmpdir}/" 
+    cp "/home/rush/${water_polygons_zip}" "${tmpdir}/" 
+    cp "/home/rush/${bridges_polygons_zip}" "${tmpdir}/" 
+
+    tar -xjf "${tmpdir}/${processed_p_tar}" -C "${tmpdir}"  > /dev/null || { printerror ; return; }
+    unzip "${tmpdir}/${water_polygons_zip}" -d "$tmpdir" > /dev/null || { printerror ; return; }
+    unzip "${tmpdir}/${bridges_zip}" -d "$tmpdir" > /dev/null || { printerror ; return; }
+
+    
+    ##### add to the db the landmass polys ######
+
+    ogr2ogr -s_srs EPSG:900913 -t_srs EPSG:4326 \
+            "${tmpdir}/4326_${processed_p_shp}" \
+            "${tmpdir}/$processed_p_shp" \
+            > /dev/null || { printerror ; return; }
+
+
+    shp2pgsql -s 4326 \
+              "${tmpdir}/4326_${processed_p_shp}" \
+              "$processed_p_tbl" |\
+     psql -d "$opengdp_db" 
+
+    psql -d "$opengdp_db"  << EOF
+CREATE INDEX "$processed_p_idx"
+ON "$processed_p_tbl"
+USING GIST (geom);
+EOF
+
+    ##### add to the db the water polys ######
+
+    shp2pgsql -s 4326 \
+              "${tmpdir}/${water_polygons_dir}/${water_polygons_shp}" \
+              "$water_polygons_tbl" |\
+     psql -d "$opengdp_db"
+
+    psql -d "$opengdp_db"  << EOF
+CREATE INDEX "$water_polygons_idx"
+ON "$water_polygons_tbl"
+USING GIST (geom);
+EOF
+
+    
+    ##### add to the db bridge polys ##### 
+
+    ogr2ogr -s_srs EPSG:900913 -t_srs EPSG:4326 \
+            "${tmpdir}/4326_${bridges_shp}" \
+            "${tmpdir}/$bridges_shp" \
+            > /dev/null || { printerror ; return; }
+
+    shp2pgsql -s 4326 \
+              "${tmpdir}/4326_${bridges_shp}" \
+              "$bridges_tbl" |\
+     psql -d "$opengdp_db" 
+
+    psql -d "$opengdp_db"  << EOF
+CREATE INDEX "$bridges_idx"
+ON "$bridges_tbl"
+USING GIST (geom);
+EOF
+
+    ##### add to the db the bmng tile index ######
+
+    shp2pgsql -s 4326 \
+              "${bmng_tindex_dir}/${bmng_tindex_shp}" \
+              "$bmng_tindex_tbl" |\
+     psql -d "$opengdp_db"
+
+    psql -d "$opengdp_db"  << EOF
+CREATE INDEX "$bmng_tindex_idx"
+ON "$bmng_tindex_tbl"
+USING GIST (geom);
+EOF
+
+    rm -r "$tmpdir"
+}
+
+################################################################################
+## @brief function to get the bbox of an image
+##
+## @param   image   full path to the image file
+##
+## @return 0 on success 1 on failure
+## @retval stdout the geotransform "xo xd xr yo yr yd"
+##
+## @details
+##    tmparray=( $(get_bbox "$img") )
+##    xd=${tmparray[@]:0:1}
+##    xd=${tmparray[@]:1:1}
+##    bboxX[@]=${tmparray[@]:2:5}
+##    bboxY[@]}=${tmparray[@]:7:5}
+##
+################################################################################
+
+get_bbox () {
+    local infile="$1"
+    local xo
+    local xd
+    local xr
+    local yo
+    local yr
+    local yd
+    local xs
+    local ys
+    local bboxX
+    local bboxY
+    local tmpdir
+    
+    tmpdir=$(mktemp -d -p "${tmp}" "${dsname}XXXXXXXXXX") || return
+
+    gdalbuildvrt -overwrite \
+                "${tmpdir}/testy.vrt" \
+                "$infile" > /dev/null || return
+
+
+    read xo xd xr yo yr yd < <(grep GeoTransform "${tmpdir}/testy.vrt" |\
+                                sed -r 's/<.?GeoTransform>//g' |\
+                                sed 's/,//g')
+
+    read xs ys  < <(grep rasterXSize "${tmpdir}/testy.vrt" |\
+                     sed 's|.*XSize="\([0-9]*\)".*YSize="\([0-9]*\)">|\1 \2|')
+
+    xo=$(fsci2dec "$xo")
+    xd=$(fsci2dec "$xd")
+    xr=$(fsci2dec "$xr")
+    yo=$(fsci2dec "$yo")
+    yd=$(fsci2dec "$yd")
+    yr=$(fsci2dec "$yr")
+
+    bboxX[0]=$(fcalc "$xo + 0   * $xd + 0   * $xr")
+    bboxY[0]=$(fcalc "$yo + 0   * $yr + 0   * $yd")
+
+    bboxX[1]=$(fcalc "$xo + $xs * $xd + 0   * $xr")
+    bboxY[1]=$(fcalc "$yo + $xs * $yr + 0   * $yd")
+        
+    bboxX[2]=$(fcalc "$xo + $xs * $xd + $ys * $xr")
+    bboxY[2]=$(fcalc "$yo + $xs * $yr + $ys * $yd")
+        
+    bboxX[3]=$(fcalc "$xo + 0   * $xd + $ys * $xr")
+    bboxY[3]=$(fcalc "$yo + 0   * $yr + $ys * $yd")
+        
+    bboxX[4]=$(fcalc "$xo + 0   * $xd + 0   * $xr")
+    bboxY[4]=$(fcalc "$yo + 0   * $yr + 0   * $yd")
+
+    rm -r "$tmpdir"
+
+    echo $xd $yd ${bboxX[@]} ${bboxY[@]}
+    
+
+}
+
+################################################################################
+## @brief function to get the intersection of a bbox with polys and output them
+##        to a table
+## 
+## @param table     the poly table to query
+## @param db        the db the table is in
+## @param outtable  the table to create with the results
+## @param bboxX     the x coords of the bbox
+## @param bboxY     the y coords of the bbox
+## @param buffer    optional buffer to apply to the bbox
+##
+## @return 0 on success 1 on failure
+##
+################################################################################
+
+blend_bbox_intersection () {
+    local table="$1"
+    local db="$2"
+    local outtable="$3"
+    local buffer="$4"
+    local bboxX=( ${@:5:5} )
+    local bboxY=( ${@:10:5} )
+
+if [[ "$buffer" == "" ]] || fcmp "$buffer" == 0
+then
+    
+    psql -t -q "$db" << EOF
+SELECT
+    geom
+INTO TABLE
+    "$outtable"
+FROM
+    $table as polys
+WHERE
+    ST_Intersects(
+        (SELECT
+            ST_Polygon(
+                ST_GeomFromText(
+                    'LINESTRING(            
+                        ${bboxX[0]} ${bboxY[0]},            
+                        ${bboxX[1]} ${bboxY[1]},            
+                        ${bboxX[2]} ${bboxY[2]},            
+                        ${bboxX[3]} ${bboxY[3]},            
+                        ${bboxX[4]} ${bboxY[4]}        
+                    )'
+                ),
+                4326
+            )
+        ),
+        polys.geom
+    );
+
+EOF
+
+else
+
+    psql -t -q "$db" << EOF
+SELECT
+    geom
+INTO TABLE
+    "$outtable"
+FROM
+    $table as polys
+WHERE
+    ST_Intersects(
+        (SELECT
+            ST_Buffer(
+                ST_Polygon(
+                    ST_GeomFromText(
+                        'LINESTRING(            
+                            ${bboxX[0]} ${bboxY[0]},            
+                            ${bboxX[1]} ${bboxY[1]},            
+                            ${bboxX[2]} ${bboxY[2]},            
+                            ${bboxX[3]} ${bboxY[3]},            
+                            ${bboxX[4]} ${bboxY[4]}        
+                        )'
+                    ),
+                    4326
+                ),
+                $buffer
+            )
+        ),
+        polys.geom
+    );
+
+EOF
+
+fi
+
+}
+
+################################################################################
+## @brief function to get the intersection of a data with another table of polys
+##        to a table
+## 
+## @param tableA    the data you wish to limit
+## @param tableB    the poly table to to intersect with the dat
+## @param db        the db the table is in
+## @param outtable  the table to create with the results
+##
+## @return 0 on success 1 on failure
+##
+################################################################################
+
+blend_table_intersection () {
+    local tableA="$1"
+    local tableB="$2"
+    local db="$3"
+    local outtable="$4"
+
+    psql -t -q "$db" << EOF
+SELECT
+    a.geom
+INTO TABLE
+    "$outtable"
+FROM
+    "$tableA" as a
+INNER JOIN
+    "$tableB" as b
+on ST_Intersects(b.geom, a.geom);
+
+EOF
+
+
+}
+
+################################################################################
+## @brief function to union two tables
+## 
+## @param tableA    the first table to add
+## @param tableB    the second table to add
+## @param db        the db the tabless are in
+## @param outtable  the table to create with the results
+##
+## @return 0 on success 1 on failure
+##
+################################################################################
+
+blend_table_union () {
+    local tableA="$1"
+    local tableB="$2"
+    local db="$3"
+    local outtable="$4"
+
+    psql -t -q "$db" << EOF
+
+CREATE TABLE "$outtable" AS (
+    ( SELECT a.geom FROM "$tableA" as a )
+    UNION
+    ( SELECT b.geom FROM "$tableB" as b )
+) ;
+
+EOF
+
+
+}
+
+###############################################################################
+## @brief function to get the buffer a table of polys and output them
+##        to a table
+## 
+## @param table     the poly table to query
+## @param db        the db the table is in
+## @param outtable  the table to create with the results
+##
+## @return 0 on success 1 on failure
+##
+################################################################################
+
+blend_buffer () {
+
+    local table="$1"
+    local db="$2"
+    local outtable="$3"
+    local buffer="$4"
+
+    psql -t -q "$db" << EOF
+SELECT
+    ST_MemUnion(
+        ST_Buffer( 
+            geom,
+            $buffer
+        )
+    ) as geom
+INTO TABLE
+    "$outtable"
+FROM
+    "$table";
+EOF
+
+
+}
+
+################################################################################
+## @brief function to get the difference of a bbox with polys and output them
+##        to a table
+## 
+## @param table     the poly table to query
+## @param db        the db the table is in
+## @param outtable  the table to create with the results
+## @param bboxX     the x coords of the bbox
+## @param bboxY     the y coords of the bbox
+##
+## @return 0 on success 1 on failure
+##
+################################################################################
+
+blend_bbox_difference () {
+    local table="$1"
+    local db="$2"
+    local outtable="$3"
+    local bboxX=( ${@:4:5} )
+    local bboxY=( ${@:9:5} )
+
+    psql -t -q "$db" << EOF
+SELECT
+
+    ST_Difference(
+         (SELECT
+            ST_Polygon(
+                ST_GeomFromText(
+                    'LINESTRING(            
+                        ${bboxX[0]} ${bboxY[0]},            
+                        ${bboxX[1]} ${bboxY[1]},            
+                        ${bboxX[2]} ${bboxY[2]},            
+                        ${bboxX[3]} ${bboxY[3]},            
+                        ${bboxX[4]} ${bboxY[4]}        
+                    )'
+                ),
+                4326
+            )
+        ),
+        ST_MemUnion(polys.geom)
+    ) as geom
+INTO TABLE
+    "$outtable"
+FROM
+    "$table" as polys ;
+EOF
+
+
+}
+
+###############################################################################
+## @brief function to test the intersection of a bbox with polys
+## 
+## @param table     the poly table to query
+## @param db        the db the table is in
+## @param bboxX     the x coords of the bbox
+## @param bboxY     the y coords of the bbox
+##
+## @return 0 on success 1 on failure
+##         stdout the rows that intersect
+##
+################################################################################
+
+blend_bbox_intersects () {
+    local table="$1"
+    local db="$2"
+    local bboxX=( ${@:3:5} )
+    local bboxY=( ${@:8:5} )
+
+    psql -t -q "$db" << EOF
+SELECT
+    *
+FROM
+    "$table" as polys
+WHERE
+    ST_Intersects(
+        (SELECT
+            ST_Polygon(
+                ST_GeomFromText(
+                    'LINESTRING(            
+                        ${bboxX[0]} ${bboxY[0]},            
+                        ${bboxX[1]} ${bboxY[1]},            
+                        ${bboxX[2]} ${bboxY[2]},            
+                        ${bboxX[3]} ${bboxY[3]},            
+                        ${bboxX[4]} ${bboxY[4]}        
+                    )'
+                ),
+                4326
+            )
+        ),
+        polys.geom
+    );
+
+EOF
+
+
+}
+
+################################################################################
+## @brief function to fill bays
+## 
+## @param table     the poly table to query
+## @param db        the db the table is in
+## @param level     how many times to buffer out then in
+##
+## @return 0 on success 1 on failure
+##         stdout the table with the result
+##
+## @details
+## global vars
+## @param blend_bay_buffers array that contaains the array of buffers
+##
+################################################################################
+
+blend_fillbays () {
+
+    local table="$1"
+    local db="$2"
+    local level="$3"
+
+    
+
+    local prev=""
+    local count=0
+    local buf
+
+    local result="$table";
+
+    ##### loop untill we have filled it in to the desired level #####
+    ##### fixme dont over run the buffers array
+
+    while ((count < level)) 
+    do 
+
+        buf=${blend_bay_buffers[$count]}
+
+        #### buffer the orighinal out #####
+
+        { psql -t -q "$db" << EOF
+
+SELECT
+    ST_MemUnion(
+        ST_Buffer(
+            ST_MakeValid(geom),
+            ${buf}
+        )
+    ) as geom
+INTO "${table}_${count}_bufout" 
+FROM "$result" as polys ;
+
+EOF
+        } || { printerror ; return 1; }
+
+        ##### we need to remove the last buf in table #####
+        ##### but not the original                    #####
+
+        if ((count > 0))
+        then
+        
+            { psql -t -q "$db" << EOF
+       
+DROP TABLE "$result";
+EOF
+            } || { printerror ; return 1; }
+
+        fi
+
+        ##### buffer it back in #####
+    
+        { psql -t -q "$db" << EOF
+
+SELECT
+    ST_Buffer(geom, -${buf}) as geom
+INTO "${table}_${count}"
+FROM "${table}_${count}_bufout" ;
+
+EOF
+        } || { printerror ; return 1; }
+
+        ##### drop the buffout table #####
+
+        { psql -t -q "$db" << EOF
+       
+DROP TABLE "${table}_${count}_bufout";
+EOF
+        } || { printerror ; return 1; }
+
+        result="${table}_${count}";
+
+        prev="_${count}"
+        ((count++))
+
+    done
+
+    echo "$result"
+}
+
+################################################################################
+## @brief function to get a list of intersecting base images
+## 
+## @param table     the tileindex table to query
+## @param db        the db the table is in
+## @param bboxX     the x coords of the bbox
+## @param bboxY     the y coords of the bbox
+##
+## @return 0 on success 1 on failure
+##         stdout the list of images that intersect
+##
+################################################################################
+
+blend_getbaselist () {
+    local table="$1"
+    local db="$2"
+    local bboxX=( ${@:3:5} )
+    local bboxY=( ${@:8:5} )
+
+    oldifs=IFS
+    IFS="| "
+    
+    while read junk file junk
+    do
+        if [[ "$file" != "" ]]
+        then
+            echo $file
+        fi
+    done < <(blend_bbox_intersects "$table" "$db" ${bboxX[@]} ${bboxY[@]} ) 
+    
+    retval=$?
+
+    IFS=$oldifs
+
+    return $retval
+}
+
+################################################################################
+## @brief function to make a overlay image the correct size and resolution to blend with
+## 
+## @param xres      the x resolution to make the image
+## @param yres      the y resolution to make the image
+## @param xmin      min x coord
+## @param ymin      min y coord
+## @param xmax      max x coord
+## @param ymax      max y coord
+## @param tmpdir    dir to create the output file in
+## @param infiles   array of input files to mosaic into the image
+##
+## @return 0 on success 1 on failure
+##         stdout the output image
+## @details
+## global vars
+## @param imgbase       the basename of the image, used to name the new image
+##                      typicly a local inherited from the calling function
+##
+################################################################################
+
+blend_cutoverlay () {
+    local xres=$(fabs "$1")
+    local yres=$(fabs "$2")
+    local xmin="$3"
+    local ymin="$4"
+    local xmax="$5"
+    local ymax="$6"
+    local tmpdir="$7"
+    local infiles=("${@:8}")
+
+    gdalwarp -co TILED=YES -dstalpha \
+             -tr "$xres" "$yres" \
+             -te $xmin $ymin $xmax $ymax \
+             "${infiles[@]}" \
+             "${tmpdir}/overlay_${imgbase}.tif" \
+             > /dev/null || { printerror ; return; }
+
+
+    echo "${tmpdir}/overlay_${imgbase}.tif"
+}
+
+
+
+blend_cp_base () {
+    local img="$1"
+    local tmpdir="$2"
+
+    gdal_translate -co TILED=YES -b 1 -b 2 -b 3 -b mask \
+                   "$img" \
+                   "${tmpdir}/blend_${imgbase}.tif" \
+                   > /dev/null || { printerror ; return; }
+
+    echo "${tmpdir}/blend_${imgbase}.tif"
+
+}
+
+
+################################################################################
+## @brief function to blend the image at a cutline in a db table
+##
+## @param img           full path to the input image
+## @param tmpdir        temp dir to place output in
+## @param cliptbl       db table with the clip geometry
+## @param db            db with the cliptable
+## @param blenddistance distance in pixels to blend
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+##         stdout the output image
+## @details
+## global vars
+## @param imgbase       the basename of the image, used to name the new image
+##                      typicly a local inherited from the calling function
+##
+################################################################################
+
+blend_blend () {
+    local img="$1"
+    local tmpdir="$2"
+    local cliptbl="$3"
+    local db="$4"
+    local blenddistance="$5"
+    local isoriginal="$6"
+
+    gdalwarp -cutline "PG:dbname=${db}" \
+             -cl "$cliptbl" \
+             -cblend "$blenddistance" \
+             "$img" \
+             "${tmpdir}/blend_${imgbase}.tif" \
+             > /dev/null || { printerror ; return; }
+ 
+    echo "${tmpdir}/blend_${imgbase}.tif"
+}
+
+mask_info () {
+    local img="$1"
+
+    local nfo
+
+    nfo=$(gdalinfo "$img")
+
+    if grep -q "Mask Flags: PER_DATASET ALPHA" <<< "$nfo"
+    then
+        echo ALPHA
+    elif grep -q "Mask Flags: PER_DATASET" <<< "$nfo"
+    then
+        echo MASK
+    fi
+        
+}
+
+###############################################################################
+## @brief function to blend an image at a polygon
+##
+## @param img        full path to the input image
+## @param tmpram     temp dir to place output in
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+## 
+###############################################################################
+
+blend () {
+    local img="$1"
+    local tmpdir="$2"
+    local isoriginal="$3"
+
+    local tmparray
+    local bboxX
+    local bboxY
+    local xd
+    local yd
+    
+    local returnfile="$img"
+
+    local ts=$(date "+%s")
+    local tmptbl="Blend_${BASHPID}_${ts}"
+
+
+    tmparray=( $(get_bbox "$img") )
+    xd=${tmparray[@]:0:1}
+    yd=${tmparray[@]:1:1}
+    bboxX=( ${tmparray[@]:2:5} )
+    bboxY=( ${tmparray[@]:7:5} )
+
+    ##### check if the image intersects the coasstline #####
+
+    local result=$(blend_bbox_intersects "$water_polygons_tbl" "$opengdp_db" \
+                                    ${bboxX[@]} ${bboxY[@]}) || return
+   
+    if [[ $result != "" ]]
+    then
+        
+        ###### make a temp table with the intersection of the cutline polys #####
+
+        blend_bbox_intersection "$processed_p_tbl" "$opengdp_db" "$tmptbl" \
+                                3 \
+                                ${bboxX[@]} ${bboxY[@]}  || return
+
+        
+        ##### make a base image of out base data #####
+
+        local baseimg
+        if istrue "$isoriginal"  || [[ "$(mask_info "$img")" == "MASK" ]]
+        then
+            baseimg=$( blend_cp_base "$img" "$tmpdir" ) || return
+
+            ##### cleanup source image if we can #####
+
+            if ! istrue "$isoriginal"  || [[ "$(mask_info "$img")" == "MASK" ]]
+            then
+                rm "$img"
+            fi
+                
+        else
+            baseimg="$img"
+        fi
+                
+        ##### get the overlay image #####
+
+        local overlay
+
+        ##### overlay a solid color? ######
+        
+        if ! [ -z ${blend_solidcolor+x} ]
+
+        then
+
+            ##### create a translation of the original to a solid color #####
+
+            overlay="${tmpdir}/blue.vrt"
+            gdal_translate -of VRT \
+                           -scale_1 0 255 ${blend_solidcolor[0]} ${blend_solidcolor[0]} \
+                           -scale_2 0 255 ${blend_solidcolor[1]} ${blend_solidcolor[1]} \
+                           -scale_3 0 255 ${blend_solidcolor[2]} ${blend_solidcolor[2]} \
+                           "$baseimg" \
+                           "$overlay" \
+                           > /dev/null || { printerror ; return; }
+
+        ##### not a solid color, use imagery #####
+
+        else
+
+            ##### get a list of  images to blend image with #####
+
+            local basefiles
+            basefiles=( $(blend_getbaselist "$bmng_tindex_tbl" "$opengdp_db" \
+                                            ${bboxX[@]} ${bboxY[@]} ) )  || return
+            ##### cut out the overlay to the max area to blend to  #####
+
+
+            overlay=$( blend_cutoverlay $xd $yd \
+                                        ${bboxX[0]} ${bboxY[2]} ${bboxX[2]} ${bboxY[0]} \
+                                        "$tmpdir" \
+                                        "${basefiles[@]/#/$bmng_tindex_dir/}" ) || return
+
+        fi
+
+        ##### fix the bays #####
+        #fixme level should come from a  global
+
+        fillbays=$(blend_fillbays "$tmptbl" "$opengdp_db" 2) || return
+
+
+        ##### get the bridges #####
+
+        blend_bbox_intersection "$bridges_tbl" "$opengdp_db" "bridges_${tmptbl}" \
+                                3 \
+                                ${bboxX[@]} ${bboxY[@]}  || return
+
+        
+
+        blend_table_intersection "bridges_${tmptbl}" \
+                                 "$water_polygons_tbl" \
+                                 "$opengdp_db" \
+                                 "bridges2_${tmptbl}" || return
+
+        blend_table_union "bridges2_${tmptbl}" \
+                          "$fillbays" \
+                          "$opengdp_db" \
+                          "land_${tmptbl}" || return
+
+
+        ##### buffer the cutline offshore a bit #####
+
+        blend_buffer "land_${tmptbl}" "$opengdp_db" "blendbuffer_${tmptbl}" .008 \
+                     ${bboxX[@]} ${bboxY[@]}  || return
+
+        ##### get the differnce between the cutline and #####
+        ##### the bbox to cut the overlay image with    #####
+        
+        blend_bbox_difference "blendbuffer_${tmptbl}" "$opengdp_db" "diff_${tmptbl}" \
+                         ${bboxX[@]} ${bboxY[@]}  || return
+ 
+        ##### blend the images #####
+
+        local blended
+        blended=$(blend_blend "$overlay" "$tmpdir" "diff_${tmptbl}" \
+                              "$opengdp_db" 300 "$isoriginal" )   || return
+
+        ##### cleanup the overlay #####
+
+        rm "$overlay"
+
+        ##### remove the temp database table #####
+    
+        psql -t -q "$opengdp_db" << EOF
+DROP TABLE "$tmptbl";
+DROP TABLE "blendbuffer_${tmptbl}";
+DROP TABLE "diff_${tmptbl}";
+DROP TABLE "$fillbays";
+DROP TABLE "bridges_${tmptbl}";
+DROP TABLE "bridges2_${tmptbl}";
+DROP TABLE "land_${tmptbl}";
+EOF
+
+
+    fi
+
+    echo "$blended"
+}
+
+

@@ -244,7 +244,7 @@ fcalc () {
 
     if [[ $# -gt 0 ]]
     then
-        echo "scale=20; $*" | bc -q 2>/dev/null
+        bc -q 2>/dev/null <<< "scale=20; $*"
     fi
 }
     
@@ -262,7 +262,7 @@ fcmp () {
     local cond=0
     if [[ $# -gt 0 ]]
     then
-        cond=$(echo "$*" | bc -q 2>/dev/null)
+        cond=$( bc -q 2>/dev/null <<< "$*")
         if [[ -z "$cond" ]]
         then
             cond=0
@@ -289,9 +289,25 @@ fcmp () {
 
 fsci2dec () {
     
-    fcalc $(sed 's/e[+]*/*10^/g' <<< "$1")
+    fcalc $(sed 's/e[+]*/*10^/g' <<< "$*")
 }
     
+###############################################################################
+## @brief get the absolute value of a number
+##
+## @param in    input number
+##
+## @return 0 for true, 1 for false
+##
+## @retval stdout the absolute value
+##
+###############################################################################
+
+fabs() {
+
+    sed 's/-//' <<< "$1"
+}
+
 ###############################################################################
 ## @brief function to get a ts from a lftp command
 ##

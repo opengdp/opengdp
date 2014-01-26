@@ -610,6 +610,7 @@ Makefile
 scripts/Makefile
 share/Makefile
 share/cgibin/Makefile
+share/data/Makefile
 share/examples/Makefile
 share/examples/floods_austrailia/Makefile
 share/examples/haiti/Makefile

@@ -42,6 +42,7 @@ EXTRA_DIST = \
     rapidfire_modis.bash.in \
     rapidfire_modis_othersubdataset.bash.in \
     newearthexplorer.bash.in \
+    blend.bash.in \
     hdds.bash.in \
     mkkey.bash.in \
     google_superoverlay_kml.bash
@@ -103,6 +104,9 @@ rapidfire_modis_othersubdataset.bash: rapidfire_modis_othersubdataset.bash.in Ma
 
 newearthexplorer.bash: newearthexplorer.bash.in Makefile
 	$(do_subst) < $(srcdir)/newearthexplorer.bash.in > newearthexplorer.bash
+
+blend.bash: blend.bash.in Makefile
+	$(do_subst) < $(srcdir)/blend.bash.in > blend.bash
 
 hdds.bash: hdds.bash.in Makefile
 	$(do_subst) < $(srcdir)/hdds.bash.in > hdds.bash
