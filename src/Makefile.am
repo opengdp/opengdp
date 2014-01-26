@@ -1,11 +1,12 @@
+LIBS = \
+	@GDAL_LIBS@
 
 if HAVE_OTB
 
 INCLUDES = \
 	@GDAL_CFLAGS@
 
-LIBS = \
-	@GDAL_LIBS@
+
 
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \

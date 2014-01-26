@@ -51,7 +51,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = share/scripts
+subdir = share/data
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -101,8 +101,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(scriptsdir)"
-DATA = $(scripts_DATA)
+am__installdirs = "$(DESTDIR)$(datadir)"
+DATA = $(data_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -259,15 +259,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-scripts_DATA = \
-    dwh-proj_def.bash
+data_DATA = \
+    bridges.zip
 
-CLEANFILES = $(scripts_DATA)
-scriptsdir = $(pkgdatadir)/scripts
+mapdir = $(pkgdatadir)/data
 EXTRA_DIST = \
-        dwh-proj_def.bash.in
+    bridges.zip
 
-do_subst = cat
 all: all-am
 
 .SUFFIXES:
@@ -280,9 +278,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu share/scripts/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu share/data/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu share/scripts/Makefile
+	  $(AUTOMAKE) --gnu share/data/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -307,27 +305,27 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-scriptsDATA: $(scripts_DATA)
+install-dataDATA: $(data_DATA)
 	@$(NORMAL_INSTALL)
-	@list='$(scripts_DATA)'; test -n "$(scriptsdir)" || list=; \
+	@list='$(data_DATA)'; test -n "$(datadir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(scriptsdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(scriptsdir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(datadir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(datadir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(scriptsdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(scriptsdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(datadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(datadir)" || exit $$?; \
 	done
 
-uninstall-scriptsDATA:
+uninstall-dataDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(scripts_DATA)'; test -n "$(scriptsdir)" || list=; \
+	@list='$(data_DATA)'; test -n "$(datadir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(scriptsdir)'; $(am__uninstall_files_from_dir)
+	dir='$(DESTDIR)$(datadir)'; $(am__uninstall_files_from_dir)
 tags: TAGS
 TAGS:
 
@@ -369,7 +367,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(scriptsdir)"; do \
+	for dir in "$(DESTDIR)$(datadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -394,7 +392,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -423,7 +420,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-scriptsDATA
+install-data-am: install-dataDATA
 
 install-dvi: install-dvi-am
 
@@ -467,25 +464,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-scriptsDATA
+uninstall-am: uninstall-dataDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-scriptsDATA \
+	install-data install-data-am install-dataDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-scriptsDATA
+	uninstall uninstall-am uninstall-dataDATA
 
-
-dwh-proj_def.bash: dwh-proj_def.bash.in Makefile
-	$(do_subst) < $(srcdir)/dwh-proj_def.bash.in > dwh-proj_def.bash
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

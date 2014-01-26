@@ -162,6 +162,7 @@ vector_warp () {
         
         ogr2ogr "${tmpram}/warp_${imgbase}.shp" \
                 "${img}" \
+                -wrapdateline
                 -t_srs "EPSG:4326" \
                 > /dev/null || { printerror ; return; }
     fi
@@ -257,16 +258,33 @@ dovector () {
     fi
     
     info="$(ogrinfo -so -al "$translated")"
-
-    ##### pole fix?  #####
-
+    local transbase="${transfile%.*}"
+    local transfile="${translated##*/}"
+    
     local xmin ymin xmax ymax
     read xmin ymin xmax ymax < <(getextent2 "$translated")
     
-    if vector_getsrs "$translated" "${tmpram}" | grep -q "Polar_Stereographic"
+    ##### dateline fix #####
+    
+    if vector_getsrs "$translated" "${tmpram}" | grep -q "Azimuthal_Equidistant"
     then
-        local transfile="${translated##*/}" 
-        local transbase="${transfile%.*}" 
+        ogr2ogr -t_srs EPSG:4326 -wrapdateline -segmentize 10000
+                "${tmpram}/${transbase}_cutup.shp" \
+                "$translated" > /dev/null || { printerror ; return; }
+
+        dovector_sub "${tmpram}/${transbase}_cutup.shp" \
+                     "${imgbase}_cutup" \
+                     "$tmpram" \
+                     "$ts" \
+                     "$info" \
+                     "yes" || return
+
+    fi
+
+    ##### pole fix?  #####
+
+    elif vector_getsrs "$translated" "${tmpram}" | grep -q "Polar_Stereographic"
+    then
 
         local xstart xend
         xstart="$xmin"
