@@ -226,7 +226,7 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 builddir = @builddir@
-datadir = @datadir@
+datadir = $(pkgdatadir)/data
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
@@ -262,7 +262,6 @@ top_srcdir = @top_srcdir@
 data_DATA = \
     bridges.zip
 
-mapdir = $(pkgdatadir)/data
 EXTRA_DIST = \
     bridges.zip
 

@@ -26,6 +26,7 @@ source @GENERICDIR@/misc.bash
 source @GENERICDIR@/addo.bash
 source @GENERICDIR@/index.bash
 source @GENERICDIR@/image.bash
+source @GENERICDIR@/blend.bash
 source @GENERICDIR@/msimage.bash
 source @GENERICDIR@/vector.bash
 source @GENERICDIR@/file.bash

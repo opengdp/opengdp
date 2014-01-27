@@ -1,7 +1,7 @@
 data_DATA = \
     bridges.zip
 
-mapdir = $(pkgdatadir)/data
+datadir = $(pkgdatadir)/data
 
 EXTRA_DIST = \
     bridges.zip

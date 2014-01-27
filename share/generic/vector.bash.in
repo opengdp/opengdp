@@ -279,7 +279,6 @@ dovector () {
                      "$info" \
                      "yes" || return
 
-    fi
 
     ##### pole fix?  #####
 
