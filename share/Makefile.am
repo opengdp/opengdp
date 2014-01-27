@@ -1,6 +1,7 @@
 
 SUBDIRS = \
 	generic\
+	data\
 	examples \
 	map \
 	web \

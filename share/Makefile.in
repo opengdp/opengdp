@@ -271,6 +271,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = \
 	generic\
+	data\
 	examples \
 	map \
 	web \

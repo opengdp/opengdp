@@ -16,6 +16,7 @@ generic_DATA = \
     rapidfire_modis.bash \
     rapidfire_modis_othersubdataset.bash \
     newearthexplorer.bash \
+    blend.bash \
     hdds.bash \
     mkkey.bash \
     google_superoverlay_kml.bash
