@@ -224,6 +224,21 @@ image_warp (){
     return
 }
 
+isoam () {
+    local img=$1
+    
+    local info=$(gdalinfo $img)
+
+    if ! grep -q -e "Driver: GTiff/GeoTIFF" <<< $info || \
+       ! grep -q -e "COMPRESSION=YCbCr JPEG" <<< $info || \
+       ! grep -q -e "INTERLEAVE=PIXEL" <<< $info || \
+       ! grep -q -e "SOURCE_COLOR_SPACE=YCbCr" <<< $info || \
+       grep -q "Mask Flags: PER_DATASET ALPHA" <<< "$info" || \
+       ! grep -q "Mask Flags: PER_DATASET" <<< "$info"
+    then
+        return 1
+    fi
+}
 
 ###############################################################################
 ## @brief function to proccess a single file
@@ -247,6 +262,8 @@ image_warp (){
 ## @param haveomar      true? tell omar there is a new image
 ##
 ###############################################################################
+
+
 
 dosubimg () {
     local img="$1"
@@ -300,35 +317,60 @@ dosubimg () {
     then
         blended=$(blend "$warped" "${tmpram}" "$isoriginal" ) || return
     fi
-        
-    ##### at this point the image should either #####
-    ##### have an alpha band or a mask band     #####
-    ##### translate to jpeg #####
 
-    if gdalinfo "$warped" | grep 'ColorInterp=Alpha' > /dev/null
+    if ! istrue "$isoriginal" && [[ "$blended" != "$warped" ]]
+    then
+        rm "$warped"
+    elif [[ "$blended" != "$warped" ]]
+    then
+        isoriginal="no"
+    fi    
+
+    ##### if it is already oam just copy it #####
+
+    if isoam "$blended"
+    then
+        if ! istrue "$isoriginal"
+        then
+            mv "$blended" \
+               "${tmpram}/final_${imgbase}.tif"
+        else
+            cp "$blended" \
+               "${tmpram}/final_${imgbase}.tif"
+        fi
+
+    ##### does it have an alpha band? translate to oam #####
+
+    elif gdalinfo "$blended" | grep 'ColorInterp=Alpha' > /dev/null
     then
         gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
                        -co PHOTOMETRIC=YCBCR \
                        -b 1 -b 2 -b 3 -mask 4 \
-                       "$warped" \
+                       "$blended" \
                        "${tmpram}/final_${imgbase}.tif" \
                        > /dev/null || { printerror ; return; }
-                       
+
+        if ! istrue "$isoriginal" 1
+        then
+            rm "$blended"
+        fi    
+                
+    ##### must have a mask band? translate to oam #####
+
     else
         gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
                        -co PHOTOMETRIC=YCBCR \
                        -b 1 -b 2 -b 3 -mask auto \
-                       "$warped" \
+                       "$blended" \
                        "${tmpram}/final_${imgbase}.tif" \
                        > /dev/null || { printerror ; return; }
     
+        if ! istrue "$isoriginal" 1
+        then
+            rm "$blended"
+        fi    
     fi
 
-    if ! istrue "$isoriginal" 1
-    then
-        rm "$warped"
-    fi    
-    
     ##### add overviews #####
     
     addo "${tmpram}/final_${imgbase}.tif"
