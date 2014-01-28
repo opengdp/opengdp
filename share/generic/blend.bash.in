@@ -746,6 +746,16 @@ mask_info () {
         
 }
 
+
+isVRT () {
+
+    if ! gdalinfo "$1"  | grep -q "Driver: VRT/Virtual Raster"
+    then
+        return 1
+    fi
+
+}
+
 ###############################################################################
 ## @brief function to blend an image at a polygon
 ##
@@ -769,7 +779,7 @@ blend () {
     local xd
     local yd
     
-    local returnfile="$img"
+    local blended="$img"
 
     local ts=$(date "+%s")
     local tmptbl="Blend_${BASHPID}_${ts}"
@@ -789,6 +799,7 @@ blend () {
     if [[ $result != "" ]]
     then
         
+    
         ###### make a temp table with the intersection of the cutline polys #####
 
         blend_bbox_intersection "$processed_p_tbl" "$opengdp_db" "$tmptbl" \
@@ -796,24 +807,13 @@ blend () {
                                 ${bboxX[@]} ${bboxY[@]}  || return
 
         
+        
         ##### make a base image of out base data #####
 
-        local baseimg
-        if istrue "$isoriginal"  || [[ "$(mask_info "$img")" == "MASK" ]]
-        then
-            baseimg=$( blend_cp_base "$img" "$tmpdir" ) || return
+        local baseimg="$img"
+        
+        baseimg=$( blend_cp_base "$img" "$tmpdir" ) || return
 
-            ##### cleanup source image if we can #####
-
-            if ! istrue "$isoriginal"  || [[ "$(mask_info "$img")" == "MASK" ]]
-            then
-                rm "$img"
-            fi
-                
-        else
-            baseimg="$img"
-        fi
-                
         ##### get the overlay image #####
 
         local overlay
@@ -890,11 +890,32 @@ blend () {
         blend_bbox_difference "blendbuffer_${tmptbl}" "$opengdp_db" "diff_${tmptbl}" \
                          ${bboxX[@]} ${bboxY[@]}  || return
  
-        ##### blend the images #####
+        
+        ##### anything left to blend? #####
 
-        local blended
-        blended=$(blend_blend "$overlay" "$tmpdir" "diff_${tmptbl}" \
-                              "$opengdp_db" 300 "$isoriginal" )   || return
+        local result2
+        result2=$( psql -t -q "$opengdp_db" > /dev/stderr << EOF
+
+SELECT
+    *
+FROM
+    "diff_${tmptbl}";
+
+EOF
+)
+
+        if [[ $result2 != "" ]]
+        then
+
+            ##### blend the images #####
+
+            blended=$(blend_blend "$overlay" "$tmpdir" "diff_${tmptbl}" \
+                                  "$opengdp_db" 300 "$isoriginal" )   || return
+        
+        elif [[ "$baseimg" != "$img" ]]
+        then
+            rm "$baseimg"
+        fi
 
         ##### cleanup the overlay #####
 
@@ -917,5 +938,6 @@ EOF
 
     echo "$blended"
 }
+
 
 
