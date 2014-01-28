@@ -41,7 +41,7 @@ index_add_layer () {
     
     if ! sqlite3 "${basedir}/${project}.db" ".tables" | grep -q -e "layers"
     then
-        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "creating db" ; return; }
+        { sqlite3 "${basedir}/${project}.db" << EOF
 
 CREATE TABLE layers
              (
@@ -54,8 +54,9 @@ CREATE TABLE layers
              );
 
 EOF
+        }  || { printerror "creating db" ; return; }
 
-        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "creating index" ; return; }
+        { sqlite3 "${basedir}/${project}.db" << EOF
 
 CREATE INDEX lname
 ON layers
@@ -65,7 +66,7 @@ ON layers
                     );
 
 EOF
-
+        }  || { printerror "creating db" ; return; }
     
     fi
     
@@ -115,13 +116,14 @@ INTO   layers
        );
 EOF
     else
-        sqlite3 "${basedir}/${project}.db" << EOF || { printerror "adding layer to db" ; return; }
+        { sqlite3 "${basedir}/${project}.db" << EOF
 UPDATE layers
 SET extent = '$extent',
     gextent = '$gw $gs $ge $gn'
 WHERE lname = '${dsname}_${ts}';
 EOF
 
+        } || { printerror "adding layer to db" ; return; }
     fi
     
 }
@@ -139,7 +141,7 @@ EOF
 
 index_get_layers () {
 
-    sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_get_layers" ; return; }
+    { sqlite3 "${basedir}/${project}.db" << EOF
 
 SELECT *
 FROM   layers
@@ -148,6 +150,7 @@ ORDER BY ts;
 
 EOF
 
+    }  || { printerror "index_get_layers" ; return; }
 }
 
 ###############################################################################
@@ -163,7 +166,7 @@ EOF
 
 index_get_latest_layers () {
 
-    sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_get_layers" ; return; }
+    { sqlite3 "${basedir}/${project}.db" << EOF
 
 SELECT *
 FROM   layers
@@ -173,6 +176,7 @@ LIMIT 2;
 
 EOF
 
+    }   || { printerror "index_get_layers" ; return; }
 }
 
 
@@ -191,12 +195,14 @@ index_drop_ds () {
 
     if [ -f "${basedir}/${project}.db" ]
     then
-        sqlite3 "${basedir}/${project}.db" << EOF  || { printerror "index_drop_ds" ; return; }
+        { sqlite3 "${basedir}/${project}.db" << EOF
 DELETE
 FROM  layers
 WHERE dsname = '${dsname}';
 EOF
 
     fi
+    }  || { printerror "index_drop_ds" ; return; }
 
 }
+
