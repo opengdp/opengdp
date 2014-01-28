@@ -606,10 +606,10 @@ image_cutup () {
     read x y < <(get_size "" "$info")
     
     local cutat=16384
-    
+
     ##### is the img too big? #####
 
-    if (( x > cutat )) || (( y > cutat ))
+    if ! istrue "$nocut" && { (( x > cutat )) || (( y > cutat )) }
     then
         
         ##### loop over x #####
