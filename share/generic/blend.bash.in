@@ -894,7 +894,7 @@ blend () {
         ##### anything left to blend? #####
 
         local result2
-        result2=$( psql -t -q "$opengdp_db" > /dev/stderr << EOF
+        result2=$( psql -t -q "$opengdp_db" << EOF
 
 SELECT
     *
