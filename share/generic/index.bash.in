@@ -201,8 +201,9 @@ FROM  layers
 WHERE dsname = '${dsname}';
 EOF
 
-    fi
-    }  || { printerror "index_drop_ds" ; return; }
 
+        }  || { printerror "index_drop_ds" ; return; }
+
+    fi
 }
 

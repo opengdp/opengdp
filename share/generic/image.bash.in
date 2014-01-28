@@ -609,7 +609,7 @@ image_cutup () {
 
     ##### is the img too big? #####
 
-    if ! istrue "$nocut" && { (( x > cutat )) || (( y > cutat )) }
+    if ! istrue "$nocut" && ( (( x > cutat )) || (( y > cutat )) )
     then
         
         ##### loop over x #####
