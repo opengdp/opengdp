@@ -371,6 +371,71 @@ dodate () {
 }
 
 ###############################################################################
+## @brief function to take a list of files on stdin and make a bash array declaration
+## script of files with the same basename in each array
+## this produces one local array per line named files
+##
+## @param ext    the extension on the files to mach associated files to
+## @param stdin  PIPE of files names to search
+##
+## note this function creates bash arrays that are outputed to stdout to be
+## eval by the calling function
+## 
+###############################################################################
+
+lftp_find_asoc_files () {
+    ext=$1
+    
+    awk -v "ext=$ext" '
+
+BEGIN {
+    FS = "\n" ;
+}
+
+
+{
+    re = "[.]" ext "$";
+        
+    names[i++] = $NF;
+    if ( $NF ~ re ) {
+        split($NF, base, re);
+        bases[b++] = base[1];
+        images[base[1]] = $NF;
+    }
+
+}
+
+END {
+    for (ibase in bases) {
+        res[1] = bases[ibase] "[.]..[Ww]$";
+        res[2] = bases[ibase] ".*[.][Aa][Uu][Xx]$";
+        res[3] = bases[ibase] ".*[.][Aa][Uu][Xx][.][Xx][Mm][Ll]$";
+        
+        i = 0;
+        files[i++] = images[bases[ibase]];
+        for (iname in names) {
+            for ( ire in res ) {
+                if ( names[iname] ~ res[ire] ) {
+                   files[i++] = names[iname];
+                }
+            }
+        }
+        
+        for ( ifile in files ) {
+            printf( " %s ; ", files[ifile] );
+        }
+        
+        printf ( "\n" );
+        for (ifile in files) {
+            delete files[ifile];
+        }
+           
+    }
+}
+'
+}
+
+###############################################################################
 ## @brief function to get the a list of new files
 ##
 ## @param mirrorfile    file to store the lftp commands in
