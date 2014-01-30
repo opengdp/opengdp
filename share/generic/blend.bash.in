@@ -99,13 +99,9 @@ EOF
     
     ##### add to the db bridge polys ##### 
 
-    ogr2ogr -s_srs EPSG:900913 -t_srs EPSG:4326 \
-            "${tmpdir}/4326_${bridges_shp}" \
-            "${tmpdir}/$bridges_shp" \
-            > /dev/null || { printerror ; return; }
 
     shp2pgsql -s 4326 \
-              "${tmpdir}/4326_${bridges_shp}" \
+              "${tmpdir}/${bridges_shp}" \
               "$bridges_tbl" |\
      psql -d "$opengdp_db" 
 
