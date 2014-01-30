@@ -313,7 +313,7 @@ dosubimg () {
     ##### blend the image #####
 
     local blended="$warped"
-    if istrue "$doblend"
+    if istrue "$doblend" && ! istrue "${isoverview}"
     then
         blended=$(blend "$warped" "${tmpram}" "$isoriginal" ) || return
     fi

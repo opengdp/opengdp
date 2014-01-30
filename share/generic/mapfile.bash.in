@@ -166,7 +166,7 @@ writemap_withover () {
     GROUP '${lname}'
     MAXSCALEDENOM $scale
     $offsite
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=5"
     $class
   END
 EOF
@@ -223,7 +223,7 @@ EOF
     GROUP '${lname}'
     MINSCALEDENOM $scale
     $offsite
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=5"
   END
 
 EOF
@@ -508,7 +508,7 @@ writemap_raster () {
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     $offsite
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=5"
     $class
   END
 
@@ -636,7 +636,7 @@ writemap_NewWorld () {
     GROUP 'NewWorld'
     MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
 
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=5"
 
   END
 
