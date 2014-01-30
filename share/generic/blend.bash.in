@@ -28,8 +28,6 @@ water_polygons_idx="water_polygons_gidx"
 
 bridges_zip="bridges.zip"
 bridges_shp="bridges.shp"
-bridges_tbl="bridges"
-#fixme remove this line
 bridges_tbl="bridges_polygons"
 bridges_idx="bridges_gidx"
 
@@ -407,6 +405,7 @@ EOF
 ## @param table     the poly table to query
 ## @param db        the db the table is in
 ## @param outtable  the table to create with the results
+## @param db        value to buffer the bbox with
 ## @param bboxX     the x coords of the bbox
 ## @param bboxY     the y coords of the bbox
 ##
@@ -418,26 +417,29 @@ blend_bbox_difference () {
     local table="$1"
     local db="$2"
     local outtable="$3"
-    local bboxX=( ${@:4:5} )
-    local bboxY=( ${@:9:5} )
+    local buf="$4"
+    local bboxX=( ${@:5:5} )
+    local bboxY=( ${@:10:5} )
 
     psql -t -q "$db" << EOF
 SELECT
 
     ST_Difference(
          (SELECT
-            ST_Polygon(
-                ST_GeomFromText(
-                    'LINESTRING(            
-                        ${bboxX[0]} ${bboxY[0]},            
-                        ${bboxX[1]} ${bboxY[1]},            
-                        ${bboxX[2]} ${bboxY[2]},            
-                        ${bboxX[3]} ${bboxY[3]},            
-                        ${bboxX[4]} ${bboxY[4]}        
-                    )'
+            ST_Buffer(
+                ST_Polygon(
+                    ST_GeomFromText(
+                        'LINESTRING(            
+                            ${bboxX[0]} ${bboxY[0]},            
+                            ${bboxX[1]} ${bboxY[1]},            
+                            ${bboxX[2]} ${bboxY[2]},            
+                            ${bboxX[3]} ${bboxY[3]},            
+                            ${bboxX[4]} ${bboxY[4]}        
+                        )'
+                    ),
+                    4326
                 ),
-                4326
-            )
+            $buf
         ),
         ST_MemUnion(polys.geom)
     ) as geom
@@ -887,8 +889,9 @@ blend () {
         ##### get the differnce between the cutline and #####
         ##### the bbox to cut the overlay image with    #####
         
-        blend_bbox_difference "blendbuffer_${tmptbl}" "$opengdp_db" "diff_${tmptbl}" \
-                         ${bboxX[@]} ${bboxY[@]}  || return
+        blend_bbox_difference "blendbuffer_${tmptbl}" "$opengdp_db" \
+                              "diff_${tmptbl}" .009 \
+                              ${bboxX[@]} ${bboxY[@]}  || return
  
         
         ##### anything left to blend? #####
@@ -897,20 +900,24 @@ blend () {
         result2=$( psql -t -q "$opengdp_db" << EOF
 
 SELECT
-    *
+    ST_AsText(geom)
 FROM
     "diff_${tmptbl}";
 
 EOF
 )
 
-        if [[ $result2 != "" ]]
+        if [[ $result2 != "" ]] && [[ "$result2" != " GEOMETRYCOLLECTION EMPTY" ]]
         then
 
             ##### blend the images #####
 
             blended=$(blend_blend "$overlay" "$tmpdir" "diff_${tmptbl}" \
-                                  "$opengdp_db" 300 "$isoriginal" )   || return
+                                  "$opengdp_db" 300 "$isoriginal" )   || {
+                echo "$img failed to blend" > /dev/stderr
+                echo "\"${result2}\"" > /dev/stderr
+                return 1
+            }
         
         elif [[ "$baseimg" != "$img" ]]
         then
