@@ -572,6 +572,60 @@ image_cutup_cb () {
 }
 
 ###############################################################################
+## @brief function to test if an image is blank
+##
+## @param img        full path to the input image
+## @param tmpdir     temp dir to place temp file in
+
+## @return 0 on blank 1 on non blank
+##
+## @details
+## this fuction is pretty cheap on 1 bit mask bands but more costly on
+## 1 byte alpha bands
+##
+###############################################################################
+
+image_isblank () {
+    local img="$1"
+    local tmpdir="$2"
+
+    local type=$(mask_info "$img")
+
+    ###### does it have a mask band? #####
+
+    if [[ "$type" == "MASK" ]]
+    then
+        gdal_translate -b mask -of VRT \
+                       "$img" \
+                       "${tmpdir}/isblank_${imgbase}.vrt" > /dev/null
+
+    ###### does it have a alpha band? #####
+
+    elif [[ "$type" == "ALPHA" ]]
+    then
+        gdal_translate -b 4 -of VRT \
+                       "$img" \
+                       "${tmpdir}/isblank_${imgbase}.vrt" > /dev/null
+    
+    ##### assume its not blank then #####
+    else
+        return 1
+
+    fi
+
+    local mm=$( gdalinfo "${tmpdir}/isblank_${imgbase}.vrt" -mm )
+    rm "${tmpdir}/isblank_${imgbase}.vrt"
+
+    if grep -q -e "Computed Min/Max=0.000,255.000" <<< $mm
+    then
+        return 1
+    fi
+
+    ##### its blank if we got here #####
+
+}
+
+###############################################################################
 ## @brief function to bust a larger image into chunks and proccess
 ##
 ## @param img        full path to the input image
