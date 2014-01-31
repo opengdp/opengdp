@@ -407,7 +407,7 @@ dosubimg () {
     ##### add overviews #####
 
     local final="$oam"
-    if ! have_addo( "$final" )
+    if ! have_addo "$final"
     then
         if istrue "$isoriginal"
         then
