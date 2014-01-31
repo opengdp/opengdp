@@ -240,6 +240,70 @@ isoam () {
     fi
 }
 
+
+###############################################################################
+## @brief function to write an image in oam format
+##
+## @param img        full path to the input image
+## @param tmpram     temp dir to place output in
+## @param isoriginal flag to mark the image as original file (dont delete = true)
+##
+## @return 0 on success 1 on failure
+## stdout the full path to the output file
+## 
+###############################################################################
+
+image_mkoam() {
+    local img="$1"
+    local tmpram="$2"
+    local isoriginal="$3"
+
+    local oam
+
+    ##### is it already oam? #####
+
+    if isoam "$img"
+    then
+        oam="$img"
+
+    ##### does it have an alpha band? translate to oam #####
+
+    elif gdalinfo "$img" | grep 'ColorInterp=Alpha' > /dev/null
+    then
+        gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
+                       -co PHOTOMETRIC=YCBCR \
+                       -b 1 -b 2 -b 3 -mask 4 \
+                       "$img" \
+                       "${tmpram}/oam_${imgbase}.tif" \
+                       > /dev/null || { printerror ; return; }
+
+        if ! istrue "$isoriginal" 1
+        then
+            rm "$img"
+        fi    
+        
+        oam="${tmpram}/oam_${imgbase}.tif"
+
+    ##### must have a mask band? translate to oam #####
+
+    else
+        gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
+                       -co PHOTOMETRIC=YCBCR \
+                       -b 1 -b 2 -b 3 -mask auto \
+                       "$img" \
+                       "${tmpram}/oam_${imgbase}.tif" \
+                       > /dev/null || { printerror ; return; }
+    
+        if ! istrue "$isoriginal" 1
+        then
+            rm "$img"
+        fi    
+
+        oam="${tmpram}/oam_${imgbase}.tif"
+
+    fi
+}
+
 ###############################################################################
 ## @brief function to proccess a single file
 ##
@@ -326,66 +390,64 @@ dosubimg () {
         isoriginal="no"
     fi    
 
-    ##### if it is already oam just copy it #####
+    ##### output to oam format #####
 
-    if isoam "$blended"
+    local oam
+    oam=$(image_mkoam "$blended" "${tmpram}" "$isoriginal" ) || return
+
+    if ! istrue "$isoriginal" && [[ "$oam" != "$blended" ]]
     then
-        if ! istrue "$isoriginal"
+        rm "$blended"
+    elif [[ "$oam" != "$blended" ]]
+    then
+        isoriginal="no"
+    fi    
+
+    
+    ##### add overviews #####
+
+    local final="$oam"
+    if ! have_addo( "$final" )
+    then
+        if istrue "$isoriginal"
         then
-            mv "$blended" \
-               "${tmpram}/final_${imgbase}.tif"
-        else
-            cp "$blended" \
-               "${tmpram}/final_${imgbase}.tif"
+            cp "$final" "${tmpram}/final_${imgbase}.tif"
+            final="${tmpram}/final_${imgbase}.tif"
+            isoriginal="no"
         fi
 
-    ##### does it have an alpha band? translate to oam #####
-
-    elif gdalinfo "$blended" | grep 'ColorInterp=Alpha' > /dev/null
-    then
-        gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
-                       -co PHOTOMETRIC=YCBCR \
-                       -b 1 -b 2 -b 3 -mask 4 \
-                       "$blended" \
-                       "${tmpram}/final_${imgbase}.tif" \
-                       > /dev/null || { printerror ; return; }
-
-        if ! istrue "$isoriginal" 1
-        then
-            rm "$blended"
-        fi    
-                
-    ##### must have a mask band? translate to oam #####
-
-    else
-        gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
-                       -co PHOTOMETRIC=YCBCR \
-                       -b 1 -b 2 -b 3 -mask auto \
-                       "$blended" \
-                       "${tmpram}/final_${imgbase}.tif" \
-                       > /dev/null || { printerror ; return; }
+        addo "$final"
     
-        if ! istrue "$isoriginal" 1
-        then
-            rm "$blended"
-        fi    
     fi
 
-    ##### add overviews #####
-    
-    addo "${tmpram}/final_${imgbase}.tif"
-    
     ##### add a timestamp for indexers #####
-    
-    tiffset -s 306 \
+
+    if ! gdalinfo "$final" | grep -q -e "TIFFTAG_DATETIME"
+    then
+        if istrue "$isoriginal"
+        then
+            cp "$final" "${tmpram}/final_${imgbase}.tif"
+            final="${tmpram}/final_${imgbase}.tif"
+            isoriginal="no"
+        fi
+
+        tiffset -s 306 \
                 "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
-                "${tmpdir}/final_${imgbase}.tif" > /dev/null 2> /dev/null
-        
+                "$final" > /dev/null 2> /dev/null
+
+    fi
+
     ##### move the output to the outdir #####
-    
-    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif" || { printerror ; return; }
-    
+
+    if istrue "$isoriginal"
+    then
+        cp "$final" "$outdir/${ts}/${imgbase}.tif" || { printerror ; return; }
+    else        
+        mv "$final" "$outdir/${ts}/${imgbase}.tif" || { printerror ; return; }
+    fi
+
     rm -rf "${tmpram}"
+
     ##### add the file to the tile index #####
     
     ##### lock! #####

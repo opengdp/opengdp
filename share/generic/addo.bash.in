@@ -21,6 +21,40 @@
 
 
 
+have_addo() {
+    local file="$1"
+
+    local have=0
+
+    have=$( tiffinfo "${file}" 2> /dev/null |\
+             grep -e "Subfile Type: reduced-resolution image (1 = 0x1)" |\
+             wc -l )
+
+    local x
+    local y
+    local o
+    local count
+    read x y < <( gdalinfo "${file}" |\
+                           grep -e "Size is" |\
+                           sed 's/Size is \([0-9]*\), \([0-9]*\)/\1 \2/')
+
+    ((o=2))
+    ((count=0))
+
+    while fcmp "64 < $x / $o" && fcmp "64 < $y / $o"
+    do
+        ((count++))
+        ((o*=2))
+    done
+
+    if ((have < count))
+    then
+        return 1
+    fi
+
+}
+
+
 ###############################################################################
 ## @brief function to add internal overviews to a file down to  64x64
 ## 
