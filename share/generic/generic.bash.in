@@ -519,7 +519,7 @@ function sub_main {
                 do
                     index_add_layer "$ts" "$(getextent "$ts")"
                 
-                done < <( find "${outdir}" -mindepth 1 -maxdepth 1 -type d -name "[0-9]*" |\
+                done < <( find "${outdir}/" -mindepth 1 -maxdepth 1 -type d -name "[0-9]*" |\
                            sed 's:.*/::g')
                 
             )
