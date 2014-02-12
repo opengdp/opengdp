@@ -75,8 +75,16 @@ EOF
 
     shp2pgsql -s 4326 \
               "${tmpdir}/4326_${processed_p_shp}" \
-              "$processed_p_tbl" |\
+              "${processed_p_tbl}" |\
      psql -d "$opengdp_db" 
+
+    ##### remove the invalid geometrys
+
+    psql -d "$opengdp_db"  << EOF
+DELETE
+FROM "${processed_p_tbl}"
+WHERE "error" = 1;
+EOF
 
     psql -d "$opengdp_db"  << EOF
 CREATE INDEX "$processed_p_idx"
