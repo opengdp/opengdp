@@ -7,8 +7,9 @@ PKGDATADIR="@PKGDATADIR@";
 
 
 blend_bay_buffers=( 0.02 0.04 0.08 0.10 0.12 )
+blend_bay_filllevel=2
 blend_pixels=300
-
+blend_cutline_buffer=".008"
 opengdp_db="opengdp"
 
 
@@ -778,7 +779,11 @@ isVRT () {
 ## 
 ## @details
 ## global vars
-## @param blend_pixels  distance in pixels to blend "" to use just a cutline
+## @param blend_pixels          distance in pixels to blend "" to use just a
+                                cutline
+## @param blend_cutline_buffer  distance in deg to buffer the shoreline
+## @param blend_bay_filllevel   number of buffers to apply to fill the bays
+##
 ###############################################################################
 
 blend () {
@@ -868,9 +873,8 @@ blend () {
         fi
 
         ##### fix the bays #####
-        #fixme level should come from a  global
 
-        fillbays=$(blend_fillbays "$tmptbl" "$opengdp_db" 2) || return
+        fillbays=$(blend_fillbays "$tmptbl" "$opengdp_db" blend_bay_filllevel) || return
 
 
         ##### get the bridges #####
@@ -894,7 +898,8 @@ blend () {
 
         ##### buffer the cutline offshore a bit #####
 
-        blend_buffer "land_${tmptbl}" "$opengdp_db" "blendbuffer_${tmptbl}" .008 \
+        blend_buffer "land_${tmptbl}" "$opengdp_db" "blendbuffer_${tmptbl}" \
+                     "${blend_cutline_buffer}" \
                      ${bboxX[@]} ${bboxY[@]}  || return
 
         ##### get the differnce between the cutline and #####
