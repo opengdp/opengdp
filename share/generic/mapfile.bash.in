@@ -78,6 +78,7 @@ mapfile_oformat_png='
 ';
 
 
+NewWorld_group="NewWorld"
 
 ###############################################################################
 ## @brief function to write out a map file with overview
@@ -607,6 +608,7 @@ writemap_noover () {
 ## @param wms_srs         wms_srs metadata
 ## @param myprojection    mapserver projection tags
 ## @param outdir          dataset output dir 
+## @param NewWorld_group  name of the mapserver newworld group
 ##
 ###############################################################################
 
@@ -633,7 +635,7 @@ writemap_NewWorld () {
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
-    GROUP 'NewWorld'
+    GROUP '$NewWorld_group'
     MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
 
     PROCESSING "OVERSAMPLE_RATIO=10"
