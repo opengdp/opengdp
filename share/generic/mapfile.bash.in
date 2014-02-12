@@ -672,7 +672,7 @@ EOF
     ${myprojection}
 
     METADATA
-      'wms_title'           ''${dsname}_${ts}_ovr'
+      'wms_title'           '${dsname}_${ts}_ovr'
       'wms_srs'             '${wms_srs}'
       'wms_extent'	        '$extent'
       "ows_enable_request"  "*"
