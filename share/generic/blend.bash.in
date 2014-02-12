@@ -734,7 +734,7 @@ blend_blend () {
                  "$img" \
                  "${tmpdir}/blend_${imgbase}.tif" \
                  > /dev/null || { printerror ; return; }
-        
+    fi
  
     echo "${tmpdir}/blend_${imgbase}.tif"
 
