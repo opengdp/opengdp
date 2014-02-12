@@ -780,7 +780,7 @@ isVRT () {
 ## @details
 ## global vars
 ## @param blend_pixels          distance in pixels to blend "" to use just a
-                                cutline
+##                              cutline
 ## @param blend_cutline_buffer  distance in deg to buffer the shoreline
 ## @param blend_bay_filllevel   number of buffers to apply to fill the bays
 ##
