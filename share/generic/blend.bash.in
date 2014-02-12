@@ -7,7 +7,7 @@ PKGDATADIR="@PKGDATADIR@";
 
 
 blend_bay_buffers=( 0.02 0.04 0.08 0.10 0.12 )
-
+blend_pixels=300
 
 opengdp_db="opengdp"
 
@@ -698,7 +698,7 @@ blend_cp_base () {
 ## @param tmpdir        temp dir to place output in
 ## @param cliptbl       db table with the clip geometry
 ## @param db            db with the cliptable
-## @param blenddistance distance in pixels to blend
+## @param blenddistance distance in pixels to blend "" to use just a cutline
 ## @param isoriginal flag to mark the image as original file (dont delete = true)
 ##
 ## @return 0 on success 1 on failure
@@ -718,14 +718,25 @@ blend_blend () {
     local blenddistance="$5"
     local isoriginal="$6"
 
-    gdalwarp -cutline "PG:dbname=${db}" \
-             -cl "$cliptbl" \
-             -cblend "$blenddistance" \
-             "$img" \
-             "${tmpdir}/blend_${imgbase}.tif" \
-             > /dev/null || { printerror ; return; }
+    if [[ "$blenddistance" != "" ]]
+    then
+        gdalwarp -cutline "PG:dbname=${db}" \
+                 -cl "$cliptbl" \
+                 -cblend "$blenddistance" \
+                 "$img" \
+                 "${tmpdir}/blend_${imgbase}.tif" \
+                 > /dev/null || { printerror ; return; }
+
+    else
+        gdalwarp -cutline "PG:dbname=${db}" \
+                 -cl "$cliptbl" \
+                 "$img" \
+                 "${tmpdir}/blend_${imgbase}.tif" \
+                 > /dev/null || { printerror ; return; }
+        
  
     echo "${tmpdir}/blend_${imgbase}.tif"
+
 }
 
 mask_info () {
@@ -765,6 +776,9 @@ isVRT () {
 ## @return 0 on success 1 on failure
 ## stdout the full path to the output file
 ## 
+## @details
+## global vars
+## @param blend_pixels  distance in pixels to blend "" to use just a cutline
 ###############################################################################
 
 blend () {
@@ -910,7 +924,7 @@ EOF
             ##### blend the images #####
 
             blended=$(blend_blend "$overlay" "$tmpdir" "diff_${tmptbl}" \
-                                  "$opengdp_db" 300 "$isoriginal" )   || {
+                                  "$opengdp_db" "$blend_pixels" "$isoriginal" )   || {
                 echo "$img failed to blend" > /dev/stderr
                 echo "\"${result2}\"" > /dev/stderr
                 return 1
