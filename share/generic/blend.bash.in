@@ -80,10 +80,17 @@ EOF
 
     ##### remove the invalid geometrys
 
+
     psql -d "$opengdp_db"  << EOF
 DELETE
 FROM "${processed_p_tbl}"
 WHERE "error" = 1;
+EOF
+
+psql -d "$opengdp_db"  << EOF
+DELETE
+FROM "${processed_p_tbl}"
+WHERE  not st_isvalid(geom);
 EOF
 
     psql -d "$opengdp_db"  << EOF
