@@ -615,8 +615,21 @@ writemap_noover () {
 writemap_NewWorld () {
     local ts="$1"
     local extent="$2"
+
+
+    local scale=$(getoverviewscale "$ts")
     
-    cat > "${outdir}/NewWorld_${dsname}${ts}.map" << EOF
+    local mapfile="${outdir}/NewWorld_${dsname}${ts}.map"
+    
+    local myscale
+    if fcmp "$NewWorld_MAXSCALEDENOM > $scale"
+    then
+        myscale="$scale"
+    else
+        myscale="$NewWorld_MAXSCALEDENOM"
+    fi
+
+    cat > "$mapfile" << EOF
 
   LAYER
     NAME '${dsname}_${ts}'
@@ -636,13 +649,45 @@ writemap_NewWorld () {
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
 
     GROUP '$NewWorld_group'
-    MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
+    MAXSCALEDENOM $myscale
 
     PROCESSING "OVERSAMPLE_RATIO=10"
 
   END
 
 EOF
+
+    ##### add overviews if we need them #####
+
+    if fcmp "$NewWorld_MAXSCALEDENOM > $scale"
+    then
+        cat >> "${mapfile}" << EOF
+
+  LAYER
+    NAME '${dsname}_${ts}_ovr'
+    TYPE RASTER
+    STATUS ON
+    DUMP TRUE
+
+    ${myprojection}
+
+    METADATA
+      'wms_title'           ''${dsname}_${ts}_ovr'
+      'wms_srs'             '${wms_srs}'
+      'wms_extent'	        '$extent'
+      "ows_enable_request"  "*"
+    END
+
+    TILEINDEX "${outdir}/overview_${dsname}${ts}.shp"
+    GROUP '$NewWorld_group'
+    MINSCALEDENOM $scale
+    MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
+
+    PROCESSING "OVERSAMPLE_RATIO=10"
+  END
+
+EOF
+    fi
 
 }
 
