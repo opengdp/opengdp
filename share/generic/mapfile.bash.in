@@ -79,6 +79,8 @@ mapfile_oformat_png='
 
 
 NewWorld_group="NewWorld"
+ms_oversample_ratio=10
+ms_resampler=AVERAGE
 
 ###############################################################################
 ## @brief function to write out a map file with overview
@@ -167,8 +169,8 @@ writemap_withover () {
     GROUP '${lname}'
     MAXSCALEDENOM $scale
     $offsite
-    PROCESSING "OVERSAMPLE_RATIO=10"
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=${ms_oversample_ratio}"
+    PROCESSING "RESAMPLE=${ms_resampler}"
     $class
   END
 EOF
@@ -225,8 +227,8 @@ EOF
     GROUP '${lname}'
     MINSCALEDENOM $scale
     $offsite
-    PROCESSING "OVERSAMPLE_RATIO=10"
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=${ms_oversample_ratio}"
+    PROCESSING "RESAMPLE=${ms_resampler}"
   END
 
 EOF
@@ -511,8 +513,8 @@ writemap_raster () {
     
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     $offsite
-    PROCESSING "OVERSAMPLE_RATIO=10"
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=${ms_oversample_ratio}"
+    PROCESSING "RESAMPLE=${ms_resampler}"
     $class
   END
 
@@ -654,8 +656,8 @@ writemap_NewWorld () {
     GROUP '$NewWorld_group'
     MAXSCALEDENOM $myscale
 
-    PROCESSING "OVERSAMPLE_RATIO=10"
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=${ms_oversample_ratio}"
+    PROCESSING "RESAMPLE=${ms_resampler}"
 
   END
 
@@ -687,8 +689,8 @@ EOF
     MINSCALEDENOM $scale
     MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
 
-    PROCESSING "OVERSAMPLE_RATIO=10"
-    PROCESSING "RESAMPLE=AVERAGE"
+    PROCESSING "OVERSAMPLE_RATIO=${ms_oversample_ratio}"
+    PROCESSING "RESAMPLE=${ms_resampler}"
   END
 
 EOF
