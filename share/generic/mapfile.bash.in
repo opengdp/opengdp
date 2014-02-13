@@ -168,6 +168,7 @@ writemap_withover () {
     MAXSCALEDENOM $scale
     $offsite
     PROCESSING "OVERSAMPLE_RATIO=10"
+    PROCESSING "RESAMPLE=AVERAGE"
     $class
   END
 EOF
@@ -225,6 +226,7 @@ EOF
     MINSCALEDENOM $scale
     $offsite
     PROCESSING "OVERSAMPLE_RATIO=10"
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 
 EOF
@@ -510,6 +512,7 @@ writemap_raster () {
     TILEINDEX '${outdir}/${dsname}${ts}.shp'
     $offsite
     PROCESSING "OVERSAMPLE_RATIO=10"
+    PROCESSING "RESAMPLE=AVERAGE"
     $class
   END
 
@@ -652,6 +655,7 @@ writemap_NewWorld () {
     MAXSCALEDENOM $myscale
 
     PROCESSING "OVERSAMPLE_RATIO=10"
+    PROCESSING "RESAMPLE=AVERAGE"
 
   END
 
@@ -684,6 +688,7 @@ EOF
     MAXSCALEDENOM $NewWorld_MAXSCALEDENOM
 
     PROCESSING "OVERSAMPLE_RATIO=10"
+    PROCESSING "RESAMPLE=AVERAGE"
   END
 
 EOF
