@@ -51,20 +51,20 @@ source @GENERICDIR@/mkkey.bash
 ###############################################################################
 
 comp_meter () {
-
     started=$1
     lines=$2
     donelines=$3
     
-    #FIXME use locals
-    decdone=$(fcalc "$donelines / $lines")
-    percdone=$(fcalc "scale = 0; $decdone * 100")
-    elap=$(($(date +%s) - started))
-    comp=$(fcalc "scale=0; $elap / $decdone")
+    local comp
+    local decdone=$(fcalc "$donelines / $lines")
+    local percdone=$(fcalc "scale = 0; $decdone * 100")
+    local elap=$(($(date +%s) - started))
+    local comp=$(fcalc "scale=0; $elap / $decdone")
     ((comp +=  started))
     
     printf "\r%3.0f%% complete. EST. finish at %s" $percdone "$(date -d "@${comp}")"
 }
+
 
 
 ###############################################################################
@@ -170,7 +170,13 @@ EOF
 
 mainloop () {
     local mirrorfile="$1"
-    #FIXME use locals
+
+    local doing
+    local line
+    local lines
+    local donelines
+    local started
+
     ((doing=0))
     
     ##### open a fd to a named pipe #####
