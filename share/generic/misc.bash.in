@@ -325,29 +325,33 @@ dodate () {
     RX_MDY='\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{4\}\)';
     RX_YDJ='\([0-9]\{4\}\)\([0-9]\{3\}\)';
 
-    Months=(january february march april may june july august september
-            october november december jan feb mar apr jun jul aug sep sept oct
-            nov dec);
+    ##### this commented out code builds an rx for RX_LM #####
+#    Months=(january february march april may june july august september
+#            october november december jan feb mar apr jun jul aug sep sept oct
+#            nov dec);
 
-    RX_LM='\(';
+#    RX_LM='\(';
 
-    needor=0;
-    for m in "${Months[@]}" 
-    do
-        if istrue $needor
-        then
-            RX_LM="$RX_LM"'\|'
-        else
-            needor=1
-        fi
+#    needor=0;
+#    for m in "${Months[@]}" 
+#    do
+#        if istrue $needor
+#        then
+#            RX_LM="$RX_LM"'\|'
+#        else
+#            needor=1
+#        fi
 
-        while read c
-        do
-            RX_LM="${RX_LM}[$(tr "[a-z]" "[A-Z]" <<<"$c")${c}]"
-        done < <(fold -w1 <<<"$m")
+#        while read c
+#        do
+#            RX_LM="${RX_LM}[$(tr "[a-z]" "[A-Z]" <<<"$c")${c}]"
+#        done < <(fold -w1 <<<"$m")
         
-    done;
-    RX_LM="$RX_LM"'\)';
+#    done;
+
+#    RX_LM="$RX_LM"'\)';
+
+    RX_LM='\([Jj][Aa][Nn][Uu][Aa][Rr][Yy]\|[Ff][Ee][Bb][Rr][Uu][Aa][Rr][Yy]\|[Mm][Aa][Rr][Cc][Hh]\|[Aa][Pp][Rr][Ii][Ll]\|[Mm][Aa][Yy]\|[Jj][Uu][Nn][Ee]\|[Jj][Uu][Ll][Yy]\|[Aa][Uu][Gg][Uu][Ss][Tt]\|[Ss][Ee][Pp][Tt][Ee][Mm][Bb][Ee][Rr]\|[Oo][Cc][Tt][Oo][Bb][Ee][Rr]\|[Nn][Oo][Vv][Ee][Mm][Bb][Ee][Rr]\|[Dd][Ee][Cc][Ee][Mm][Bb][Ee][Rr]\|[Jj][Aa][Nn]\|[Ff][Ee][Bb]\|[Mm][Aa][Rr]\|[Aa][Pp][Rr]\|[Jj][Uu][Nn]\|[Jj][Uu][Ll]\|[Aa][Uu][Gg]\|[Ss][Ee][Pp]\|[Ss][Ee][Pp][Tt]\|[Oo][Cc][Tt]\|[Nn][Oo][Vv]\|[Dd][Ee][Cc]\)'
 
     RX_MLD="$RX_LM"'\([0-9]\{2\}\)';
 
@@ -797,7 +801,7 @@ url_encode_awk () {
     LANG=C awk '
 $1 == "20"                    { printf("%s",   "+"); next } # space becomes plus
 $1 ~  /0[adAD]/               {                      next } # strip newlines
-$2 ~  /^[a-zA-Z0-9.*()\/-]$/  { printf("%s",   $2);  next } # pass through what we can
+$2 ~  /^[a-zA-Z0-9.*()\-]$/  { printf("%s",   $2);  next } # pass through what we can
                               { printf("%%%s", $1)        } # take hex value of everything else
 '
 }
