@@ -272,7 +272,7 @@ dotar_multiband () {
 ###############################################################################
 
 find_asoc_files () {
-    ext=$1
+    ext="$1"
     
     awk -v "ext=$ext" '
 
@@ -295,10 +295,20 @@ BEGIN {
 
 END {
     for (ibase in bases) {
-        res[1] = bases[ibase] "[.]..[Ww]$";
-        res[2] = bases[ibase] ".*[.][Aa][Uu][Xx]$";
-        res[3] = bases[ibase] ".*[.][Aa][Uu][Xx][.][Xx][Mm][Ll]$";
-        
+        if ( "shp" ~ ext ) {
+            res[1] = bases[ibase] ".*[.][Dd][Bb][Ff]$";
+            res[2] = bases[ibase] ".*[.][Ss][Hh][Xx]$";
+            res[3] = bases[ibase] ".*[.][Pp][Rr][Jj]$";
+        } else if ( "bil" ~ ext ) {
+            res[1] = bases[ibase] "[.]..[Ww]$";
+            res[2] = bases[ibase] ".*[.][Hh][Dd][Rr]$";
+            res[3] = bases[ibase] ".*[.][Pp][Rr][Jj]$";
+        } else {
+            res[1] = bases[ibase] "[.]..[Ww]$";
+            res[2] = bases[ibase] ".*[.][Aa][Uu][Xx]$";
+            res[3] = bases[ibase] ".*[.][Aa][Uu][Xx][.][Xx][Mm][Ll]$";
+        }
+
         i = 0;
         files[i++] = images[bases[ibase]];
         for (iname in names) {
@@ -324,70 +334,7 @@ END {
 '
 }
 
-###############################################################################
-## @brief function to take a list of files on stdin and make a bash array declaration
-## script of files with the same basename in each array
-## this produces one local array per line named files
-## @param ext    the extension on the files to mach associated files to
-## @param stdin  PIPE of files names to search
-##
-## note this function creates bash arrays that are outputed to stdout to be
-## eval by the calling function
-## 
-###############################################################################
 
-find_asoc_shape_files () {
-    ext=$1
-    
-    awk -v "ext=$ext" '
-
-BEGIN {
-    FS = "\n" ;
-}
-
-
-{
-    re = "[.]" ext "$";
-        
-    names[i++] = $NF;
-    if ( $NF ~ re ) {
-        split($NF, base, re);
-        bases[b++] = base[1];
-        images[base[1]] = $NF;
-    }
-
-}
-
-END {
-    for (ibase in bases) {
-        res[1] = bases[ibase] ".*[.][Dd][Bb][Ff]$";
-        res[2] = bases[ibase] ".*[.][Ss][Hh][Xx]$";
-        res[3] = bases[ibase] ".*[.][Pp][Rr][Jj]$";
-        
-        i = 0;
-        files[i++] = images[bases[ibase]];
-        for (iname in names) {
-            for ( ire in res ) {
-                if ( names[iname] ~ res[ire] ) {
-                   files[i++] = names[iname];
-                }
-            }
-        }
-        
-        printf ( "local files=(" );
-        for ( ifile in files ) {
-            printf( " \"%s\"", files[ifile] );
-        }
-        
-        printf ( " )\n" );
-        for (ifile in files) {
-            delete files[ifile];
-        }
-           
-    }
-}
-'
-}
 
 
 ###############################################################################
@@ -506,6 +453,16 @@ dobzip () {
     fi
 }
 
+imagepriority= "[.]tif$ [Tt][Ii][Ff]
+                [.]sid$ [Ss][Ii][Dd]
+                [.]jp2$ [Jj][Pp]2
+                [.]bil$ [Bb][Ii][Ll]
+                [.]png$ [Pp][Nn][Gg]
+                [.]jpg$ [Jj][Pp][Gg]
+                [.]gif$ [Gg][Ii][Ff]
+                [.]grd$ [Gg][Rr][Dd]"
+
+vectorpriority= "[.]shp$ [Ss][Hh][Pp]"
 
 ###############################################################################
 ## @brief function to process a zip file
@@ -548,126 +505,68 @@ dozip () {
     local regex="${regex//\?/.}"
     local iext
     
-    ##### do we have image data? #####
+    local priority
 
     if ! istrue "$vector"
+        priority="$imagepriority"
+    else
+        priority="$vectorpriority" 
+    fi
+
+    if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
     then
-        if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
-        then
-            local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
-            iext="${firstfile##*.}"
-    
-        ##### tif #####
-        
-        elif grep -i -e "[.]tif$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Tt][Ii][Ff]"
+        local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
+        iext="${firstfile##*.}"
 
-        ##### sid #####
-        
-        elif grep -i -e "[.]sid$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Ss][Ii][Dd]"
-        
-        ##### jpeg2000 #####
-        
-        elif grep -i -e "[.]jp2$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Jj][Pp]2"
-            local images="$(grep -i -e "[.]jp2$" <<<"$zipinfo")"
-        
-        ##### png #####
-        
-        elif grep -i -e "[.]png$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Pp][Nn][Gg]"
-        
-        ##### jpg #####
-        
-        elif grep -i -e "[.]jpg$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Jj][Pp][Gg]"
-        
-        ##### gif #####
-        
-        elif grep -i -e "[.]gif$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Gg][Ii][Ff]"
-        
-        ##### grd #####
-        
-        elif grep -i -e "[.]grd$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Gg][Rr][Dd]"
-
-        ##### no match, bail #####
-        
-        else
-            return
-        fi
-        
-        ##### loop over the matching files #####
-        
-        while read -r line
+    else
+        local ext
+        local rx
+        while read ext rx
         do
+            if grep -q -i -e "$ext" <<<"$zipinfo"
+            then
+                iext="$rx"
+                break;
+            fi
+        done <<<"$priority"
 
-            eval $line
+    fi
+    
+    if [[ -z "$iext" ]]
+    then
+        return 1
+    fi
+        
+    ##### loop over the matching files #####
+        
+    while read -r line
+    do
 
-            ##### extract the files #####
+        eval $line
+
+        ##### extract the files #####
             
-            unzip "${origdir}/${zipfile}" \
-                  ${files[@]} \
-                  -d "$tmpdir" > /dev/null 2> /dev/null || { printerror ; return; }
+        unzip "${origdir}/${zipfile}" \
+              ${files[@]} \
+              -d "$tmpdir" > /dev/null 2> /dev/null || { printerror ; return; }
+    
             
+        if ! istrue "$vector"    
+        then
             ##### proccess the images #####
             
             doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${files[0]}")" "no" || return
-        
-        done < <( find_asoc_files "$iext" <<<"$zipinfo" )
-    
-    
-    ##### do we have vector data? #####
 
-    else
-        
-        if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
-        then
-            local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
-            iext="${firstfile##*.}"
-
-        ##### shp #####
-        
-        elif grep -i -e "[.]shp$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Ss][Hh][Pp]"
-
-        ##### no match, bail #####
-        
         else
-            return
-        fi
-
-        ##### loop over the matching files #####
-
-        while read -r line
-        do
-
-            eval $line
-
-            ##### extract the files #####
-
-            unzip "${origdir}/${zipfile}" \
-                  ${files[@]} \
-                  -d "$tmpdir" > /dev/null 2> /dev/null || { printerror ; return; }
-
+        
             ##### proccess the vectors #####
 
             dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${files[0]}")" "no" || return
 
-        done < <( find_asoc_shape_files "$iext" <<<"$zipinfo" )
+        fi
 
-    fi
-        
+    done < <( find_asoc_files "$iext" <<<"$zipinfo" )
+    
 }
 
 ###############################################################################
@@ -735,125 +634,67 @@ dotar () {
     local regex="${regex//?/.}"
     local iext
     
-    ##### do we have image data? #####
+    local priority
 
     if ! istrue "$vector"
+        priority="$imagepriority"
+    else
+        priority="$vectorpriority" 
+    fi
+
+    if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
     then
-
-        if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
-        then
-            local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
-            iext="${firstfile##*.}"
-        
-        ##### tif #####
-        
-        elif grep -i -e "[.]tif$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Tt][Ii][Ff]"
-
-        ##### sid #####
-        
-        elif grep -i -e "[.]sid$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Ss][Ii][Dd]"
-        
-        ##### jpeg2000 #####
-        
-        elif grep -i -e "[.]jp2$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Jj][Pp]2"
-            local images="$(grep -i -e "[.]jp2$" <<<"$zipinfo")"
-        
-        ##### png #####
-        
-        elif grep -i -e "[.]png$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Pp][Nn][Gg]"
-        
-        ##### jpg #####
-        
-        elif grep -i -e "[.]jpg$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Jj][Pp][Gg]"
-        
-        ##### gif #####
-        
-        elif grep -i -e "[.]gif$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Gg][Ii][Ff]"
-        
-        ##### grd #####
-        
-        elif grep -i -e "[.]grd$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Gg][Rr][Dd]"
-
-        ##### no match, bail #####
-        
-        else
-            return
-        fi
-
-        ##### loop over the matching files #####
-        
-        while read -r line
-        do
-
-            eval $line
-
-            ##### extract the files #####
-            
-            tar -x${switch}f "${origdir}/${zipfile}" \
-                -C "$tmpdir" \
-                ${files[@]} > /dev/null 2> /dev/null || { printerror ; return; }
-            
-             ##### proccess the images #####
-            
-            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${files[0]}")" "no" || return
-            
-        done < <( find_asoc_files "$iext" <<<"$zipinfo" )
-    
-    ##### do we have vector data? #####
+        local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
+        iext="${firstfile##*.}"
 
     else
-        
-        if [ -n "$extglob" ] && grep -i -e "^$regex$" <<<"$zipinfo" > /dev/null
-        then
-            local firstfile=$(grep -i -e "^$regex$" <<<"$zipinfo" | head -n 1)
-            iext="${firstfile##*.}"
-
-        ##### shp #####
-        
-        elif grep -i -e "[.]shp$" <<<"$zipinfo" > /dev/null
-        then
-            iext="[Ss][Hh][Pp]"
-
-        ##### no match, bail #####
-        
-        else
-            return
-        fi
-
-        ##### loop over the matching files #####
-
-        while read -r line
+        local ext
+        local rx
+        while read ext rx
         do
+            if grep -q -i -e "$ext" <<<"$zipinfo"
+            then
+                iext="$rx"
+                break;
+            fi
+        done <<<"$priority"
 
-            eval $line
+    fi
+    
+    if [[ -z "$iext" ]]
+    then
+        return 1
+    fi
+        
+    ##### loop over the matching files #####
+        
+    while read -r line
+    do
 
-            ##### extract the files #####
+        eval $line
+
+        ##### extract the files #####
+        
+        tar -x${switch}f "${origdir}/${zipfile}" \
+            -C "$tmpdir" \
+            ${files[@]} > /dev/null 2> /dev/null || { printerror ; return; }
+        
+        if ! istrue "$vector"    
+        then
+            ##### proccess the images #####
             
-            tar -x${switch}f "${origdir}/${zipfile}" \
-                -C "$tmpdir" \
-                ${files[@]} > /dev/null 2> /dev/null || { printerror ; return; }
+            doimg "${files[0]}" "$tmpdir" "$ts" "$(gdalinfo "${tmpdir}/${files[0]}")" "no" || return
 
+        else
+        
             ##### proccess the vectors #####
 
             dovector "${files[0]}" "$tmpdir" "$ts" "$(ogrinfo -so -al "${tmpdir}/${files[0]}")" "no" || return
 
-        done < <( find_asoc_shape_files "$iext" <<<"$zipinfo" )
+        fi
 
-    fi   
+    done < <( find_asoc_files "$iext" <<<"$zipinfo" )
+
 }
 
 ###############################################################################
@@ -1211,6 +1052,14 @@ dofile_sub () {
     
 }
 
+##### function to sub the tmp dir in for a lftp fetch
+
+subtmplftp() {\
+    local tmpdir="$1"
+
+    sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g"
+}
+
 ###############################################################################
 ## @brief function to proccess a file
 ## 
@@ -1326,7 +1175,7 @@ dofile () {
         
         if ! [ -n "$NewEarthExplorer_user" ]
         then
-            lftp -e "$(echo "$myline" | sed "s:get \([-]. \)\{1,\}[-/_.A-Za-z0-9]*:get \1${tmpdir}:g") ; exit" > /dev/null 2> /dev/null
+                lftp -e "$(subtmplftp "${tmpdir}" <<<"$myline") ; exit" > /dev/null 2> /dev/null
         fi
     fi
     
