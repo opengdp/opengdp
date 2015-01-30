@@ -1,0 +1,387 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+ 
+###############################################################################
+## @brief recursive function to follow redirects on new earth explorer
+##
+## @param url       url to return if no redirect
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param headers   header file
+## @param cookie    cookie file
+## @param outfile   output file
+##
+## @return 0 for success
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args a standard set of arguments for curl
+##
+###############################################################################
+
+EarthExplorer_redirect () {
+    local url="$1"
+    local referer="$2"
+    local tmpdir="$3"
+    local headers="$4"
+    local cookie="$5"
+    local outfile="$6"
+   
+    ##### only recurse if there is a Location in the response headers #####
+    
+    if [[ -f "${tmpdir}/${headers}" ]] && \
+       grep -q "${tmpdir}/${headers}" -e "^[lL]ocation:"
+    then
+        
+        local location=$( grep "${tmpdir}/${headers}" -e "^[lL]ocation:" | \
+                          sed 's/[lL]ocation: //' | \
+                          sed 's:/[.]/:/:' | tr -d "\r")
+        
+        ##### does the location have a host? #####
+        
+        local host="$(url_get_host "$location")"
+        if ! [ -n "$host" ]
+        then
+            location="$(url_get_proto "$url")://$(url_get_host "$url")${location}"
+        fi
+        
+        find "$tmpdir" -name "${cookie}*" -exec mv {} {}.old \;
+        find "$tmpdir" -name "${headers}*" -exec mv {} {}.old \;
+        find "$tmpdir" -name "${outfile}*" -exec mv {} {}.old \;
+        
+        if [ -n "$referer" ]
+        then
+            
+            curl "$location" \
+                 "${curl_std_args[@]}" \
+                 --referer "$referer" \
+                 --cookie "${tmpdir}/${cookie}.old" \
+                 --cookie-jar "${tmpdir}/${cookie}" \
+                 --dump-header "${tmpdir}/${headers}" \
+                 > "${tmpdir}/${outfile}" \
+                 2> /dev/null || return 1
+        else
+                 
+            curl "$location" \
+                 "${curl_std_args[@]}" \
+                 --cookie "${tmpdir}/${cookie}.old" \
+                 --cookie-jar "${tmpdir}/${cookie}" \
+                 --dump-header "${tmpdir}/${headers}" \
+                 > "${tmpdir}/${outfile}" \
+                 2> /dev/null || return 1
+        fi
+        
+        ##### check if the output is gzipped #####
+        
+        if [ -f "${tmpdir}/${outfile}" ] && \
+           grep -q "${tmpdir}/${headers}" -e "Content-Encoding: gzip"
+        then
+            mv "${tmpdir}/${outfile}" "${tmpdir}/${outfile}.gz"
+            zcat "${tmpdir}/${outfile}.gz" > "${tmpdir}/${outfile}"
+        fi
+        
+        local lastlocation
+        lastlocation=$( EarthExplorer_redirect "$location" "$referer" "$tmpdir" \
+                                      "$headers" "$cookie" "$outfile") || return 1
+        
+        echo "$lastlocation"
+    
+    ##### no location? return the url #####
+    
+    else
+        echo "$url"
+    fi
+    
+}
+
+###############################################################################
+## @brief function to log into new earth explorer
+##
+## @param url       url to connect to
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param oldcookie last coockie file
+## @param cookie    cookie file
+## @param headers   header file
+## @param outfile   output file
+##
+## @return 0 for success 1 for failure
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args         a standard set of arguments for curl
+## @param EarthExplorer_user username for login
+## @param EarthExplorer_pass password for login
+##
+## vars EarthExplorer_user EarthExplorer_pass must be set
+##
+###############################################################################
+
+EarthExplorer_login () {
+    local url="$1"
+    local referer="$2"
+    local tmpdir="$3"
+    local oldcookie="$4"
+    local cookie="$5"
+    local headers="$6"
+    local outfile="$7"
+    
+    curl "$url" \
+         "${curl_std_args[@]}" \
+         --referer "${referer}" \
+         --cookie "${tmpdir}/${oldcookie}" \
+         --cookie-jar "${tmpdir}/${cookie}" \
+         --dump-header "${tmpdir}/${headers}" \
+         --data-urlencode "username=$EarthExplorer_user" \
+         --data-urlencode "password=$EarthExplorer_pass" \
+         --data-urlencode "rememberMe=0" \
+         --data-urlencode "submit=" \
+         > "${tmpdir}/${outfile}" \
+         2> /dev/null #|| { printerror "login" ; return 1 }
+    
+    ##### check if the output is gzipped #####
+        
+    if [ -f "${tmpdir}/${outfile}" ] && \
+       grep -q "${tmpdir}/${headers}" -e "Content-Encoding: gzip"
+    then
+        mv "${tmpdir}/${outfile}" "${tmpdir}/${outfile}.gz"
+        zcat "${tmpdir}/${outfile}.gz" > "${tmpdir}/${outfile}"
+    fi
+    
+    EarthExplorer_redirect "$url" "$referer" "$tmpdir" \
+                 "$headers" "$cookie" "${outfile}" || return 1
+        
+    
+}
+
+###############################################################################
+## @brief function std curl call with a recursive redirect
+##
+## @param url       url to connect to
+## @param referer   last url to pass as referer
+## @param tmpdir    dir to save output in
+## @param oldcookie last coockie file
+## @param cookie    cookie file
+## @param headers   header file
+## @param outfile   output file
+##
+## @return 0 for success 1 for failure
+##
+## @retval stdout the lastlocation redirected to
+##
+## @details
+## global vars
+## @param curl_std_args         a standard set of arguments for curl
+##
+###############################################################################
+
+EarthExplorer_curl () {
+    local url="$1"
+    local referer="$2"
+    local tmpdir="$3"
+    local oldcookie="$4"
+    local cookie="$5"
+    local headers="$6"
+    local outfile="$7"
+    
+    if [ -n "$referer" ]
+    then
+        
+        curl "$url" \
+             "${curl_std_args[@]}" \
+             --referer "$referer" \
+             --cookie "${tmpdir}/${oldcookie}" \
+             --cookie-jar "${tmpdir}/${cookie}" \
+             --dump-header "${tmpdir}/${headers}" \
+             > "${tmpdir}/${outfile}" \
+             2> /dev/null #|| { printerror "getdownload" ; return 1 }
+    else
+             
+        curl "$url" \
+             "${curl_std_args[@]}" \
+             --cookie "${tmpdir}/${oldcookie}" \
+             --cookie-jar "${tmpdir}/${cookie}" \
+             --dump-header "${tmpdir}/${headers}" \
+             > "${tmpdir}/${outfile}" \
+             2> /dev/null #|| { printerror "getdownload" ; return 1 }
+    fi
+        
+    ##### check if the output is gzipped #####
+        
+    if [ -f "${tmpdir}/${outfile}" ] && \
+       grep -q "${tmpdir}/${headers}" -e "Content-Encoding: gzip"
+    then
+        mv "${tmpdir}/${outfile}" "${tmpdir}/${outfile}.gz"
+        zcat "${tmpdir}/${outfile}.gz" > "${tmpdir}/${outfile}"
+    fi
+    
+    EarthExplorer_redirect "$url" "$referer" "$tmpdir" \
+                 "$headers" "$cookie" "${outfile}" || return 1
+
+}
+
+
+###############################################################################
+## @brief main function to get a file from new earth explorer
+##
+## @param url       url for the file
+## @param outdir    output dir
+##
+## @return 0 for success 1 for failure
+##
+## @details
+## global vars
+## @param dsname
+## @param EarthExplorer_user username for login
+## @param EarthExplorer_pass password for login
+##
+## vars EarthExplorer_user EarthExplorer_pass must be set
+##
+## usage: EarthExplorer_get "<url> <outdir>
+## @n http://edcsns17.cr.usgs.gov/EarthExplorer/order/process?node=RS&dataset_name=LANDSAT_ETM_SLC_OFF&ordered=LE71270312011259EDC00
+##
+###############################################################################
+
+EarthExplorer_get () {
+    local url="$1"
+    local outdir="$2"
+    
+    local urlenc="$(url_encode "$url")"
+    
+    local proto="$(url_get_proto $url)"
+    local host="$(url_get_host $url)"
+    local path="$(url_get_path $url)"
+    local query="$(url_get_query $url)"
+    
+    local referer="${proto}://${host}${path%/*}/"
+    #--header "Host: $host"
+       
+    curl_std_args=(
+        --user-agent "User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.15) Gecko/20110324 Gentoo Firefox/3.6.15"
+        --header "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        --header "Accept-Language: en-us,en;q=0.5"
+        --header "Accept-Encoding: gzip,deflate"
+        --header "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7"
+        --header "Keep-Alive: 115"
+        --header "Connection: keep-alive" )
+
+    local tmpdir
+    tmpdir=$(mktemp -d -p "${outdir}" "${dsname}XXXXXXXXXX") #|| { printerror "create tmpdir" ; return 1 }
+    
+
+    ##### get the login page #####
+    
+    local lasturl
+    
+    touch "${tmpdir}/prelogin.cookie"
+
+    lasturl=$( EarthExplorer_curl "${url}" "" "$tmpdir" "prelogin.cookie" \
+                         "getlogin.cookie" "getlogin.header" \
+                         "getlogin.out" ) || {
+        rm -r "${tmpdir}"
+        return 1
+    }
+    
+    local loginurl=$( grep "<a.*Login" < "${tmpdir}/getlogin.out" |\
+                       sed 's/.*href=["'"'"']\([^["'"'"']*\).*/\1/'  ) 
+
+    ##### login #####
+    
+    lasturl=$( EarthExplorer_login "$loginurl" "$url" "$tmpdir" "getlogin.cookie" \
+                         "login.cookie" "login.header" \
+                         "login.out") || {
+        rm -r "${tmpdir}"
+        return 1
+    }
+    
+    local logouturl=$( grep "<a.*Logout" < "${tmpdir}/login.out" |\
+                        sed 's/.*href=["'"'"']\([^["'"'"']*\).*/\1/' ) 
+
+
+     
+    ##### get popup download window #####
+    
+    lasturl=$( EarthExplorer_curl "$pupurl" "${lasturl}" "$tmpdir" "login.cookie" \
+                        "getpopup.cookie" "getpopup.header" \
+                        "getpopup.out" )  || {
+        EarthExplorer_curl "$logouturl" "${lasturl}" "$tmpdir" "login.cookie" \
+                 "logout.cookie" "logout.header" "logout.out" > /dev/null
+        rm -r "$tmpdir"
+        return 1
+    }
+    
+    ##### does the download window have a standard download? #####
+
+    if grep -q STANDARD < "${tmpdir}/getpopup.out"
+    then
+        local next=$( grep STANDARD < "${tmpdir}/getpopup.out" |\
+                       sed 's/.*location=["'"'"']\([^["'"'"']*\).*/\1/'  ) 
+
+       
+        ###### download the file #####
+
+        EarthExplorer_curl "$next" "${lasturl}" "$tmpdir" \
+                 "getpopup.cookie" "lovgin.cookie" \
+                 "download.header" \
+                 "download.out" > /dev/null || return 1
+
+        ##### rename the file ##### 
+
+        if grep -q "${tmpdir}/download.header" -e "filename="
+        then
+            outfile=$(grep "${tmpdir}/download.header" -e filename= |\
+                      sed 's/.*filename=["'"'"']\([^["'"'"']*\).*/\1/' |\
+                      tr -d "\r" )
+            mv "${tmpdir}/download.out" "${outdir}/$outfile"
+            
+            echo "$outfile"
+        fi
+
+        ##### logout #####
+    
+        EarthExplorer_curl "$logouturl" "${lasturl}" "$tmpdir" "login.cookie" \
+                 "logout.cookie" "logout.header" \
+                 "logout.out" > /dev/null || return 1
+    
+    else
+    
+        ##### need to add an option to order items that do not already have a standard download #####
+
+        ##### logout #####
+    
+        EarthExplorer_curl "$logouturl" "${lasturl}" "$tmpdir" "login.cookie" \
+                 "logout.cookie" "logout.header" \
+                 "logout.out" > /dev/null || return 1
+       
+    fi
+    
+    ##### cleanup temp dir #####
+    
+    rm -r "$tmpdir"
+    
+}
+
