@@ -6,6 +6,7 @@ generic_DATA = \
     index.bash \
     geoext.bash \
     image.bash \
+    dem.bash \
     msimage.bash \
     vector.bash \
     mapfile.bash \
@@ -33,6 +34,7 @@ EXTRA_DIST = \
     index.bash.in \
     geoext.bash.in \
     image.bash.in \
+    dem.bash.in \
     msimage.bash.in \
     vector.bash.in \
     mapfile.bash.in \
@@ -76,6 +78,9 @@ index.bash: index.bash.in Makefile
 	
 image.bash: image.bash.in Makefile
 	$(do_subst) < $(srcdir)/image.bash.in > image.bash
+	
+dem.bash: image.dem.in Makefile
+	$(do_subst) < $(srcdir)/dem.bash.in > dem.bash
 	
 msimage.bash: msimage.bash.in Makefile
 	$(do_subst) < $(srcdir)/msimage.bash.in > msimage.bash

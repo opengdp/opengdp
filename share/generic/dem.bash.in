@@ -1,0 +1,155 @@
+#!/bin/bash
+# Copyright (c) 2011, Brian Case
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+
+function doimg {
+    local img="$1"
+    local tmpdir="$2"
+    local ts="$3"
+    local info="$4"
+    local isoriginal="$5"
+    
+    
+    local imgfile="${img##*/}"
+    local imgbase="${imgfile%.*}"
+    local imgext="${imgfile##*.}"
+    local imgextlower="$(tr [A-Z] [a-z] <<< "$imgext")"
+    local imgdir="${img%/*}"
+    
+    local imgdir="${img%/*}"
+    if [[ "$imgdir" = "$imgfile" ]]
+    then
+        local imgdir=""
+    else
+        local imgdir="${imgdir}/"
+    fi
+    
+    ##### double check the info #####
+    
+    if [ -n "$info" ]
+    then
+        info="$(gdalinfo "${tmpdir}/${img}")"
+    fi
+   
+    ##### if we need a debug do it and return #####
+
+    if [ -n "$DEBUG_doimg" ]
+    then
+        printf " img=%s\n tmpdir=%s\n ts=%s\n imgfile=%s\n imgbase=%s\n imgext=%s\n imgdir=%s \n" \
+               "$img" \
+               "$tmpdir "\
+               "$ts" \
+             date i assuk  "$imgfile" \
+               "$imgbase" \
+               "$imgext" \
+               "$imgdir"
+       return
+    fi
+
+    ###### RAMDISK? #####
+
+    if [ -n "$ramdisk" ]
+    then
+        local tmpram=$(mktemp -d -p "${ramdisk}" "${dsname}XXXXXXXXXX")
+    else
+        local tmpram=$(mktemp -d -p "${tmpdir}" "${dsname}XXXXXXXXXX")
+    fi
+
+    ##### test the projection ####
+       
+    if ! image_is_4326 "${tmpdir}/${img}" "$info"
+    then
+
+        ##### needs warped #####
+        
+        gdalwarp -ot Int32 \
+                 -co TILED=YES \
+                 -t_srs EPSG:4326 \
+                 "${tmpdir}/${img}" \
+                 "${tmpram}/final_${imgbase}.tif" > /dev/null || return
+
+    else
+        gdal_translate -ot Int32 \
+                       -co TILED=YES \
+                      "${tmpdir}/${img}" \
+                      "${tmpram}/final_${imgbase}.tif" > /dev/null || return
+    
+    fi
+
+    ##### add overviews #####
+    
+    addo "${tmpram}/final_${imgbase}.tif"
+    
+    ##### add a timestamp for indexers #####
+    
+    tiffset -s 306 \
+                "${ts:0:4}:${ts:4:2}:${ts:6:2} 12:00:00" \
+                "${tmpdir}/final_${imgbase}.tif" > /dev/null 2> /dev/null
+        
+    ##### move the output to the outdir #####
+    
+    mv "${tmpram}/final_${imgbase}.tif" "$outdir/${ts}/${imgbase}.tif" || return
+    
+    rm -rf "${tmpram}"
+    ##### add the file to the tile index #####
+    
+    ##### lock! #####
+    
+    local lock="${outdir}/${dsname}${ts}.shp"
+    lock="${lock//\//.}"
+    
+    while ! mkdir "${lock}" 2> /dev/null
+	do
+		sleep 1
+	done
+    
+    ##### make the tileindex in a subshell so we can cd with no adverse effect #####
+    ##### this costs like 2s of system time per 4000 calls #####
+
+    if [ -n "$isoverview" ]
+    then
+        (
+            cd ${outdir}
+            gdaltindex "overview_${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
+        )
+    else
+ 
+        (
+            cd ${outdir}
+            gdaltindex "${dsname}${ts}.shp" "${ts}/${imgbase}.tif"  > /dev/null
+        )
+    
+    fi
+
+    ##### unlock #####
+    
+    rmdir "${lock}"
+    
+    if [[ "$haveomar" == "yes" ]]
+    then
+        curl --data "filename=${outdir}/${ts}/${imgbase}.tif" \
+             "${urlbase}/omar/dataManager/addRaster"
+    fi
+    
+}
+
+
