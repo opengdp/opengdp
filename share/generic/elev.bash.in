@@ -43,7 +43,7 @@ elev_warp (){
 
     ##### is it already 4326? #####
        
-    if echo $info | grep 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]' > /dev/null
+    if image_is_4326 "${img}" "$info"
     then
         
         ##### is it 0-360? #####
@@ -431,7 +431,7 @@ do_contour () {
     fi
 }
 
-doimg () {
+doimg_hillshade () {
     local img="$1"
     local tmpdir="$2"
     local ts="$3"
@@ -476,4 +476,5 @@ doimg () {
     return $status
 
 }
+
 

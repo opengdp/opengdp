@@ -25,6 +25,85 @@ have_mrsiddecode="@HAVE_MRSIDDECODE@";
 export GDAL_CACHEMAX=500
 export GDAL_TIFF_INTERNAL_MASK=YES
 
+
+
+###############################################################################
+## @brief function to test if an image is 4326
+##
+## @param   image   full path to the image file
+## @param   info    cached gdalinfo string
+##
+## @return 0 if true 1 if false
+##
+###############################################################################
+
+image_is_4326() {
+    local img="$1"
+    local info="$2"
+
+    if [ -n "$info" ]
+    then
+        info="$(gdalinfo "${img}")"
+    fi
+
+    #'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563, AUTHORITY."EPSG","7030".., AUTHORITY."EPSG","6326".., PRIMEM.."Greenwich",0.*., UNIT."degree",0.0174532925199433., AUTHORITY."EPSG","4326"..'
+                        #'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]'
+    echo $info | grep -q 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]'
+    return $?
+}
+
+###############################################################################
+## @brief function to test if an image has an alpha band
+##
+## @param   image   full path to the image file
+## @param   info    cached gdalinfo string
+##
+## @return 0 if true 1 if false
+##
+###############################################################################
+
+image_has_alpha() {
+    local img="$1"
+    local info="$2"
+
+    if [ -n "$info" ]
+    then
+        info="$(gdalinfo "${img}")"
+    fi
+
+    grep -q 'ColorInterp=Alpha'<<< "$info"
+    return $?
+}
+
+
+###############################################################################
+## @brief function to test if an image has a mask band
+##
+## @param   image   full path to the image file
+## @param   info    cached gdalinfo string
+##
+## @return 0 if true 1 if false
+##
+###############################################################################
+
+image_has_mask() {
+    local img="$1"
+    local info="$2"
+
+    if [ -n "$info" ]
+    then
+        info="$(gdalinfo "${img}")"
+    fi
+
+    if grep -q 'Mask Flags: PER_DATASET'<<< "$info" && ! grep -q 'Mask Flags: PER_DATASET ALPHA' <<< "$info"
+    then
+        return 0
+    else
+        return 1
+    fi
+
+}
+
 ###############################################################################
 ## @brief function to get the number of bands in an image
 ##
@@ -77,14 +156,14 @@ image_colar () {
     ##### does the image already have a alpha band? #####
     ##### and ignorealpha is not set true #####
     
-    if ! istrue "$ignorealpha" && echo "$info" | grep 'ColorInterp=Alpha' > /dev/null
+    if ! istrue "$ignorealpha" && image_has_alpha "${img}" "$info"
     then
         echo "${img}"
         return
     
     ##### does the image already have a mask band? #####
     
-    elif echo "$info" | grep -q 'Mask Flags: PER_DATASET' && ! echo "$info" | grep -q 'Mask Flags: PER_DATASET ALPHA'
+    elif image_has_mask "${img}" "$info"
     then
         echo "${img}"
         return
@@ -184,7 +263,7 @@ image_warp (){
     
     ##### test the projection #####
        
-    if echo $info | grep 'GEOGCS."WGS 84", DATUM."WGS_1984", SPHEROID."WGS 84",6378137,298.257223563,.* PRIMEM.*"Greenwich",0.*UNIT[[]*"degree".*AUTHORITY."EPSG","4326"\]\][^,]' > /dev/null
+    if image_is_4326 "${img}" "$info"
     then
         echo "${img}"
         return
@@ -193,7 +272,7 @@ image_warp (){
         
         ###### does the image have a alpha band? #####
     
-        if gdalinfo "${img}" | grep 'ColorInterp=Alpha' > /dev/null
+        if image_has_alpha "${img}" "$info"
         then
             ##### fixme gdalwarp seems to be ignoring mask bands #####
             ##### convert alpha mask to a mask band #####
@@ -268,7 +347,7 @@ image_mkoam() {
 
     ##### does it have an alpha band? translate to oam #####
 
-    elif gdalinfo "$img" | grep 'ColorInterp=Alpha' > /dev/null
+    elif image_has_alpha "${img}" "$info"
     then
         gdal_translate -co TILED=YES -co JPEG_QUALITY=80 -co COMPRESS=JPEG \
                        -co PHOTOMETRIC=YCBCR \
